@@ -1,1 +1,22 @@
 @import "tailwindcss";
+
+@theme {
+  --color-gold: #d4af37;
+  --color-gold-light: #f9e29c;
+  --color-dark-gray: #1a1a1a;
+}
+
+body {
+  @apply bg-black text-white;
+}
+
+/* Opcional: Para que el scrollbar también sea oscuro */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-black;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-dark-gray rounded-full border-2 border-black;
+}
