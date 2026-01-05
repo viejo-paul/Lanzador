@@ -31,8 +31,7 @@ function analyzeResult(dice, rollType) {
     }
   } 
   
-  // --- MODO EXPLORACIÓN (Antes Caza) ---
-  // CAMBIO: Renombrado a Exploración y Token -> Contador
+  // --- MODO EXPLORACIÓN ---
   else if (rollType === 'hunt') {
     const tokens = dice.filter(d => d.value === 6).length;
     if (tokens > 0) {
@@ -64,29 +63,31 @@ function analyzeResult(dice, rollType) {
     }
   }
 
+  // --- NUEVO: MODO AYUDAR ---
+  else if (rollType === 'help') {
+      const val = dice[0].value;
+      resultText = `DADO DE AYUDA: ${val}`;
+      if (val === 6) {
+          resultColor = 'text-[#d4af37] font-bold';
+          icon = '🤝';
+      } else if (val >= 4) {
+          resultColor = 'text-[#f9e29c]';
+          icon = '✋';
+      } else {
+          resultColor = 'text-gray-500';
+          icon = '🥀';
+      }
+  }
+
   return { label: resultText, color: resultColor, isDarkHighest, icon, rollType };
 }
 
-// --- COMPONENTE FICHA (Ampliada) ---
+// --- COMPONENTE FICHA (Sin cambios en estructura) ---
 const CharacterSheet = ({ roomName, playerName }) => {
-  // CAMBIO: Estado ampliado con todos los nuevos campos
   const [stats, setStats] = useState({ 
-    ruin: 1, 
-    ruinInitial: 1, // NUEVO
-    gold: 0, 
-    debt: 0,        // NUEVO
-    tokens: 0,      // NUEVO
-    occupation: '', // NUEVO
-    background: '', // NUEVO
-    drive: '',      // NUEVO
-    skills: '',     // NUEVO
-    rituals: '',    // NUEVO
-    backpack: '',   // Antes inventory (renombrado visualmente)
-    armor: '',      // NUEVO
-    weapons: '',    // NUEVO
-    foundGear: '',  // NUEVO
-    conditions: '', 
-    imageUrl: '' 
+    ruin: 1, ruinInitial: 1, gold: 0, debt: 0, tokens: 0, 
+    occupation: '', background: '', drive: '', skills: '', rituals: '', 
+    backpack: '', armor: '', weapons: '', foundGear: '', conditions: '', imageUrl: '' 
   });
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -113,14 +114,10 @@ const CharacterSheet = ({ roomName, playerName }) => {
       
       {isExpanded && (
         <div className="p-4 animate-in slide-in-from-top-2">
-          {/* AVATAR */}
           <div className="flex justify-center mb-6">
              <div className="w-24 h-24 rounded-full border-2 border-[#d4af37] bg-black overflow-hidden">{stats.imageUrl ? <img src={stats.imageUrl} className="w-full h-full object-cover" alt="Avatar"/> : <div className="w-full h-full flex items-center justify-center text-[#d4af37] opacity-20 text-4xl">?</div>}</div>
           </div>
-
-          {/* NUEVO: BARRA DE ESTADÍSTICAS (4 Columnas) */}
           <div className="grid grid-cols-4 gap-2 mb-4">
-            {/* RUINA (Doble) */}
             <div className="col-span-2 border border-gray-700 p-1 bg-black">
                 <label className="text-[9px] text-gray-500 uppercase block text-center mb-1">Ruina (Inicial / Actual)</label>
                 <div className="flex items-center gap-1">
@@ -129,34 +126,26 @@ const CharacterSheet = ({ roomName, playerName }) => {
                     <input type="number" min="1" max="6" value={stats.ruin} onChange={e=>handleChange('ruin',+e.target.value)} className={`w-full bg-[#111] text-center font-bold outline-none ${stats.ruin>=5 ? 'text-red-500 animate-pulse' : 'text-white'}`}/>
                 </div>
             </div>
-            {/* ORO */}
             <div className="border border-gray-700 p-1 bg-black">
                 <label className="text-[9px] text-[#f9e29c] uppercase block text-center mb-1">Oro</label>
                 <input type="number" value={stats.gold} onChange={e=>handleChange('gold',+e.target.value)} className="w-full bg-transparent text-[#d4af37] text-center font-bold outline-none"/>
             </div>
-             {/* DEUDA */}
              <div className="border border-gray-700 p-1 bg-black">
                 <label className="text-[9px] text-red-400 uppercase block text-center mb-1">Deuda</label>
                 <input type="number" value={stats.debt || 0} onChange={e=>handleChange('debt',+e.target.value)} className="w-full bg-transparent text-red-400 text-center font-bold outline-none"/>
             </div>
           </div>
-
-          {/* NUEVO: CONTADORES EXPLORACIÓN */}
           <div className="mb-4 border border-[#d4af37]/50 p-2 bg-[#d4af37]/5">
              <div className="flex justify-between items-center">
                  <label className="text-xs text-[#d4af37] uppercase font-bold">Contadores Exploración</label>
                  <input type="number" value={stats.tokens || 0} onChange={e=>handleChange('tokens',+e.target.value)} className="w-16 bg-black border border-[#d4af37] text-[#d4af37] font-bold text-center p-1"/>
              </div>
           </div>
-
-          {/* NUEVO: DATOS PERSONALES */}
           <div className="space-y-2 mb-4">
               <input type="text" value={stats.occupation} onChange={e=>handleChange('occupation',e.target.value)} placeholder="Ocupación" className="w-full bg-black text-white text-sm border border-gray-800 p-2 placeholder-gray-600"/>
               <input type="text" value={stats.background} onChange={e=>handleChange('background',e.target.value)} placeholder="Trasfondo" className="w-full bg-black text-white text-sm border border-gray-800 p-2 placeholder-gray-600"/>
               <input type="text" value={stats.drive} onChange={e=>handleChange('drive',e.target.value)} placeholder="Motivación" className="w-full bg-black text-white text-sm border border-gray-800 p-2 placeholder-gray-600"/>
           </div>
-
-          {/* NUEVO: HABILIDADES Y RITUALES */}
           <div className="grid grid-cols-2 gap-2 mb-4">
               <div>
                   <label className="text-[10px] text-gray-500 uppercase block mb-1">Habilidades (4)</label>
@@ -167,16 +156,11 @@ const CharacterSheet = ({ roomName, playerName }) => {
                   <textarea rows="4" value={stats.rituals} onChange={e=>handleChange('rituals',e.target.value)} className="w-full bg-black text-gray-300 text-xs border border-gray-700 p-1 resize-none leading-5" placeholder={"1.\n2.\n3."}/>
               </div>
           </div>
-
-          {/* EQUIPO Y CONDICIONES */}
           <div className="space-y-3">
-             {/* CAMBIO: Inventario ahora es Equipo Mochila (6 huecos) */}
              <div>
                  <label className="text-[10px] text-gray-500 uppercase block mb-1">Equipo en la Mochila (6)</label>
                  <textarea rows="6" value={stats.backpack} onChange={e=>handleChange('backpack',e.target.value)} placeholder={"1.\n2.\n..."} className="w-full bg-black text-gray-300 text-xs border border-gray-700 p-2 resize-none"/>
              </div>
-
-             {/* NUEVO: Equipo de Combate */}
              <div className="grid grid-cols-2 gap-2">
                 <div>
                     <label className="text-[10px] text-gray-500 uppercase block mb-1">Armas (5)</label>
@@ -187,18 +171,14 @@ const CharacterSheet = ({ roomName, playerName }) => {
                     <textarea rows="5" value={stats.armor} onChange={e=>handleChange('armor',e.target.value)} className="w-full bg-black text-gray-300 text-xs border border-gray-700 p-1 resize-none"/>
                 </div>
              </div>
-
-             {/* NUEVO: Equipo Encontrado */}
              <div>
                  <label className="text-[10px] text-[#d4af37] uppercase block mb-1">Equipo Encontrado</label>
                  <textarea rows="3" value={stats.foundGear} onChange={e=>handleChange('foundGear',e.target.value)} className="w-full bg-black text-[#f9e29c] text-xs border border-[#d4af37] p-2 resize-none"/>
              </div>
-
              <div>
                  <label className="text-[10px] text-red-500 uppercase block mb-1">Condiciones (Heridas)</label>
                  <textarea value={stats.conditions} onChange={e=>handleChange('conditions',e.target.value)} placeholder="Sin traumas..." className="w-full bg-black text-gray-300 text-xs border border-gray-700 p-2 h-16"/>
              </div>
-             
              <input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} placeholder="URL Imagen (Retrato)" className="w-full bg-black text-gray-600 text-xs border border-gray-800 p-2"/>
           </div>
         </div>
@@ -207,7 +187,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
   );
 };
 
-// --- COMPONENTE VISTA GRUPO (Resumen + Desplegable Completo) ---
+// --- COMPONENTE VISTA GRUPO ---
 const PartyView = ({ roomName, currentPlayerName }) => {
   const [party, setParty] = useState({});
   const [expandedCards, setExpandedCards] = useState({});
@@ -227,13 +207,11 @@ const PartyView = ({ roomName, currentPlayerName }) => {
       <div className="space-y-3">
         {players.map(([n, s]) => (
           <div key={n} className="border border-gray-800 bg-[#0a0a0a]">
-             {/* CABECERA RESUMEN */}
              <div onClick={()=>toggle(n)} className="flex justify-between p-3 cursor-pointer hover:bg-[#1a1a1a]">
                 <div className="flex items-center gap-3">
                    <div className="w-8 h-8 rounded-full bg-black border border-gray-700 overflow-hidden">{s.imageUrl ? <img src={s.imageUrl} className="w-full h-full object-cover" alt={n}/> : null}</div>
                    <div>
                        <span className="text-[#d4af37] font-bold text-sm uppercase block">{n}</span>
-                       {/* CAMBIO: Resumen de stats principales */}
                        <div className="flex gap-2 text-[9px] uppercase text-gray-500">
                            <span className={s.ruin>=5?'text-red-500 font-bold':''}>R: {s.ruin}/{s.ruinInitial||1}</span>
                            <span className="text-[#f9e29c]">O: {s.gold}</span>
@@ -244,15 +222,12 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                 </div>
                 <span className="text-gray-600">{expandedCards[n] ? '▲' : '▼'}</span>
              </div>
-
-             {/* CAMBIO: FICHA COMPLETA AL DESPLEGAR (Solo lectura) */}
              {expandedCards[n] && (
                <div className="p-3 bg-black border-t border-gray-900 text-xs">
                   <div className="grid grid-cols-2 gap-4 mb-2">
                       <div><span className="text-gray-600 block text-[9px]">Ocupación</span><p className="text-gray-300">{s.occupation || '-'}</p></div>
                       <div><span className="text-gray-600 block text-[9px]">Motivación</span><p className="text-gray-300">{s.drive || '-'}</p></div>
                   </div>
-                  
                   <div className="grid grid-cols-2 gap-2 mb-2">
                      <div className="border border-gray-800 p-2">
                          <span className="text-gray-600 block text-[9px] uppercase mb-1">Habilidades</span>
@@ -263,12 +238,10 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                          <pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.rituals}</pre>
                      </div>
                   </div>
-
                   <div className="mb-2 border border-gray-800 p-2">
                       <span className="text-gray-600 block text-[9px] uppercase mb-1">Mochila</span>
                       <pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.backpack}</pre>
                   </div>
-
                   <div className="grid grid-cols-2 gap-2 mb-2">
                       <div className="border border-gray-800 p-2">
                           <span className="text-gray-600 block text-[9px] uppercase mb-1">Armas</span>
@@ -279,14 +252,12 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                           <pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.armor}</pre>
                       </div>
                   </div>
-
                   {s.foundGear && (
                     <div className="mb-2 border border-[#d4af37]/30 p-2">
                         <span className="text-[#d4af37] block text-[9px] uppercase mb-1">Equipo Encontrado</span>
                         <pre className="text-[#f9e29c] font-serif whitespace-pre-wrap">{s.foundGear}</pre>
                     </div>
                   )}
-
                   <div className="border border-red-900/30 p-2">
                       <span className="text-red-500 block text-[9px] uppercase mb-1">Condiciones</span>
                       <p className={s.conditions?'text-red-400':'text-green-500'}>{s.conditions||'Sano'}</p>
@@ -323,7 +294,6 @@ const RulesModal = ({ isOpen, onClose }) => {
             <div className="mt-3 bg-red-900/20 border border-red-900/50 p-2 text-xs"><strong className="text-red-500">RUINA:</strong> Si tu dado más alto es Oscuro, sube tu Ruina en 1.</div>
           </section>
           <section>
-            {/* CAMBIO: Caza -> Exploración */}
             <h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">Tirada de Exploración</h3>
             <ul className="space-y-2">
               <li className="flex gap-2"><span className="text-[#d4af37] font-bold">Cada 6:</span> <span>1 Contador.</span></li>
@@ -337,6 +307,10 @@ const RulesModal = ({ isOpen, onClose }) => {
                 <div className="border border-gray-700 p-2"><div className="text-[#d4af37] font-bold text-lg">&ge; 10</div><div className="text-[10px] uppercase">Golpe Brutal</div></div>
                 <div className="border border-gray-700 p-2"><div className="text-[#f9e29c] font-bold text-lg">7-9</div><div className="text-[10px] uppercase">Exitoso</div></div>
             </div>
+          </section>
+          <section>
+             <h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">Ayudar</h3>
+             <p className="italic text-xs">Lanza un único dado claro para asistir a un compañero.</p>
           </section>
         </div>
         <div className="p-4 border-t border-gray-800 bg-black text-center">
@@ -360,7 +334,6 @@ function App() {
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
-    // CAMBIO: Detecta parametro 'partida' o 'sala' para compatibilidad
     if (p.get('sala')) setRoomName(p.get('sala'));
     if (p.get('partida')) setRoomName(p.get('partida'));
   }, []);
@@ -391,8 +364,26 @@ function App() {
 
   const handleRoll = () => {
     const newDice = [];
-    for (let i=0; i<lightCount; i++) newDice.push({ type: 'light', value: Math.ceil(Math.random()*6), id: Math.random() });
-    for (let i=0; i<darkCount; i++) newDice.push({ type: 'dark', value: Math.ceil(Math.random()*6), id: Math.random() });
+    
+    // LÓGICA ESPECIAL SEGÚN TIPO DE TIRADA
+    if (rollType === 'help') {
+        // Ayudar: Siempre 1 dado claro
+        newDice.push({ type: 'light', value: Math.ceil(Math.random()*6), id: Math.random() });
+    } else {
+        // Otros modos: Usan los contadores (filtrando si es Hunt o Combat)
+        // En Hunt, ignoramos DarkCount visualmente, así que aquí tampoco los generamos si quieres ser estricto,
+        // pero dado que el input se oculta, darkCount no debería cambiar. 
+        // Aun así, filtramos por seguridad:
+        
+        if (rollType !== 'combat') { // Si NO es combate, añadimos claros
+            for (let i=0; i<lightCount; i++) newDice.push({ type: 'light', value: Math.ceil(Math.random()*6), id: Math.random() });
+        }
+        
+        if (rollType !== 'hunt') { // Si NO es exploración, añadimos oscuros
+             for (let i=0; i<darkCount; i++) newDice.push({ type: 'dark', value: Math.ceil(Math.random()*6), id: Math.random() });
+        }
+    }
+
     if (newDice.length === 0) return;
 
     const analysis = analyzeResult(newDice, rollType);
@@ -417,12 +408,9 @@ function App() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4 font-serif text-white">
         <div className="bg-[#1a1a1a] p-8 max-w-sm w-full text-center border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
-          {/* CAMBIO: Título nuevo */}
           <h1 className="text-3xl font-bold text-[#d4af37] uppercase tracking-[0.2em]">Trophy (g)Old</h1>
           <p className="text-[10px] text-gray-600 mb-6 italic tracking-widest">(by Viejo)</p>
-          
           <div className="space-y-4">
-            {/* CAMBIO: Placeholder Partida */}
             <input type="text" placeholder="NOMBRE DE PARTIDA" value={roomName} onChange={e=>setRoomName(e.target.value)} className="w-full bg-black text-white p-3 text-center border border-gray-800 focus:border-[#d4af37] outline-none"/>
             <input type="text" placeholder="TU NOMBRE" value={playerName} onChange={e=>setPlayerName(e.target.value)} className="w-full bg-black text-[#f9e29c] p-3 text-center border border-gray-800 focus:border-[#d4af37] outline-none font-bold"/>
           </div>
@@ -437,7 +425,6 @@ function App() {
       {/* HEADER */}
       <div className="w-full max-w-md flex justify-between items-end mb-6 border-b border-[#1a1a1a] pb-2">
         <div onClick={()=>{navigator.clipboard.writeText(window.location.href);alert('Link Copiado')}} className="cursor-pointer group">
-          {/* CAMBIO: Sala -> Partida */}
           <p className="text-[10px] text-gray-500 uppercase tracking-widest">Partida</p>
           <h1 className="text-xl font-bold text-[#d4af37] truncate max-w-[200px]">{roomName}</h1>
         </div>
@@ -451,37 +438,59 @@ function App() {
 
       <CharacterSheet roomName={roomName} playerName={playerName} />
 
-      {/* PANEL DE DADOS */}
+      {/* PANEL DE DADOS COMPACTO Y CONTEXTUAL */}
       <div className="bg-[#1a1a1a] p-1 w-full max-w-md border border-gray-800 mb-8 shadow-lg relative">
-        <div className="grid grid-cols-3 gap-1 bg-black p-1 mb-4">
-            <button onClick={() => setRollType('risk')} className={`py-2 text-[10px] uppercase tracking-widest font-bold transition-all ${rollType === 'risk' ? 'bg-[#d4af37] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Riesgo</button>
-            {/* CAMBIO: Caza -> Exploración */}
-            <button onClick={() => setRollType('hunt')} className={`py-2 text-[10px] uppercase tracking-widest font-bold transition-all ${rollType === 'hunt' ? 'bg-[#d4af37] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Exploración</button>
-            <button onClick={() => setRollType('combat')} className={`py-2 text-[10px] uppercase tracking-widest font-bold transition-all ${rollType === 'combat' ? 'bg-red-900 text-white' : 'text-gray-500 hover:text-gray-300'}`}>Combate</button>
+        {/* Pestañas de Navegación (4 Columnas) */}
+        <div className="grid grid-cols-4 gap-1 bg-black p-1 mb-4">
+            <button onClick={() => setRollType('risk')} className={`py-2 text-[9px] uppercase tracking-widest font-bold transition-all ${rollType === 'risk' ? 'bg-[#d4af37] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Riesgo</button>
+            <button onClick={() => setRollType('hunt')} className={`py-2 text-[9px] uppercase tracking-widest font-bold transition-all ${rollType === 'hunt' ? 'bg-[#d4af37] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Explor.</button>
+            <button onClick={() => setRollType('combat')} className={`py-2 text-[9px] uppercase tracking-widest font-bold transition-all ${rollType === 'combat' ? 'bg-red-900 text-white' : 'text-gray-500 hover:text-gray-300'}`}>Combate</button>
+            <button onClick={() => setRollType('help')} className={`py-2 text-[9px] uppercase tracking-widest font-bold transition-all ${rollType === 'help' ? 'bg-[#f9e29c] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Ayudar</button>
         </div>
 
-        <div className="px-5 pb-5">
-            <div className="flex flex-col gap-5">
-            <div>
-                <label className="block text-xs text-[#d4af37] mb-1 uppercase tracking-widest text-center">Dados Claros</label>
-                <div className="flex items-center justify-between border border-[#d4af37] bg-black h-14">
-                <button onClick={() => updateDiceCount(setLightCount, lightCount, -1)} className="w-16 h-full text-[#d4af37] text-3xl font-bold hover:bg-[#d4af37] hover:text-black transition-all">-</button>
-                <span className="text-[#d4af37] text-3xl font-bold">{lightCount}</span>
-                <button onClick={() => updateDiceCount(setLightCount, lightCount, 1)} className="w-16 h-full text-[#d4af37] text-3xl font-bold hover:bg-[#d4af37] hover:text-black transition-all">+</button>
-                </div>
-            </div>
-            <div>
-                <label className="block text-xs text-gray-500 mb-1 uppercase tracking-widest text-center">Dados Oscuros</label>
-                <div className="flex items-center justify-between border border-gray-600 bg-black h-14">
-                <button onClick={() => updateDiceCount(setDarkCount, darkCount, -1)} className="w-16 h-full text-gray-500 text-3xl font-bold hover:bg-gray-700 hover:text-white transition-all">-</button>
-                <span className="text-gray-400 text-3xl font-bold">{darkCount}</span>
-                <button onClick={() => updateDiceCount(setDarkCount, darkCount, 1)} className="w-16 h-full text-gray-500 text-3xl font-bold hover:bg-gray-700 hover:text-white transition-all">+</button>
-                </div>
-            </div>
-            </div>
+        <div className="px-5 pb-3">
+            {/* Controles de Dados (Ocultos en modo Ayuda) */}
+            {rollType !== 'help' && (
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                    {/* Dados Claros (Visible en Riesgo y Exploración) */}
+                    {(rollType === 'risk' || rollType === 'hunt') && (
+                        <div>
+                            <label className="block text-[10px] text-[#d4af37] mb-1 uppercase tracking-widest text-center">Claros</label>
+                            <div className="flex items-center justify-between border border-[#d4af37] bg-black h-10">
+                                <button onClick={() => updateDiceCount(setLightCount, lightCount, -1)} className="w-8 h-full text-[#d4af37] text-xl font-bold hover:bg-[#d4af37] hover:text-black">-</button>
+                                <span className="text-[#d4af37] text-xl font-bold">{lightCount}</span>
+                                <button onClick={() => updateDiceCount(setLightCount, lightCount, 1)} className="w-8 h-full text-[#d4af37] text-xl font-bold hover:bg-[#d4af37] hover:text-black">+</button>
+                            </div>
+                        </div>
+                    )}
 
-            <button onClick={handleRoll} className={`w-full mt-8 font-bold py-4 text-xl uppercase tracking-[0.3em] shadow-lg transition-all ${rollType === 'combat' ? 'bg-red-900 hover:bg-red-700 text-white' : 'bg-[#d4af37] hover:bg-[#f9e29c] text-black active:translate-y-1'}`}>
-            {rollType === 'combat' ? '¡ATACAR!' : rollType === 'hunt' ? 'BUSCAR' : 'TIRAR'}
+                    {/* Dados Oscuros (Visible en Riesgo y Combate) */}
+                    {(rollType === 'risk' || rollType === 'combat') && (
+                        <div className={rollType === 'combat' ? 'col-span-2' : ''}> 
+                        {/* Si es combate ocupa todo el ancho, si es riesgo comparte */}
+                            <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-widest text-center">Oscuros</label>
+                            <div className="flex items-center justify-between border border-gray-600 bg-black h-10">
+                                <button onClick={() => updateDiceCount(setDarkCount, darkCount, -1)} className="w-8 h-full text-gray-500 text-xl font-bold hover:bg-gray-700 hover:text-white">-</button>
+                                <span className="text-gray-400 text-xl font-bold">{darkCount}</span>
+                                <button onClick={() => updateDiceCount(setDarkCount, darkCount, 1)} className="w-8 h-full text-gray-500 text-xl font-bold hover:bg-gray-700 hover:text-white">+</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+            
+            {/* Mensaje especial para modo Ayuda */}
+            {rollType === 'help' && (
+                <div className="text-center text-gray-500 text-xs italic mb-4">
+                    Lanzarás 1 dado claro para ayudar.
+                </div>
+            )}
+
+            <button onClick={handleRoll} className={`w-full font-bold py-3 text-lg uppercase tracking-[0.2em] shadow-lg transition-all 
+                ${rollType === 'combat' ? 'bg-red-900 hover:bg-red-700 text-white' : 
+                  rollType === 'help' ? 'bg-[#f9e29c] hover:bg-white text-black' :
+                  'bg-[#d4af37] hover:bg-[#f9e29c] text-black active:translate-y-1'}`}>
+            {rollType === 'combat' ? '¡ATACAR!' : rollType === 'hunt' ? 'EXPLORAR' : rollType === 'help' ? 'PRESTAR AYUDA' : 'TIRAR'}
             </button>
         </div>
       </div>
@@ -494,8 +503,7 @@ function App() {
               <span className="text-[#f9e29c] font-bold text-sm uppercase tracking-wider">
                 {roll.player} 
                 <span className="text-[9px] text-gray-500 ml-2 border border-gray-800 px-1 rounded">
-                    {/* CAMBIO: Caza -> Exploración en etiqueta */}
-                    {roll.rollType === 'combat' ? 'COMBATE' : roll.rollType === 'hunt' ? 'EXPLORACIÓN' : 'RIESGO'}
+                    {roll.rollType === 'combat' ? 'COMBATE' : roll.rollType === 'hunt' ? 'EXPLORACIÓN' : roll.rollType === 'help' ? 'AYUDA' : 'RIESGO'}
                 </span>
                 {roll.isPush && <span className="text-[9px] text-red-500 ml-2 animate-pulse">(PUSH)</span>}
               </span>
@@ -510,7 +518,7 @@ function App() {
                 <div key={d.id} className={`w-11 h-11 flex items-center justify-center text-xl font-bold shadow-sm ${d.type === 'light' ? 'bg-[#d4af37] text-black border-t-2 border-[#f9e29c]' : 'bg-black text-white border border-gray-700'}`}>{d.value}</div>
               ))}
             </div>
-            {index === 0 && roll.player === playerName && (
+            {index === 0 && roll.player === playerName && roll.rollType !== 'help' && (
                 <button onClick={() => handlePush(roll)} className="mt-4 w-full border border-gray-700 text-gray-400 hover:border-[#d4af37] hover:text-[#d4af37] text-[10px] uppercase transition-all py-2 tracking-widest">¿Tentar al destino? (+1 Dado Oscuro)</button>
             )}
           </div>
