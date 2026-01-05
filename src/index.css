@@ -7,7 +7,10 @@
 }
 
 body {
-  @apply bg-black text-white;
+  background-color: black;
+  color: white; /* Esto asegura que el texto general sea blanco */
+  margin: 0;
+  font-family: serif;
 }
 
 /* Opcional: Para que el scrollbar también sea oscuro */

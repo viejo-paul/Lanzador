@@ -167,21 +167,22 @@ function App() {
               </span>
               <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
             </div>
-            <div className="flex flex-wrap gap-3">
-              {roll.dice.map((d) => (
-                <div 
-                  key={d.id}
-                  className={`
-                    w-11 h-11 flex items-center justify-center text-xl font-bold rounded-none
-                    ${d.type === 'light' 
-                      ? 'bg-[calc(var(--color-gold))] text-black shadow-[0_0_10px_rgba(212,175,55,0.2)]' 
-                      : 'bg-black text-white border border-gray-800'
-                    }
-                  `}
-                >
-                  {d.value}
-                </div>
-              ))}
+          <div className="flex flex-wrap gap-3">
+            {roll.dice.map((d) => (
+              <div 
+                key={d.id}
+                className={`
+                  w-12 h-12 flex items-center justify-center text-2xl font-bold rounded-none
+                  ${d.type === 'light' 
+                    ? 'bg-[calc(var(--color-gold))] text-black border-t-2 border-[calc(var(--color-gold-light))]' 
+                    : 'bg-black text-white border border-gray-700 shadow-[inset_0_0_5px_rgba(255,255,255,0.1)]'
+                  }
+                `}
+              >
+                {d.value}
+              </div>
+            ))}
+          </div>
             </div>
           </div>
         ))}
