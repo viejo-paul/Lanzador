@@ -63,7 +63,7 @@ function analyzeResult(dice, rollType) {
     }
   }
 
-  // --- NUEVO: MODO AYUDAR ---
+  // --- MODO AYUDAR ---
   else if (rollType === 'help') {
       const val = dice[0].value;
       resultText = `DADO DE AYUDA: ${val}`;
@@ -82,7 +82,7 @@ function analyzeResult(dice, rollType) {
   return { label: resultText, color: resultColor, isDarkHighest, icon, rollType };
 }
 
-// --- COMPONENTE FICHA (Sin cambios en estructura) ---
+// --- COMPONENTE FICHA ---
 const CharacterSheet = ({ roomName, playerName }) => {
   const [stats, setStats] = useState({ 
     ruin: 1, ruinInitial: 1, gold: 0, debt: 0, tokens: 0, 
@@ -103,7 +103,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
   };
 
   return (
-    <div className="w-full max-w-md bg-[#1a1a1a] border border-[#d4af37] mb-6 shadow-lg transition-all">
+    <div className="w-full border border-[#d4af37] mb-6 shadow-lg transition-all bg-[#1a1a1a]">
       <div onClick={() => setIsExpanded(!isExpanded)} className="p-3 bg-black flex items-center justify-between cursor-pointer border-b border-gray-800">
         <div className="flex items-center gap-3">
           {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
@@ -202,7 +202,7 @@ const PartyView = ({ roomName, currentPlayerName }) => {
   if(players.length===0) return null;
 
   return (
-    <div className="w-full max-w-md mt-8 border-t border-gray-900 pt-8">
+    <div className="w-full mt-8 border-t border-gray-900 pt-8">
       <h3 className="text-gray-500 text-xs uppercase tracking-[0.3em] text-center mb-6">El Resto del Grupo</h3>
       <div className="space-y-3">
         {players.map(([n, s]) => (
@@ -332,7 +332,9 @@ function App() {
   const [rollType, setRollType] = useState('risk');
   const [showRules, setShowRules] = useState(false);
 
+  // CAMBIO: Título de página
   useEffect(() => {
+    document.title = "Trophy (g)Old";
     const p = new URLSearchParams(window.location.search);
     if (p.get('sala')) setRoomName(p.get('sala'));
     if (p.get('partida')) setRoomName(p.get('partida'));
@@ -364,22 +366,13 @@ function App() {
 
   const handleRoll = () => {
     const newDice = [];
-    
-    // LÓGICA ESPECIAL SEGÚN TIPO DE TIRADA
     if (rollType === 'help') {
-        // Ayudar: Siempre 1 dado claro
         newDice.push({ type: 'light', value: Math.ceil(Math.random()*6), id: Math.random() });
     } else {
-        // Otros modos: Usan los contadores (filtrando si es Hunt o Combat)
-        // En Hunt, ignoramos DarkCount visualmente, así que aquí tampoco los generamos si quieres ser estricto,
-        // pero dado que el input se oculta, darkCount no debería cambiar. 
-        // Aun así, filtramos por seguridad:
-        
-        if (rollType !== 'combat') { // Si NO es combate, añadimos claros
+        if (rollType !== 'combat') { 
             for (let i=0; i<lightCount; i++) newDice.push({ type: 'light', value: Math.ceil(Math.random()*6), id: Math.random() });
         }
-        
-        if (rollType !== 'hunt') { // Si NO es exploración, añadimos oscuros
+        if (rollType !== 'hunt') { 
              for (let i=0; i<darkCount; i++) newDice.push({ type: 'dark', value: Math.ceil(Math.random()*6), id: Math.random() });
         }
     }
@@ -404,128 +397,149 @@ function App() {
     });
   };
 
-  if (!isJoined) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4 font-serif text-white">
-        <div className="bg-[#1a1a1a] p-8 max-w-sm w-full text-center border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
-          <h1 className="text-3xl font-bold text-[#d4af37] uppercase tracking-[0.2em]">Trophy (g)Old</h1>
-          <p className="text-[10px] text-gray-600 mb-6 italic tracking-widest">(by Viejo)</p>
-          <div className="space-y-4">
-            <input type="text" placeholder="NOMBRE DE PARTIDA" value={roomName} onChange={e=>setRoomName(e.target.value)} className="w-full bg-black text-white p-3 text-center border border-gray-800 focus:border-[#d4af37] outline-none"/>
-            <input type="text" placeholder="TU NOMBRE" value={playerName} onChange={e=>setPlayerName(e.target.value)} className="w-full bg-black text-[#f9e29c] p-3 text-center border border-gray-800 focus:border-[#d4af37] outline-none font-bold"/>
-          </div>
-          <button onClick={handleJoin} className="w-full mt-8 bg-[#d4af37] hover:bg-[#f9e29c] text-black font-bold py-3 tracking-widest">ENTRAR</button>
-        </div>
-      </div>
-    );
-  }
-
+  // --- ESTRUCTURA GENERAL APP ---
   return (
-    <div className="min-h-screen bg-black text-white p-4 flex flex-col items-center font-serif pb-20">
-      {/* HEADER */}
-      <div className="w-full max-w-md flex justify-between items-end mb-6 border-b border-[#1a1a1a] pb-2">
-        <div onClick={()=>{navigator.clipboard.writeText(window.location.href);alert('Link Copiado')}} className="cursor-pointer group">
-          <p className="text-[10px] text-gray-500 uppercase tracking-widest">Partida</p>
-          <h1 className="text-xl font-bold text-[#d4af37] truncate max-w-[200px]">{roomName}</h1>
-        </div>
-        <div className="flex gap-4">
-            <button onClick={() => setShowRules(true)} className="text-[10px] text-[#d4af37] hover:text-white uppercase font-bold border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">
-            [ ? Reglas ]</button>
-            <button onClick={handleClear} className="text-[10px] text-gray-500 hover:text-red-500 uppercase cursor-pointer">[ Limpiar ]</button>
-            <button onClick={handleExit} className="text-[10px] text-gray-500 hover:text-white uppercase cursor-pointer">[ Salir ]</button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-black text-white flex flex-col font-serif">
+      
+      {/* CAMBIO: HEADER FIJO SUPERIOR */}
+      <header className="w-full bg-[#1a1a1a] border-b border-[#d4af37] text-center text-[#d4af37] text-xs py-1 font-bold uppercase tracking-[0.2em] select-none">
+          Trophy (g)Old
+      </header>
 
-      <CharacterSheet roomName={roomName} playerName={playerName} />
-
-      {/* PANEL DE DADOS COMPACTO Y CONTEXTUAL */}
-      <div className="bg-[#1a1a1a] p-1 w-full max-w-md border border-gray-800 mb-8 shadow-lg relative">
-        {/* Pestañas de Navegación (4 Columnas) */}
-        <div className="grid grid-cols-4 gap-1 bg-black p-1 mb-4">
-            <button onClick={() => setRollType('risk')} className={`py-2 text-[9px] uppercase tracking-widest font-bold transition-all ${rollType === 'risk' ? 'bg-[#d4af37] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Riesgo</button>
-            <button onClick={() => setRollType('hunt')} className={`py-2 text-[9px] uppercase tracking-widest font-bold transition-all ${rollType === 'hunt' ? 'bg-[#d4af37] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Explor.</button>
-            <button onClick={() => setRollType('combat')} className={`py-2 text-[9px] uppercase tracking-widest font-bold transition-all ${rollType === 'combat' ? 'bg-red-900 text-white' : 'text-gray-500 hover:text-gray-300'}`}>Combate</button>
-            <button onClick={() => setRollType('help')} className={`py-2 text-[9px] uppercase tracking-widest font-bold transition-all ${rollType === 'help' ? 'bg-[#f9e29c] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Ayudar</button>
-        </div>
-
-        <div className="px-5 pb-3">
-            {/* Controles de Dados (Ocultos en modo Ayuda) */}
-            {rollType !== 'help' && (
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                    {/* Dados Claros (Visible en Riesgo y Exploración) */}
-                    {(rollType === 'risk' || rollType === 'hunt') && (
-                        <div>
-                            <label className="block text-[10px] text-[#d4af37] mb-1 uppercase tracking-widest text-center">Claros</label>
-                            <div className="flex items-center justify-between border border-[#d4af37] bg-black h-10">
-                                <button onClick={() => updateDiceCount(setLightCount, lightCount, -1)} className="w-8 h-full text-[#d4af37] text-xl font-bold hover:bg-[#d4af37] hover:text-black">-</button>
-                                <span className="text-[#d4af37] text-xl font-bold">{lightCount}</span>
-                                <button onClick={() => updateDiceCount(setLightCount, lightCount, 1)} className="w-8 h-full text-[#d4af37] text-xl font-bold hover:bg-[#d4af37] hover:text-black">+</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Dados Oscuros (Visible en Riesgo y Combate) */}
-                    {(rollType === 'risk' || rollType === 'combat') && (
-                        <div className={rollType === 'combat' ? 'col-span-2' : ''}> 
-                        {/* Si es combate ocupa todo el ancho, si es riesgo comparte */}
-                            <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-widest text-center">Oscuros</label>
-                            <div className="flex items-center justify-between border border-gray-600 bg-black h-10">
-                                <button onClick={() => updateDiceCount(setDarkCount, darkCount, -1)} className="w-8 h-full text-gray-500 text-xl font-bold hover:bg-gray-700 hover:text-white">-</button>
-                                <span className="text-gray-400 text-xl font-bold">{darkCount}</span>
-                                <button onClick={() => updateDiceCount(setDarkCount, darkCount, 1)} className="w-8 h-full text-gray-500 text-xl font-bold hover:bg-gray-700 hover:text-white">+</button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
-            
-            {/* Mensaje especial para modo Ayuda */}
-            {rollType === 'help' && (
-                <div className="text-center text-gray-500 text-xs italic mb-4">
-                    Lanzarás 1 dado claro para ayudar.
-                </div>
-            )}
-
-            <button onClick={handleRoll} className={`w-full font-bold py-3 text-lg uppercase tracking-[0.2em] shadow-lg transition-all 
-                ${rollType === 'combat' ? 'bg-red-900 hover:bg-red-700 text-white' : 
-                  rollType === 'help' ? 'bg-[#f9e29c] hover:bg-white text-black' :
-                  'bg-[#d4af37] hover:bg-[#f9e29c] text-black active:translate-y-1'}`}>
-            {rollType === 'combat' ? '¡ATACAR!' : rollType === 'hunt' ? 'EXPLORAR' : rollType === 'help' ? 'PRESTAR AYUDA' : 'TIRAR'}
-            </button>
-        </div>
-      </div>
-
-      {/* HISTORIAL */}
-      <div className="w-full max-w-md space-y-4">
-        {history.map((roll, index) => (
-          <div key={roll.id} className={`bg-[#1a1a1a] p-4 border-l-4 shadow-md animate-in fade-in slide-in-from-top-2 ${roll.rollType === 'combat' ? 'border-red-900' : 'border-[#d4af37]'}`}>
-            <div className="flex justify-between items-baseline mb-2 pb-2 border-b border-black">
-              <span className="text-[#f9e29c] font-bold text-sm uppercase tracking-wider">
-                {roll.player} 
-                <span className="text-[9px] text-gray-500 ml-2 border border-gray-800 px-1 rounded">
-                    {roll.rollType === 'combat' ? 'COMBATE' : roll.rollType === 'hunt' ? 'EXPLORACIÓN' : roll.rollType === 'help' ? 'AYUDA' : 'RIESGO'}
-                </span>
-                {roll.isPush && <span className="text-[9px] text-red-500 ml-2 animate-pulse">(PUSH)</span>}
-              </span>
-              <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
+      {/* VISTA LOGIN */}
+      {!isJoined ? (
+        <div className="flex-grow flex items-center justify-center p-4">
+          <div className="bg-[#1a1a1a] p-8 max-w-sm w-full text-center border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
+            <h1 className="text-3xl font-bold text-[#d4af37] uppercase tracking-[0.2em]">Trophy (g)Old</h1>
+            <p className="text-[10px] text-gray-600 mb-6 italic tracking-widest">(by Viejo)</p>
+            <div className="space-y-4">
+              <input type="text" placeholder="NOMBRE DE PARTIDA" value={roomName} onChange={e=>setRoomName(e.target.value)} className="w-full bg-black text-white p-3 text-center border border-gray-800 focus:border-[#d4af37] outline-none"/>
+              <input type="text" placeholder="TU NOMBRE" value={playerName} onChange={e=>setPlayerName(e.target.value)} className="w-full bg-black text-[#f9e29c] p-3 text-center border border-gray-800 focus:border-[#d4af37] outline-none font-bold"/>
             </div>
-            <div className="mb-3 flex flex-col">
-               <span className={`font-bold uppercase text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
-               {roll.analysis.isDarkHighest && (<span className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/20 p-1 text-center border border-red-900/50">⚠️ ¡EL DADO OSCURO ES EL MÁS ALTO!</span>)}
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {roll.dice.map((d) => (
-                <div key={d.id} className={`w-11 h-11 flex items-center justify-center text-xl font-bold shadow-sm ${d.type === 'light' ? 'bg-[#d4af37] text-black border-t-2 border-[#f9e29c]' : 'bg-black text-white border border-gray-700'}`}>{d.value}</div>
-              ))}
-            </div>
-            {index === 0 && roll.player === playerName && roll.rollType !== 'help' && (
-                <button onClick={() => handlePush(roll)} className="mt-4 w-full border border-gray-700 text-gray-400 hover:border-[#d4af37] hover:text-[#d4af37] text-[10px] uppercase transition-all py-2 tracking-widest">¿Tentar al destino? (+1 Dado Oscuro)</button>
-            )}
+            <button onClick={handleJoin} className="w-full mt-8 bg-[#d4af37] hover:bg-[#f9e29c] text-black font-bold py-3 tracking-widest">ENTRAR</button>
           </div>
-        ))}
-      </div>
+        </div>
+      ) : (
+        /* VISTA PRINCIPAL (GRID) */
+        <main className="flex-grow flex flex-col items-center p-4">
+            {/* SUB-HEADER (Sala, Reglas, Salir) - ANCHO COMPLETO MESA */}
+            <div className="w-full max-w-5xl flex justify-between items-end mb-6 border-b border-[#1a1a1a] pb-2">
+                <div onClick={()=>{navigator.clipboard.writeText(window.location.href);alert('Link Copiado')}} className="cursor-pointer group">
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest">Partida</p>
+                <h1 className="text-xl font-bold text-[#d4af37] truncate max-w-[200px]">{roomName}</h1>
+                </div>
+                <div className="flex gap-4">
+                    <button onClick={() => setShowRules(true)} className="text-[10px] text-[#d4af37] hover:text-white uppercase font-bold border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">
+                    [ ? Reglas ]</button>
+                    <button onClick={handleClear} className="text-[10px] text-gray-500 hover:text-red-500 uppercase cursor-pointer">[ Limpiar ]</button>
+                    <button onClick={handleExit} className="text-[10px] text-gray-500 hover:text-white uppercase cursor-pointer">[ Salir ]</button>
+                </div>
+            </div>
 
-      <PartyView roomName={roomName} currentPlayerName={playerName} />
+            {/* CAMBIO: GRID DESKTOP (2 Cols) / MOBILE (1 Col) */}
+            <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                
+                {/* COLUMNA 1 DESKTOP (DADOS + HISTORIAL) / 2º y 3º MOBILE */}
+                {/* Usamos lg:col-start-1 lg:row-start-1 para forzarla a la izq arriba en desktop */}
+                {/* En mobile, el orden DOM importa: si ponemos esto segundo en el DOM, saldrá segundo */}
+                {/* Para que salga como quiere el usuario (Ficha, Dados, Historial, Grupo), pondremos este bloque SEGUNDO en el código HTML */}
+                
+                {/* Pero wait! El usuario quiere en Desktop: Izq=Dados/Hist, Der=Fichas. */}
+                {/* En Mobile quiere: Igual que antes (Ficha -> Dados -> Historial -> Grupo). */}
+                {/* Para lograr eso, en el HTML pongo: Ficha, Dados, Historial, Grupo. */}
+                {/* Y en Desktop uso clases grid para mover Ficha a la derecha. */}
+
+                {/* --- 1. FICHA (Mobile: 1º / Desktop: Col 2, Fila 1) --- */}
+                <div className="lg:col-start-2 lg:row-start-1 w-full">
+                    <CharacterSheet roomName={roomName} playerName={playerName} />
+                </div>
+
+                {/* --- 2. DADOS (Mobile: 2º / Desktop: Col 1, Fila 1) --- */}
+                <div className="lg:col-start-1 lg:row-start-1 w-full">
+                    <div className="bg-[#1a1a1a] p-1 border border-gray-800 mb-8 shadow-lg relative">
+                        <div className="grid grid-cols-4 gap-1 bg-black p-1 mb-4">
+                            <button onClick={() => setRollType('risk')} className={`py-2 text-[9px] uppercase tracking-widest font-bold transition-all ${rollType === 'risk' ? 'bg-[#d4af37] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Riesgo</button>
+                            <button onClick={() => setRollType('hunt')} className={`py-2 text-[9px] uppercase tracking-widest font-bold transition-all ${rollType === 'hunt' ? 'bg-[#d4af37] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Explor.</button>
+                            <button onClick={() => setRollType('combat')} className={`py-2 text-[9px] uppercase tracking-widest font-bold transition-all ${rollType === 'combat' ? 'bg-red-900 text-white' : 'text-gray-500 hover:text-gray-300'}`}>Combate</button>
+                            <button onClick={() => setRollType('help')} className={`py-2 text-[9px] uppercase tracking-widest font-bold transition-all ${rollType === 'help' ? 'bg-[#f9e29c] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Ayudar</button>
+                        </div>
+                        <div className="px-5 pb-3">
+                            {rollType !== 'help' && (
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    {(rollType === 'risk' || rollType === 'hunt') && (
+                                        <div>
+                                            <label className="block text-[10px] text-[#d4af37] mb-1 uppercase tracking-widest text-center">Claros</label>
+                                            <div className="flex items-center justify-between border border-[#d4af37] bg-black h-10">
+                                                <button onClick={() => updateDiceCount(setLightCount, lightCount, -1)} className="w-8 h-full text-[#d4af37] text-xl font-bold hover:bg-[#d4af37] hover:text-black">-</button>
+                                                <span className="text-[#d4af37] text-xl font-bold">{lightCount}</span>
+                                                <button onClick={() => updateDiceCount(setLightCount, lightCount, 1)} className="w-8 h-full text-[#d4af37] text-xl font-bold hover:bg-[#d4af37] hover:text-black">+</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {(rollType === 'risk' || rollType === 'combat') && (
+                                        <div className={rollType === 'combat' ? 'col-span-2' : ''}> 
+                                            <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-widest text-center">Oscuros</label>
+                                            <div className="flex items-center justify-between border border-gray-600 bg-black h-10">
+                                                <button onClick={() => updateDiceCount(setDarkCount, darkCount, -1)} className="w-8 h-full text-gray-500 text-xl font-bold hover:bg-gray-700 hover:text-white">-</button>
+                                                <span className="text-gray-400 text-xl font-bold">{darkCount}</span>
+                                                <button onClick={() => updateDiceCount(setDarkCount, darkCount, 1)} className="w-8 h-full text-gray-500 text-xl font-bold hover:bg-gray-700 hover:text-white">+</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {rollType === 'help' && <div className="text-center text-gray-500 text-xs italic mb-4">Lanzarás 1 dado claro para ayudar.</div>}
+                            <button onClick={handleRoll} className={`w-full font-bold py-3 text-lg uppercase tracking-[0.2em] shadow-lg transition-all ${rollType === 'combat' ? 'bg-red-900 hover:bg-red-700 text-white' : rollType === 'help' ? 'bg-[#f9e29c] hover:bg-white text-black' : 'bg-[#d4af37] hover:bg-[#f9e29c] text-black active:translate-y-1'}`}>
+                            {rollType === 'combat' ? '¡ATACAR!' : rollType === 'hunt' ? 'EXPLORAR' : rollType === 'help' ? 'PRESTAR AYUDA' : 'TIRAR'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* --- 3. HISTORIAL (Mobile: 3º / Desktop: Col 1, Fila 2) --- */}
+                <div className="lg:col-start-1 w-full space-y-4">
+                    {history.map((roll, index) => (
+                    <div key={roll.id} className={`bg-[#1a1a1a] p-4 border-l-4 shadow-md animate-in fade-in slide-in-from-top-2 ${roll.rollType === 'combat' ? 'border-red-900' : 'border-[#d4af37]'}`}>
+                        <div className="flex justify-between items-baseline mb-2 pb-2 border-b border-black">
+                        <span className="text-[#f9e29c] font-bold text-sm uppercase tracking-wider">
+                            {roll.player} 
+                            <span className="text-[9px] text-gray-500 ml-2 border border-gray-800 px-1 rounded">
+                                {roll.rollType === 'combat' ? 'COMBATE' : roll.rollType === 'hunt' ? 'EXPLORACIÓN' : roll.rollType === 'help' ? 'AYUDA' : 'RIESGO'}
+                            </span>
+                            {roll.isPush && <span className="text-[9px] text-red-500 ml-2 animate-pulse">(PUSH)</span>}
+                        </span>
+                        <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
+                        </div>
+                        <div className="mb-3 flex flex-col">
+                        <span className={`font-bold uppercase text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
+                        {roll.analysis.isDarkHighest && (<span className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/20 p-1 text-center border border-red-900/50">⚠️ ¡EL DADO OSCURO ES EL MÁS ALTO!</span>)}
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                        {roll.dice.map((d) => (
+                            <div key={d.id} className={`w-11 h-11 flex items-center justify-center text-xl font-bold shadow-sm ${d.type === 'light' ? 'bg-[#d4af37] text-black border-t-2 border-[#f9e29c]' : 'bg-black text-white border border-gray-700'}`}>{d.value}</div>
+                        ))}
+                        </div>
+                        {index === 0 && roll.player === playerName && roll.rollType !== 'help' && (
+                            <button onClick={() => handlePush(roll)} className="mt-4 w-full border border-gray-700 text-gray-400 hover:border-[#d4af37] hover:text-[#d4af37] text-[10px] uppercase transition-all py-2 tracking-widest">¿Tentar al destino? (+1 Dado Oscuro)</button>
+                        )}
+                    </div>
+                    ))}
+                </div>
+
+                {/* --- 4. GRUPO (Mobile: 4º / Desktop: Col 2, Fila 2) --- */}
+                <div className="lg:col-start-2 w-full">
+                    <PartyView roomName={roomName} currentPlayerName={playerName} />
+                </div>
+
+            </div>
+        </main>
+      )}
+
+      {/* CAMBIO: FOOTER FIJO INFERIOR */}
+      <footer className="w-full bg-black border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase select-none">
+          by Viejo · viejorpg@gmail.com · v.1.0
+      </footer>
+
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
