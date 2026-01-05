@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { database } from './firebase';
 import { ref, push, onValue, limitToLast, query, remove, update } from "firebase/database";
 
-// --- LÓGICA DE REGLAS TROPHY GOLD (ACTUALIZADA) ---
+// --- LÓGICA DE REGLAS TROPHY GOLD ---
 function analyzeResult(dice, rollType) {
   if (dice.length === 0) return { label: 'Sin dados', color: 'text-gray-500' };
 
@@ -35,7 +35,7 @@ function analyzeResult(dice, rollType) {
   else if (rollType === 'hunt') {
     const tokens = dice.filter(d => d.value === 6).length;
     if (tokens > 0) {
-      resultText = `${tokens} FICHA${tokens > 1 ? 'S' : ''} DE CAZA OBTENIDA${tokens > 1 ? 'S' : ''}`;
+      resultText = `${tokens} FICHA${tokens > 1 ? 'S' : ''} OBTENIDA${tokens > 1 ? 'S' : ''}`;
       resultColor = 'text-[#d4af37] font-bold border border-[#d4af37] px-2 py-1 bg-[#d4af37]/10';
       icon = '💎';
     } else {
@@ -66,7 +66,7 @@ function analyzeResult(dice, rollType) {
   return { label: resultText, color: resultColor, isDarkHighest, icon, rollType };
 }
 
-// --- COMPONENTE FICHA (Sin cambios, solo lo minimizo aquí para no ocupar espacio) ---
+// --- COMPONENTE FICHA ---
 const CharacterSheet = ({ roomName, playerName }) => {
   const [stats, setStats] = useState({ ruin: 1, gold: 0, conditions: '', inventory: '', imageUrl: '' });
   const [isExpanded, setIsExpanded] = useState(false);
@@ -90,7 +90,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
       {isExpanded && (
         <div className="p-4 animate-in slide-in-from-top-2">
           <div className="flex justify-center mb-6">
-             <div className="w-24 h-24 rounded-full border-2 border-[#d4af37] bg-black overflow-hidden">{stats.imageUrl ? <img src={stats.imageUrl} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-[#d4af37] opacity-20 text-4xl">?</div>}</div>
+             <div className="w-24 h-24 rounded-full border-2 border-[#d4af37] bg-black overflow-hidden">{stats.imageUrl ? <img src={stats.imageUrl} className="w-full h-full object-cover" alt="Avatar"/> : <div className="w-full h-full flex items-center justify-center text-[#d4af37] opacity-20 text-4xl">?</div>}</div>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div><label className="text-[10px] text-gray-500 uppercase block mb-1">Ruina</label><input type="number" value={stats.ruin} onChange={e=>handleChange('ruin',+e.target.value)} className={`w-full bg-black font-bold text-2xl text-center border p-2 ${stats.ruin>=5?'text-red-500 border-red-900 animate-pulse':'text-gray-300 border-gray-700'}`}/></div>
@@ -107,7 +107,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
   );
 };
 
-// --- COMPONENTE VISTA GRUPO (Minimizado) ---
+// --- COMPONENTE VISTA GRUPO ---
 const PartyView = ({ roomName, currentPlayerName }) => {
   const [party, setParty] = useState({});
   const [expandedCards, setExpandedCards] = useState({});
@@ -126,7 +126,7 @@ const PartyView = ({ roomName, currentPlayerName }) => {
           <div key={n} className="border border-gray-800 bg-[#0a0a0a]">
              <div onClick={()=>toggle(n)} className="flex justify-between p-3 cursor-pointer hover:bg-[#1a1a1a]">
                 <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 rounded-full bg-black border border-gray-700 overflow-hidden">{s.imageUrl ? <img src={s.imageUrl} className="w-full h-full object-cover"/> : null}</div>
+                   <div className="w-8 h-8 rounded-full bg-black border border-gray-700 overflow-hidden">{s.imageUrl ? <img src={s.imageUrl} className="w-full h-full object-cover" alt={n}/> : null}</div>
                    <div><span className="text-[#d4af37] font-bold text-sm uppercase block">{n}</span><span className={`text-[10px] uppercase ${s.ruin>=5?'text-red-500':'text-gray-500'}`}>Ruina: {s.ruin}/6</span></div>
                 </div>
              </div>
@@ -148,87 +148,39 @@ const RulesModal = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-[#1a1a1a] border border-[#d4af37] max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-[0_0_30px_rgba(212,175,55,0.2)] relative">
-        
-        {/* Cabecera */}
         <div className="sticky top-0 bg-[#d4af37] text-black p-3 flex justify-between items-center font-bold uppercase tracking-widest z-10">
           <span>Grimorio de Reglas</span>
           <button onClick={onClose} className="text-xl hover:text-white px-2">×</button>
         </div>
-
         <div className="p-6 space-y-8 text-gray-300 font-serif text-sm">
-          
-          {/* SECCIÓN RIESGO */}
           <section>
-            <h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">
-              Tirada de Riesgo
-            </h3>
+            <h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">Tirada de Riesgo</h3>
             <p className="mb-2 italic text-xs">Para acciones arriesgadas o inciertas.</p>
             <ul className="space-y-2">
-              <li className="flex gap-2">
-                <span className="text-[#d4af37] font-bold">6:</span> 
-                <span>Éxito. Tomas el control.</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-[#f9e29c] font-bold">4-5:</span> 
-                <span>Éxito con coste. El GM ofrece un compromiso.</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-gray-500 font-bold">1-3:</span> 
-                <span>Fallo. La situación empeora.</span>
-              </li>
+              <li className="flex gap-2"><span className="text-[#d4af37] font-bold">6:</span> <span>Éxito. Tomas el control.</span></li>
+              <li className="flex gap-2"><span className="text-[#f9e29c] font-bold">4-5:</span> <span>Éxito con coste.</span></li>
+              <li className="flex gap-2"><span className="text-gray-500 font-bold">1-3:</span> <span>Fallo.</span></li>
             </ul>
-            <div className="mt-3 bg-red-900/20 border border-red-900/50 p-2 text-xs">
-              <strong className="text-red-500">RUINA:</strong> Si tu dado más alto es Oscuro, sube tu Ruina en 1 (independientemente del éxito).
-            </div>
+            <div className="mt-3 bg-red-900/20 border border-red-900/50 p-2 text-xs"><strong className="text-red-500">RUINA:</strong> Si tu dado más alto es Oscuro, sube tu Ruina en 1.</div>
           </section>
-
-          {/* SECCIÓN CAZA */}
           <section>
-            <h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">
-              Tirada de Caza
-            </h3>
-            <p className="mb-2 italic text-xs">Para buscar tesoros o el camino.</p>
+            <h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">Tirada de Caza</h3>
             <ul className="space-y-2">
-              <li className="flex gap-2">
-                <span className="text-[#d4af37] font-bold">Cada 6:</span> 
-                <span>Obtienes 1 Ficha (Token).</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-gray-500 font-bold">1-5:</span> 
-                <span>Nada ocurre (pero puedes sufrir Ruina si usaste dados oscuros).</span>
-              </li>
+              <li className="flex gap-2"><span className="text-[#d4af37] font-bold">Cada 6:</span> <span>1 Ficha (Token).</span></li>
+              <li className="flex gap-2"><span className="text-gray-500 font-bold">1-5:</span> <span>Nada ocurre.</span></li>
             </ul>
           </section>
-
-          {/* SECCIÓN COMBATE */}
           <section>
-            <h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">
-              Tirada de Combate
-            </h3>
-            <p className="mb-2 italic text-xs">Atacar monstruos. Suma los 2 dados más altos.</p>
+            <h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">Combate</h3>
+            <p className="mb-2 italic text-xs">Suma los 2 dados más altos.</p>
             <div className="grid grid-cols-2 gap-4 text-center mt-2">
-                <div className="border border-gray-700 p-2">
-                    <div className="text-[#d4af37] font-bold text-lg">Total &ge; 10</div>
-                    <div className="text-[10px] uppercase">Golpe Brutal</div>
-                    <div className="text-xs text-gray-400 mt-1">El monstruo muere o cede.</div>
-                </div>
-                <div className="border border-gray-700 p-2">
-                    <div className="text-[#f9e29c] font-bold text-lg">Total 7-9</div>
-                    <div className="text-[10px] uppercase">Golpe Exitoso</div>
-                    <div className="text-xs text-gray-400 mt-1">Haces daño, pero el monstruo contraataca.</div>
-                </div>
-            </div>
-            <div className="mt-2 text-center border border-gray-700 p-2 opacity-70">
-                 <div className="text-gray-400 font-bold">Total &le; 6</div>
-                 <div className="text-[10px] uppercase">Fallo</div>
-                 <div className="text-xs text-gray-500 mt-1">Sufres daño o ruina.</div>
+                <div className="border border-gray-700 p-2"><div className="text-[#d4af37] font-bold text-lg">&ge; 10</div><div className="text-[10px] uppercase">Golpe Brutal</div></div>
+                <div className="border border-gray-700 p-2"><div className="text-[#f9e29c] font-bold text-lg">7-9</div><div className="text-[10px] uppercase">Exitoso</div></div>
             </div>
           </section>
-
         </div>
-        
         <div className="p-4 border-t border-gray-800 bg-black text-center">
-            <button onClick={onClose} className="text-[#d4af37] hover:underline text-xs uppercase tracking-widest">Cerrar Grimorio</button>
+            <button onClick={onClose} className="text-[#d4af37] hover:underline text-xs uppercase tracking-widest">Cerrar</button>
         </div>
       </div>
     </div>
@@ -237,18 +189,14 @@ const RulesModal = ({ isOpen, onClose }) => {
 
 // --- APP PRINCIPAL ---
 function App() {
-  // ... otros estados
-  const [showRules, setShowRules] = useState(false); // <--- NUEVO
-  // ...
   const [roomName, setRoomName] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [isJoined, setIsJoined] = useState(false);
   const [lightCount, setLightCount] = useState(1);
   const [darkCount, setDarkCount] = useState(0);
   const [history, setHistory] = useState([]);
-  
-  // NUEVO ESTADO: TIPO DE TIRADA
-  const [rollType, setRollType] = useState('risk'); // 'risk', 'hunt', 'combat'
+  const [rollType, setRollType] = useState('risk');
+  const [showRules, setShowRules] = useState(false);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -265,20 +213,29 @@ function App() {
   }, [isJoined, roomName]);
 
   const handleJoin = () => { if(roomName && playerName) { setIsJoined(true); window.history.pushState({},'',`?sala=${roomName}`); } };
+  
+  const handleExit = () => {
+    setIsJoined(false);
+    window.history.pushState({}, '', window.location.pathname);
+  };
+
+  const handleClear = () => {
+    if (window.confirm("¿Deseas purgar el historial de la sala?")) {
+      remove(ref(database, `rooms/${roomName}/rolls`));
+    }
+  };
+
   const updateDiceCount = (setter, c, ch) => { const v = c+ch; if(v>=0 && v<=10) setter(v); };
 
-  // --- TIRAR DADOS ---
   const handleRoll = () => {
     const newDice = [];
     for (let i=0; i<lightCount; i++) newDice.push({ type: 'light', value: Math.ceil(Math.random()*6), id: Math.random() });
     for (let i=0; i<darkCount; i++) newDice.push({ type: 'dark', value: Math.ceil(Math.random()*6), id: Math.random() });
     if (newDice.length === 0) return;
 
-    // Aquí pasamos el tipo de tirada actual
     const analysis = analyzeResult(newDice, rollType);
-    
     push(ref(database, `rooms/${roomName}/rolls`), {
-      id: Date.now(), dice: newDice, analysis, player: playerName, rollType, // Guardamos qué tipo fue
+      id: Date.now(), dice: newDice, analysis, player: playerName, rollType,
       timestamp: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})
     });
   };
@@ -287,9 +244,7 @@ function App() {
     const currentDice = [...originalRoll.dice];
     const newDarkDie = { type: 'dark', value: Math.ceil(Math.random()*6), id: Math.random() };
     const updatedDice = [...currentDice, newDarkDie];
-    // Al hacer push, mantenemos el tipo de tirada original
     const analysis = analyzeResult(updatedDice, originalRoll.rollType || 'risk'); 
-    
     push(ref(database, `rooms/${roomName}/rolls`), {
       id: Date.now(), dice: updatedDice, analysis, player: playerName, isPush: true, rollType: originalRoll.rollType,
       timestamp: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})
@@ -313,7 +268,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-black text-white p-4 flex flex-col items-center font-serif pb-20">
-      {/* Header */}
+      {/* HEADER CORREGIDO */}
       <div className="w-full max-w-md flex justify-between items-end mb-6 border-b border-[#1a1a1a] pb-2">
         <div onClick={()=>{navigator.clipboard.writeText(window.location.href);alert('Link Copiado')}} className="cursor-pointer group">
           <p className="text-[10px] text-gray-500 uppercase tracking-widest">Sala</p>
@@ -322,43 +277,23 @@ function App() {
         <div className="flex gap-4">
             <button onClick={() => setShowRules(true)} className="text-[10px] text-[#d4af37] hover:text-white uppercase font-bold border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">
             [ ? Reglas ]</button>
-            <button onClick={handleClear} ... >...</button>
-            <button onClick={handleExit} ... >...</button>
-            <button onClick={()=>window.confirm('¿Borrar historial?') && remove(ref(database, `rooms/${roomName}/rolls`))} className="text-[10px] text-gray-500 hover:text-red-500 uppercase">[ Limpiar ]</button>
-            <button onClick={()=>{setIsJoined(false);window.history.pushState({},'',window.location.pathname)}} className="text-[10px] text-gray-500 hover:text-white uppercase">[ Salir ]</button>
+            <button onClick={handleClear} className="text-[10px] text-gray-500 hover:text-red-500 uppercase cursor-pointer">[ Limpiar ]</button>
+            <button onClick={handleExit} className="text-[10px] text-gray-500 hover:text-white uppercase cursor-pointer">[ Salir ]</button>
         </div>
       </div>
 
       <CharacterSheet roomName={roomName} playerName={playerName} />
 
-      {/* --- PANEL DE DADOS MEJORADO --- */}
+      {/* PANEL DE DADOS */}
       <div className="bg-[#1a1a1a] p-1 w-full max-w-md border border-gray-800 mb-8 shadow-lg relative">
-        
-        {/* PESTAÑAS DE TIPO DE TIRADA */}
         <div className="grid grid-cols-3 gap-1 bg-black p-1 mb-4">
-            <button 
-                onClick={() => setRollType('risk')} 
-                className={`py-2 text-[10px] uppercase tracking-widest font-bold transition-all ${rollType === 'risk' ? 'bg-[#d4af37] text-black' : 'text-gray-500 hover:text-gray-300'}`}
-            >
-                Riesgo
-            </button>
-            <button 
-                onClick={() => setRollType('hunt')} 
-                className={`py-2 text-[10px] uppercase tracking-widest font-bold transition-all ${rollType === 'hunt' ? 'bg-[#d4af37] text-black' : 'text-gray-500 hover:text-gray-300'}`}
-            >
-                Caza
-            </button>
-            <button 
-                onClick={() => setRollType('combat')} 
-                className={`py-2 text-[10px] uppercase tracking-widest font-bold transition-all ${rollType === 'combat' ? 'bg-red-900 text-white' : 'text-gray-500 hover:text-gray-300'}`}
-            >
-                Combate
-            </button>
+            <button onClick={() => setRollType('risk')} className={`py-2 text-[10px] uppercase tracking-widest font-bold transition-all ${rollType === 'risk' ? 'bg-[#d4af37] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Riesgo</button>
+            <button onClick={() => setRollType('hunt')} className={`py-2 text-[10px] uppercase tracking-widest font-bold transition-all ${rollType === 'hunt' ? 'bg-[#d4af37] text-black' : 'text-gray-500 hover:text-gray-300'}`}>Caza</button>
+            <button onClick={() => setRollType('combat')} className={`py-2 text-[10px] uppercase tracking-widest font-bold transition-all ${rollType === 'combat' ? 'bg-red-900 text-white' : 'text-gray-500 hover:text-gray-300'}`}>Combate</button>
         </div>
 
         <div className="px-5 pb-5">
             <div className="flex flex-col gap-5">
-            {/* Dados Claros */}
             <div>
                 <label className="block text-xs text-[#d4af37] mb-1 uppercase tracking-widest text-center">Dados Claros</label>
                 <div className="flex items-center justify-between border border-[#d4af37] bg-black h-14">
@@ -367,7 +302,6 @@ function App() {
                 <button onClick={() => updateDiceCount(setLightCount, lightCount, 1)} className="w-16 h-full text-[#d4af37] text-3xl font-bold hover:bg-[#d4af37] hover:text-black transition-all">+</button>
                 </div>
             </div>
-            {/* Dados Oscuros */}
             <div>
                 <label className="block text-xs text-gray-500 mb-1 uppercase tracking-widest text-center">Dados Oscuros</label>
                 <div className="flex items-center justify-between border border-gray-600 bg-black h-14">
@@ -378,54 +312,33 @@ function App() {
             </div>
             </div>
 
-            <button onClick={handleRoll} className={`w-full mt-8 font-bold py-4 text-xl uppercase tracking-[0.3em] shadow-lg transition-all 
-                ${rollType === 'combat' ? 'bg-red-900 hover:bg-red-700 text-white' : 'bg-[#d4af37] hover:bg-[#f9e29c] text-black active:translate-y-1'}`}>
+            <button onClick={handleRoll} className={`w-full mt-8 font-bold py-4 text-xl uppercase tracking-[0.3em] shadow-lg transition-all ${rollType === 'combat' ? 'bg-red-900 hover:bg-red-700 text-white' : 'bg-[#d4af37] hover:bg-[#f9e29c] text-black active:translate-y-1'}`}>
             {rollType === 'combat' ? '¡ATACAR!' : rollType === 'hunt' ? 'BUSCAR' : 'TIRAR'}
             </button>
         </div>
       </div>
 
-      {/* Historial */}
+      {/* HISTORIAL */}
       <div className="w-full max-w-md space-y-4">
         {history.map((roll, index) => (
-          <div key={roll.id} className={`bg-[#1a1a1a] p-4 border-l-4 shadow-md animate-in fade-in slide-in-from-top-2 
-                ${roll.rollType === 'combat' ? 'border-red-900' : 'border-[#d4af37]'}`}>
-            
+          <div key={roll.id} className={`bg-[#1a1a1a] p-4 border-l-4 shadow-md animate-in fade-in slide-in-from-top-2 ${roll.rollType === 'combat' ? 'border-red-900' : 'border-[#d4af37]'}`}>
             <div className="flex justify-between items-baseline mb-2 pb-2 border-b border-black">
               <span className="text-[#f9e29c] font-bold text-sm uppercase tracking-wider">
-                {roll.player} 
-                <span className="text-[9px] text-gray-500 ml-2 border border-gray-800 px-1 rounded">
-                    {roll.rollType === 'combat' ? 'COMBATE' : roll.rollType === 'hunt' ? 'CAZA' : 'RIESGO'}
-                </span>
-                {roll.isPush && <span className="text-[9px] text-red-500 ml-2 animate-pulse">(PUSH)</span>}
+                {roll.player} <span className="text-[9px] text-gray-500 ml-2 border border-gray-800 px-1 rounded">{roll.rollType === 'combat' ? 'COMBATE' : roll.rollType === 'hunt' ? 'CAZA' : 'RIESGO'}</span>{roll.isPush && <span className="text-[9px] text-red-500 ml-2 animate-pulse">(PUSH)</span>}
               </span>
               <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
             </div>
-
             <div className="mb-3 flex flex-col">
-               <span className={`font-bold uppercase text-xs tracking-widest ${roll.analysis.color}`}>
-                {roll.analysis.icon} {roll.analysis.label}
-               </span>
-               {roll.analysis.isDarkHighest && (
-                 <span className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/20 p-1 text-center border border-red-900/50">
-                    ⚠️ ¡EL DADO OSCURO ES EL MÁS ALTO!
-                 </span>
-               )}
+               <span className={`font-bold uppercase text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
+               {roll.analysis.isDarkHighest && (<span className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/20 p-1 text-center border border-red-900/50">⚠️ ¡EL DADO OSCURO ES EL MÁS ALTO!</span>)}
             </div>
-
             <div className="flex flex-wrap gap-3">
               {roll.dice.map((d) => (
-                <div key={d.id} className={`w-11 h-11 flex items-center justify-center text-xl font-bold shadow-sm ${d.type === 'light' ? 'bg-[#d4af37] text-black border-t-2 border-[#f9e29c]' : 'bg-black text-white border border-gray-700'}`}>
-                  {d.value}
-                </div>
+                <div key={d.id} className={`w-11 h-11 flex items-center justify-center text-xl font-bold shadow-sm ${d.type === 'light' ? 'bg-[#d4af37] text-black border-t-2 border-[#f9e29c]' : 'bg-black text-white border border-gray-700'}`}>{d.value}</div>
               ))}
             </div>
-
-            {/* Solo permitir PUSH si es mi tirada, es la última y NO es una tirada de Caza exitosa (opcional, pero en Hunt no suele haber push si ya hay éxito) */}
             {index === 0 && roll.player === playerName && (
-                <button onClick={() => handlePush(roll)} className="mt-4 w-full border border-gray-700 text-gray-400 hover:border-[#d4af37] hover:text-[#d4af37] text-[10px] uppercase transition-all py-2 tracking-widest">
-                    ¿Tentar al destino? (+1 Dado Oscuro)
-                </button>
+                <button onClick={() => handlePush(roll)} className="mt-4 w-full border border-gray-700 text-gray-400 hover:border-[#d4af37] hover:text-[#d4af37] text-[10px] uppercase transition-all py-2 tracking-widest">¿Tentar al destino? (+1 Dado Oscuro)</button>
             )}
           </div>
         ))}
@@ -433,7 +346,6 @@ function App() {
 
       <PartyView roomName={roomName} currentPlayerName={playerName} />
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
-        </div> // Cierre del div principal
     </div>
   );
 }
