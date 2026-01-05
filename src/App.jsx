@@ -36,19 +36,17 @@ function App() {
   const [darkCount, setDarkCount] = useState(0);
   const [history, setHistory] = useState([]); 
 
-  // --- NUEVO: DETECTAR URL AL CARGAR ---
+  // --- DETECTAR URL (Sin forzar mayúsculas) ---
   useEffect(() => {
-    // Leemos los parámetros de la URL (ej: ?sala=MESA1)
     const params = new URLSearchParams(window.location.search);
     const salaUrl = params.get('sala');
     
     if (salaUrl) {
-      setRoomName(salaUrl.toUpperCase());
+      setRoomName(salaUrl); // Ya no lo convierte a mayúsculas
       setIsJoined(true);
     }
   }, []);
 
-  // --- CONEXIÓN CON FIREBASE ---
   useEffect(() => {
     if (!isJoined || !roomName) return;
     const rollsRef = query(ref(database, `rooms/${roomName}/rolls`), limitToLast(20));
@@ -65,12 +63,9 @@ function App() {
     return () => unsubscribe();
   }, [isJoined, roomName]);
 
-  // --- FUNCIONES AUXILIARES ---
-  
   const handleJoin = () => {
     if (roomName) {
       setIsJoined(true);
-      // Actualizamos la URL del navegador sin recargar
       const newUrl = `${window.location.pathname}?sala=${roomName}`;
       window.history.pushState({}, '', newUrl);
     }
@@ -79,14 +74,13 @@ function App() {
   const handleExit = () => {
     setIsJoined(false);
     setRoomName('');
-    // Limpiamos la URL al salir
     window.history.pushState({}, '', window.location.pathname);
   };
 
   const handleCopyLink = () => {
     const link = window.location.href;
     navigator.clipboard.writeText(link);
-    alert("¡Enlace de la sala copiado al portapapeles!");
+    alert("¡Enlace copiado!");
   };
 
   const handleRoll = () => {
@@ -122,13 +116,13 @@ function App() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4 font-serif text-white">
         <div className="bg-[#1a1a1a] p-8 max-w-sm w-full text-center border border-[#d4af37]">
-          <h1 className="text-3xl font-bold mb-6 text-[#d4af37] uppercase tracking-[0.2em]">Trophy Roller</h1>
+          <h1 className="text-3xl font-bold mb-6 text-[#d4af37] uppercase tracking-[0.2em]">Trophy Gold</h1>
           <input 
             type="text" 
-            placeholder="SALA" 
-            className="w-full bg-black text-white p-3 mb-4 text-center border border-gray-800 focus:border-[#d4af37] outline-none uppercase"
+            placeholder="Nombre de sala" 
+            className="w-full bg-black text-white p-3 mb-4 text-center border border-gray-800 focus:border-[#d4af37] outline-none placeholder-gray-600"
             value={roomName}
-            onChange={(e) => setRoomName(e.target.value.toUpperCase())}
+            onChange={(e) => setRoomName(e.target.value)} // Quitada conversión mayúsculas
             onKeyDown={(e) => e.key === 'Enter' && handleJoin()} 
           />
           <button 
@@ -148,7 +142,8 @@ function App() {
       <div className="w-full max-w-md flex justify-between items-end mb-6 border-b border-[#1a1a1a] pb-2">
         <div className="cursor-pointer group" onClick={handleCopyLink} title="Click para copiar enlace">
           <p className="text-[10px] text-gray-500 uppercase tracking-widest group-hover:text-[#d4af37]">Sala (Copiar Link)</p>
-          <h1 className="text-xl font-bold text-[#d4af37] uppercase group-hover:underline">{roomName} 🔗</h1>
+          {/* Quitada clase 'uppercase' para ver nombre real */}
+          <h1 className="text-xl font-bold text-[#d4af37] group-hover:underline">{roomName} 🔗</h1>
         </div>
         <div className="flex gap-4">
             <button onClick={handleClear} className="text-[10px] text-gray-500 hover:text-red-500 uppercase cursor-pointer">
