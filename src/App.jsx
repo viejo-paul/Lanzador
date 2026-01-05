@@ -31,19 +31,20 @@ function analyzeResult(dice) {
 
 function App() {
   const [roomName, setRoomName] = useState(''); 
+  const [playerName, setPlayerName] = useState(''); // Nuevo estado para el personaje
   const [isJoined, setIsJoined] = useState(false); 
   const [lightCount, setLightCount] = useState(1);
   const [darkCount, setDarkCount] = useState(0);
   const [history, setHistory] = useState([]); 
 
-  // --- DETECTAR URL (Sin forzar mayúsculas) ---
+  // --- DETECTAR URL (Pre-rellena la sala pero NO entra solo) ---
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const salaUrl = params.get('sala');
     
     if (salaUrl) {
-      setRoomName(salaUrl); // Ya no lo convierte a mayúsculas
-      setIsJoined(true);
+      setRoomName(salaUrl);
+      // Quitamos el setIsJoined(true) automático para obligar a poner nombre
     }
   }, []);
 
@@ -64,16 +65,18 @@ function App() {
   }, [isJoined, roomName]);
 
   const handleJoin = () => {
-    if (roomName) {
+    if (roomName.trim() && playerName.trim()) {
       setIsJoined(true);
       const newUrl = `${window.location.pathname}?sala=${roomName}`;
       window.history.pushState({}, '', newUrl);
+    } else {
+      alert("Por favor, escribe el nombre de la sala y de tu personaje.");
     }
   };
 
   const handleExit = () => {
     setIsJoined(false);
-    setRoomName('');
+    // No borramos el nombre de la sala ni del personaje para facilitar re-entrar
     window.history.pushState({}, '', window.location.pathname);
   };
 
@@ -98,7 +101,8 @@ function App() {
       id: Date.now(),
       dice: newDice,
       analysis: analysis,
-      timestamp: new Date().toLocaleTimeString()
+      player: playerName, // ¡AQUÍ GUARDAMOS QUIÉN TIRÓ!
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) // Hora corta
     };
 
     const rollsRef = ref(database, `rooms/${roomName}/rolls`);
@@ -111,25 +115,43 @@ function App() {
     }
   };
 
-  // --- VISTA DE LOGIN ---
+  // --- VISTA DE LOGIN (AHORA PIDE PERSONAJE) ---
   if (!isJoined) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4 font-serif text-white">
-        <div className="bg-[#1a1a1a] p-8 max-w-sm w-full text-center border border-[#d4af37]">
-          <h1 className="text-3xl font-bold mb-6 text-[#d4af37] uppercase tracking-[0.2em]">Trophy Gold</h1>
-          <input 
-            type="text" 
-            placeholder="Nombre de sala" 
-            className="w-full bg-black text-white p-3 mb-4 text-center border border-gray-800 focus:border-[#d4af37] outline-none placeholder-gray-600"
-            value={roomName}
-            onChange={(e) => setRoomName(e.target.value)} // Quitada conversión mayúsculas
-            onKeyDown={(e) => e.key === 'Enter' && handleJoin()} 
-          />
+        <div className="bg-[#1a1a1a] p-8 max-w-sm w-full text-center border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
+          <h1 className="text-3xl font-bold mb-6 text-[#d4af37] uppercase tracking-[0.2em]">Trophy Roller</h1>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Nombre de Sala</label>
+              <input 
+                type="text" 
+                placeholder="MESA DE JUEGO" 
+                className="w-full bg-black text-white p-3 text-center border border-gray-800 focus:border-[#d4af37] outline-none placeholder-gray-700"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Tu Personaje</label>
+              <input 
+                type="text" 
+                placeholder="NOMBRE DEL CAZATESOROS" 
+                className="w-full bg-black text-[#f9e29c] p-3 text-center border border-gray-800 focus:border-[#d4af37] outline-none placeholder-gray-700 font-bold"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleJoin()} 
+              />
+            </div>
+          </div>
+
           <button 
             onClick={handleJoin}
-            className="w-full bg-[#d4af37] hover:bg-[#f9e29c] text-black font-bold py-3 transition-colors tracking-widest cursor-pointer"
+            className="w-full mt-8 bg-[#d4af37] hover:bg-[#f9e29c] active:translate-y-1 text-black font-bold py-3 transition-all tracking-widest cursor-pointer shadow-lg"
           >
-            ENTRAR
+            ENTRAR A LA OSCURIDAD
           </button>
         </div>
       </div>
@@ -142,8 +164,7 @@ function App() {
       <div className="w-full max-w-md flex justify-between items-end mb-6 border-b border-[#1a1a1a] pb-2">
         <div className="cursor-pointer group" onClick={handleCopyLink} title="Click para copiar enlace">
           <p className="text-[10px] text-gray-500 uppercase tracking-widest group-hover:text-[#d4af37]">Sala (Copiar Link)</p>
-          {/* Quitada clase 'uppercase' para ver nombre real */}
-          <h1 className="text-xl font-bold text-[#d4af37] group-hover:underline">{roomName} 🔗</h1>
+          <h1 className="text-xl font-bold text-[#d4af37] group-hover:underline truncate max-w-[200px]">{roomName} 🔗</h1>
         </div>
         <div className="flex gap-4">
             <button onClick={handleClear} className="text-[10px] text-gray-500 hover:text-red-500 uppercase cursor-pointer">
@@ -155,8 +176,14 @@ function App() {
         </div>
       </div>
 
-      <div className="bg-[#1a1a1a] p-6 w-full max-w-md border border-gray-800 mb-8 shadow-lg shadow-black">
-        <div className="flex gap-6 mb-6">
+      {/* PANEL DE TIRADA */}
+      <div className="bg-[#1a1a1a] p-6 w-full max-w-md border border-gray-800 mb-8 shadow-lg shadow-black relative">
+        {/* Etiqueta flotante con el nombre del personaje actual */}
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-4 py-1 border border-[#d4af37] text-[#d4af37] text-xs font-bold uppercase tracking-widest">
+          {playerName}
+        </div>
+
+        <div className="flex gap-6 mb-6 mt-2">
           <div className="flex-1 text-center">
             <label className="block text-xs text-gray-500 mb-2 uppercase tracking-widest">Claros</label>
             <input 
@@ -184,15 +211,27 @@ function App() {
         </button>
       </div>
 
+      {/* HISTORIAL */}
       <div className="w-full max-w-md space-y-4 pb-10">
         {history.map((roll) => (
           <div key={roll.id} className="bg-[#1a1a1a] p-4 border-l-2 border-[#d4af37] shadow-md animate-in fade-in slide-in-from-top-2">
-            <div className="flex justify-between items-center mb-3 border-b border-black pb-2">
-              <span className={`font-bold uppercase text-xs tracking-widest ${roll.analysis.color}`}>
+            
+            {/* CABECERA DE LA TIRADA: NOMBRE Y HORA */}
+            <div className="flex justify-between items-baseline mb-2 pb-2 border-b border-black">
+              <span className="text-[#f9e29c] font-bold text-sm uppercase tracking-wider">
+                {roll.player || 'Anónimo'} {/* Fallback por si hay tiradas viejas */}
+              </span>
+              <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
+            </div>
+
+            {/* RESULTADO (ÉXITO/FALLO) */}
+            <div className="mb-3">
+               <span className={`font-bold uppercase text-xs tracking-widest ${roll.analysis.color}`}>
                 {roll.analysis.label}
               </span>
-              <span className="text-[10px] text-gray-600">{roll.timestamp}</span>
             </div>
+
+            {/* DADOS */}
             <div className="flex flex-wrap gap-3">
               {roll.dice.map((d) => (
                 <div 
