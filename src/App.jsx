@@ -141,8 +141,105 @@ const PartyView = ({ roomName, currentPlayerName }) => {
   );
 };
 
+// --- COMPONENTE: MODAL DE REGLAS (EL GRIMORIO) ---
+const RulesModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-[#1a1a1a] border border-[#d4af37] max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-[0_0_30px_rgba(212,175,55,0.2)] relative">
+        
+        {/* Cabecera */}
+        <div className="sticky top-0 bg-[#d4af37] text-black p-3 flex justify-between items-center font-bold uppercase tracking-widest z-10">
+          <span>Grimorio de Reglas</span>
+          <button onClick={onClose} className="text-xl hover:text-white px-2">×</button>
+        </div>
+
+        <div className="p-6 space-y-8 text-gray-300 font-serif text-sm">
+          
+          {/* SECCIÓN RIESGO */}
+          <section>
+            <h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">
+              Tirada de Riesgo
+            </h3>
+            <p className="mb-2 italic text-xs">Para acciones arriesgadas o inciertas.</p>
+            <ul className="space-y-2">
+              <li className="flex gap-2">
+                <span className="text-[#d4af37] font-bold">6:</span> 
+                <span>Éxito. Tomas el control.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-[#f9e29c] font-bold">4-5:</span> 
+                <span>Éxito con coste. El GM ofrece un compromiso.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-gray-500 font-bold">1-3:</span> 
+                <span>Fallo. La situación empeora.</span>
+              </li>
+            </ul>
+            <div className="mt-3 bg-red-900/20 border border-red-900/50 p-2 text-xs">
+              <strong className="text-red-500">RUINA:</strong> Si tu dado más alto es Oscuro, sube tu Ruina en 1 (independientemente del éxito).
+            </div>
+          </section>
+
+          {/* SECCIÓN CAZA */}
+          <section>
+            <h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">
+              Tirada de Caza
+            </h3>
+            <p className="mb-2 italic text-xs">Para buscar tesoros o el camino.</p>
+            <ul className="space-y-2">
+              <li className="flex gap-2">
+                <span className="text-[#d4af37] font-bold">Cada 6:</span> 
+                <span>Obtienes 1 Ficha (Token).</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-gray-500 font-bold">1-5:</span> 
+                <span>Nada ocurre (pero puedes sufrir Ruina si usaste dados oscuros).</span>
+              </li>
+            </ul>
+          </section>
+
+          {/* SECCIÓN COMBATE */}
+          <section>
+            <h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">
+              Tirada de Combate
+            </h3>
+            <p className="mb-2 italic text-xs">Atacar monstruos. Suma los 2 dados más altos.</p>
+            <div className="grid grid-cols-2 gap-4 text-center mt-2">
+                <div className="border border-gray-700 p-2">
+                    <div className="text-[#d4af37] font-bold text-lg">Total &ge; 10</div>
+                    <div className="text-[10px] uppercase">Golpe Brutal</div>
+                    <div className="text-xs text-gray-400 mt-1">El monstruo muere o cede.</div>
+                </div>
+                <div className="border border-gray-700 p-2">
+                    <div className="text-[#f9e29c] font-bold text-lg">Total 7-9</div>
+                    <div className="text-[10px] uppercase">Golpe Exitoso</div>
+                    <div className="text-xs text-gray-400 mt-1">Haces daño, pero el monstruo contraataca.</div>
+                </div>
+            </div>
+            <div className="mt-2 text-center border border-gray-700 p-2 opacity-70">
+                 <div className="text-gray-400 font-bold">Total &le; 6</div>
+                 <div className="text-[10px] uppercase">Fallo</div>
+                 <div className="text-xs text-gray-500 mt-1">Sufres daño o ruina.</div>
+            </div>
+          </section>
+
+        </div>
+        
+        <div className="p-4 border-t border-gray-800 bg-black text-center">
+            <button onClick={onClose} className="text-[#d4af37] hover:underline text-xs uppercase tracking-widest">Cerrar Grimorio</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- APP PRINCIPAL ---
 function App() {
+  // ... otros estados
+  const [showRules, setShowRules] = useState(false); // <--- NUEVO
+  // ...
   const [roomName, setRoomName] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [isJoined, setIsJoined] = useState(false);
@@ -223,6 +320,10 @@ function App() {
           <h1 className="text-xl font-bold text-[#d4af37] truncate max-w-[200px]">{roomName}</h1>
         </div>
         <div className="flex gap-4">
+            <button onClick={() => setShowRules(true)} className="text-[10px] text-[#d4af37] hover:text-white uppercase font-bold border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">
+            [ ? Reglas ]</button>
+            <button onClick={handleClear} ... >...</button>
+            <button onClick={handleExit} ... >...</button>
             <button onClick={()=>window.confirm('¿Borrar historial?') && remove(ref(database, `rooms/${roomName}/rolls`))} className="text-[10px] text-gray-500 hover:text-red-500 uppercase">[ Limpiar ]</button>
             <button onClick={()=>{setIsJoined(false);window.history.pushState({},'',window.location.pathname)}} className="text-[10px] text-gray-500 hover:text-white uppercase">[ Salir ]</button>
         </div>
@@ -331,6 +432,8 @@ function App() {
       </div>
 
       <PartyView roomName={roomName} currentPlayerName={playerName} />
+      <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
+        </div> // Cierre del div principal
     </div>
   );
 }
