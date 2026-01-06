@@ -103,7 +103,7 @@ function analyzeResult(dice, rollType) {
 const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
   if (!isOpen || !imageUrl) return null;
   return (
-    <div className="fixed inset-0 bg-black/95 z-[70] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/95 z-[90] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}>
       <div className="relative max-w-full max-h-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
         <img 
           src={imageUrl} 
@@ -316,7 +316,7 @@ const PartyView = ({ roomName, currentPlayerName }) => {
 const RulesModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-[#1a1a1a] border border-[#d4af37] max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-[0_0_30px_rgba(212,175,55,0.2)] relative">
         <div className="sticky top-0 bg-[#d4af37] text-black p-3 flex justify-between items-center font-bold uppercase tracking-widest z-10">
           <span>Grimorio de Reglas</span>
@@ -358,15 +358,15 @@ function App() {
       container: "#dice-box", 
       assetPath: '/assets/', 
       theme: 'default',
-      scale: 14,
-      gravity: 6,
-      mass: 5,
-      friction: 0.5,
-      restitution: 0.2, 
+      scale: 15,
+      gravity: 5,
+      mass: 1,
+      friction: 0.6,
+      restitution: 0.1, 
       linearDamping: 0.5,
-      angularDamping: 0.4,
+      angularDamping: 0.5,
       spinForce: 6,
-      throwForce: 7,
+      throwForce: 3,
     });
     
     box.init()
@@ -470,7 +470,8 @@ function App() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       
-      <div id="dice-box" className="fixed inset-0 w-full h-full z-0 pointer-events-none"></div>
+      {/* 3D CANVAS - CAMBIADO: z-[50] y pointer-events-none para que esté ARRIBA pero deje clicar debajo */}
+      <div id="dice-box" className="fixed inset-0 w-full h-full z-[50] pointer-events-none"></div>
 
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-xs py-1 font-bold uppercase tracking-[0.2em] select-none relative z-20">
           Trophy (g)Old
@@ -587,7 +588,7 @@ function App() {
       )}
 
       <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase select-none relative z-20">
-          by Viejo · viejorpg@gmail.com · v.0.2.4
+          by Viejo · viejorpg@gmail.com · v.0.2.5
       </footer>
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
