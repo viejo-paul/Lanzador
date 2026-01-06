@@ -236,7 +236,7 @@ const PartyView = ({ roomName, currentPlayerName, isGM }) => {
   const toggle = (n) => { setExpandedCards(p => ({...p, [n]: !p[n]})); playSound('click'); };
   
   // Si soy el Guardián, quiero ver a TODOS los jugadores (excepto a mí mismo, que soy 'Guardián')
-  const players = Object.entries(party).filter(([n]) => n !== currentPlayerName);
+const players = Object.entries(party).filter(([n]) => n !== currentPlayerName && n !== 'Guardián');
   
   if(players.length===0) return null;
   return (
@@ -532,10 +532,16 @@ function App() {
               </button>
             </div>
 
+            {/* LISTA DE PERSONAJES EXISTENTES */}
             {Object.keys(existingCharacters).length > 0 && (
               <div className="space-y-3 animate-in fade-in duration-500">
                 <p className="text-gray-600 text-[10px] uppercase tracking-widest text-center">Personajes en esta partida</p>
-                {Object.entries(existingCharacters).map(([name, data]) => (
+                
+                {/* AQUÍ ESTÁ EL CAMBIO: AÑADIMOS EL FILTER PARA EXCLUIR AL GUARDIÁN */}
+                {Object.entries(existingCharacters)
+                  .filter(([name]) => name !== 'Guardián') 
+                  .map(([name, data]) => (
+                  
                   <button 
                     key={name}
                     onClick={() => handleJoin(name)}
@@ -628,7 +634,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.6 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.7 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
