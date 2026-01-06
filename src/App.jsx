@@ -1,19 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { database } from './firebase';
 import { ref, push, onValue, limitToLast, query, remove, update } from "firebase/database";
-import DiceBox from '@3d-dice/dice-box'; // IMPORTANTE: Librería 3D
+import DiceBox from '@3d-dice/dice-box'; 
 
 // --- GESTOR DE SONIDOS ---
 const playSound = (type) => {
+  // Lista de rutas
   const sounds = {
     click: '/sounds/click.mp3',
-    success: '/sounds/success.mp3', // Sonido celestial/moneda
-    fail: '/sounds/fail.mp3',     // Golpe seco/viento
-    ruin: '/sounds/glitch.mp3',   // Ruido estático/terror
+    success: '/sounds/success.mp3',
+    fail: '/sounds/fail.mp3',
+    ruin: '/sounds/glitch.mp3',
   };
+
+  // Intentamos reproducir solo si el archivo existe (evita errores masivos en consola)
   const audio = new Audio(sounds[type]);
   audio.volume = 0.5;
-  audio.play().catch(e => console.log("Esperando interacción para audio...", e));
+  audio.play().catch(e => {
+    // Silenciamos el error en consola si faltan los archivos o no hay interacción
+    // console.log("Audio no reproducido (falta archivo o permisos)"); 
+  });
 };
 
 // --- LÓGICA DE REGLAS TROPHY GOLD ---
@@ -27,7 +33,7 @@ function analyzeResult(dice, rollType) {
   let resultText = '';
   let resultColor = '';
   let icon = '';
-  let soundType = 'fail'; // Sonido por defecto
+  let soundType = 'fail'; 
 
   // --- MODO RIESGO ---
   if (rollType === 'risk') {
@@ -40,7 +46,7 @@ function analyzeResult(dice, rollType) {
       resultText = 'ÉXITO PARCIAL (CON COSTE)';
       resultColor = 'text-[#f9e29c]';
       icon = '⚠️';
-      soundType = 'fail'; // Tensión
+      soundType = 'fail'; 
     } else {
       resultText = 'FALLO (LA SITUACIÓN EMPEORA)';
       resultColor = 'text-gray-400';
@@ -74,7 +80,7 @@ function analyzeResult(dice, rollType) {
     if (attackTotal >= 10) {
         resultColor = 'text-red-500 font-bold text-lg animate-pulse';
         icon = '⚔️';
-        soundType = 'ruin'; // Sonido agresivo
+        soundType = 'ruin'; 
     } else if (attackTotal >= 8) {
         resultColor = 'text-[#d4af37] font-bold';
         icon = '🗡️';
@@ -105,7 +111,6 @@ function analyzeResult(dice, rollType) {
       }
   }
 
-  // Override de sonido si hay Ruina (El glitch manda)
   if (isDarkHighest && highestValue > 0) {
       soundType = 'ruin'; 
   }
@@ -255,7 +260,6 @@ const PartyView = ({ roomName, currentPlayerName }) => {
              </div>
              {expandedCards[n] && (
                <div className="p-3 bg-black/50 border-t border-gray-900 text-xs">
-                  {/* ... Mismo contenido que arriba pero readonly ... */}
                   <div className="grid grid-cols-2 gap-4 mb-2">
                       <div><span className="text-gray-600 block text-[9px]">Ocupación</span><p className="text-gray-300">{s.occupation || '-'}</p></div>
                       <div><span className="text-gray-600 block text-[9px]">Motivación</span><p className="text-gray-300">{s.drive || '-'}</p></div>
@@ -291,7 +295,6 @@ const RulesModal = ({ isOpen, onClose }) => {
           <button onClick={onClose} className="text-xl hover:text-white px-2">×</button>
         </div>
         <div className="p-6 space-y-8 text-gray-300 font-serif text-sm">
-          {/* Contenido reglas igual que antes... */}
           <section><h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">Tirada de Riesgo</h3><ul className="space-y-2"><li className="flex gap-2"><span className="text-[#d4af37] font-bold">6:</span> <span>Éxito.</span></li><li className="flex gap-2"><span className="text-[#f9e29c] font-bold">4-5:</span> <span>Con coste.</span></li><li className="flex gap-2"><span className="text-gray-500 font-bold">1-3:</span> <span>Fallo.</span></li></ul><div className="mt-3 bg-red-900/20 border border-red-900/50 p-2 text-xs"><strong className="text-red-500">RUINA:</strong> Si dado Oscuro es alto, +1 Ruina.</div></section>
           <section><h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">Exploración</h3><ul className="space-y-2"><li className="flex gap-2"><span className="text-[#d4af37] font-bold">Cada 6:</span> <span>1 Contador.</span></li></ul></section>
           <section><h3 className="text-[#d4af37] font-bold uppercase tracking-widest border-b border-gray-700 pb-1 mb-3">Combate</h3><p className="mb-2 italic text-xs">Suma 2 dados altos.</p><div className="grid grid-cols-2 gap-4 text-center mt-2"><div className="border border-gray-700 p-2"><div className="text-[#d4af37] font-bold text-lg">&ge; 10</div><div className="text-[10px] uppercase">Brutal</div></div><div className="border border-gray-700 p-2"><div className="text-[#f9e29c] font-bold text-lg">7-9</div><div className="text-[10px] uppercase">Exitoso</div></div></div></section>
@@ -318,17 +321,20 @@ function App() {
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   const isInitialLoad = useRef(true);
 
-  // 1. INICIALIZAR DADOS 3D
+  // 1. INICIALIZAR DADOS 3D (CORREGIDO PARA NUEVA API)
   useEffect(() => {
     if (diceBoxInstance) return;
-    const box = new DiceBox("#dice-box", {
-      assetPath: '/assets/', // IMPORTANTE: carpeta public/assets/
-      theme: 'default',
+
+    // Usamos CDN para evitar problemas de archivos locales
+    const box = new DiceBox({
+      container: "#dice-box", 
+      assetPath: 'https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/assets/',
       scale: 6,
       gravity: 3,
       mass: 5,
       friction: 0.8
     });
+    
     box.init().then(() => setDiceBoxInstance(box));
   }, []);
 
@@ -349,14 +355,14 @@ function App() {
     return () => unsubscribe();
   }, [isJoined, roomName]);
 
-  // 3. EFECTO SONIDO AL RECIBIR DATOS
+  // 3. EFECTO SONIDO
   useEffect(() => {
     if (history.length > 0) {
       if (isInitialLoad.current) {
         isInitialLoad.current = false;
       } else {
         const latestRoll = history[0];
-        // Retrasamos el sonido del resultado para que coincida con el fin de la animación 3D
+        // Sincronizar sonido con fin de animación 3D
         setTimeout(() => {
             if (latestRoll.analysis.soundType) playSound(latestRoll.analysis.soundType);
             else playSound('click');
@@ -370,33 +376,50 @@ function App() {
   const handleClear = () => { if (window.confirm("¿Deseas purgar el historial?")) remove(ref(database, `rooms/${roomName}/rolls`)); };
   const updateDiceCount = (setter, c, ch) => { const v = c+ch; if(v>=0 && v<=10) { setter(v); playSound('click'); } };
 
-  // --- TIRAR DADOS 3D ---
+  // --- TIRAR DADOS 3D (CORREGIDO COLORES) ---
   const handleRoll = async () => {
     if (!diceBoxInstance) { alert("Cargando dados 3D..."); return; }
     
-    // Preparar dados para 3D
     const diceToRoll = [];
     
+    // DEFINICIÓN DE COLORES: theme: 'default' siempre, usamos themeColor para teñir
     if (rollType === 'help') {
-        diceToRoll.push({ sides: 6, qty: 1, themeColor: '#000000', theme: '#d4af37' });
+        // DADO AYUDA (Oro)
+        diceToRoll.push({ 
+            sides: 6, qty: 1, 
+            theme: 'default', 
+            themeColor: '#d4af37', // Cuerpo dorado
+            foreground: '#000000'  // Tinta negra
+        });
     } else {
         if (rollType !== 'combat' && lightCount > 0) {
-            diceToRoll.push({ sides: 6, qty: lightCount, themeColor: '#000000', theme: '#d4af37' });
+            // DADOS CLAROS (Oro)
+            diceToRoll.push({ 
+                sides: 6, qty: lightCount, 
+                theme: 'default', 
+                themeColor: '#d4af37', 
+                foreground: '#000000'
+            });
         }
         if (rollType !== 'hunt' && darkCount > 0) {
-            diceToRoll.push({ sides: 6, qty: darkCount, themeColor: '#d4af37', theme: '#1a1a1a' });
+            // DADOS OSCUROS (Negro)
+            diceToRoll.push({ 
+                sides: 6, qty: darkCount, 
+                theme: 'default', 
+                themeColor: '#1a1a1a', 
+                foreground: '#d4af37' // Tinta dorada
+            });
         }
     }
 
     if (diceToRoll.length === 0) return;
 
-    // Limpiar y lanzar
     diceBoxInstance.clear();
     const result3D = await diceBoxInstance.roll(diceToRoll);
 
-    // Mapear resultado 3D a nuestro formato
+    // Mapear resultado: Si el cuerpo es Oro (#d4af37) es Light, si no es Dark
     const newDice = result3D.map(d => ({
-        type: d.theme === '#d4af37' ? 'light' : 'dark',
+        type: d.themeColor === '#d4af37' ? 'light' : 'dark',
         value: d.value,
         id: Math.random()
     }));
@@ -412,8 +435,13 @@ function App() {
     if (!diceBoxInstance) return;
     diceBoxInstance.clear();
     
-    // Lanzar 1 dado oscuro 3D
-    const result3D = await diceBoxInstance.roll([{ sides: 6, qty: 1, themeColor: '#d4af37', theme: '#1a1a1a' }]);
+    // 1 Dado Oscuro
+    const result3D = await diceBoxInstance.roll([{ 
+        sides: 6, qty: 1, 
+        theme: 'default',
+        themeColor: '#1a1a1a',
+        foreground: '#d4af37'
+    }]);
     
     const newDarkDie = { type: 'dark', value: result3D[0].value, id: Math.random() };
     const updatedDice = [...originalRoll.dice, newDarkDie];
@@ -429,7 +457,7 @@ function App() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       
-      {/* 3D DICE CANVAS (FONDO, PERO VISIBLE) */}
+      {/* 3D CANVAS */}
       <div id="dice-box" className="fixed inset-0 w-full h-full z-0 pointer-events-none"></div>
 
       {/* HEADER */}
@@ -437,7 +465,6 @@ function App() {
           Trophy (g)Old
       </header>
 
-      {/* LOGIN */}
       {!isJoined ? (
         <div className="flex-grow flex items-center justify-center p-4 relative z-10">
           <div className="bg-[#1a1a1a]/95 backdrop-blur p-8 max-w-sm w-full text-center border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
@@ -451,9 +478,8 @@ function App() {
           </div>
         </div>
       ) : (
-        /* MESA DE JUEGO */
         <main className="flex-grow flex flex-col items-center p-4 relative z-10">
-            {/* SUB-HEADER */}
+            {/* BARRA SUPERIOR MESA */}
             <div className="w-full max-w-5xl flex justify-between items-end mb-6 border-b border-[#1a1a1a] pb-2 bg-black/40 backdrop-blur-sm rounded px-2">
                 <div onClick={()=>{navigator.clipboard.writeText(window.location.href);alert('Link Copiado')}} className="cursor-pointer group">
                 <p className="text-[10px] text-gray-500 uppercase tracking-widest">Partida</p>
@@ -466,15 +492,14 @@ function App() {
                 </div>
             </div>
 
-            {/* GRID LAYOUT (Desktop 2 cols / Mobile 1 col) */}
             <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                 
-                {/* COLUMNA 1: FICHA + GRUPO (En Desktop va a la derecha, en Mobile va 1º) */}
+                {/* COL 1: FICHA + GRUPO */}
                 <div className="lg:col-start-2 lg:row-start-1 w-full">
                     <CharacterSheet roomName={roomName} playerName={playerName} />
                 </div>
 
-                {/* COLUMNA 2: DADOS + HISTORIAL (En Desktop va a la izq, en Mobile va 2º) */}
+                {/* COL 2: DADOS + HISTORIAL */}
                 <div className="lg:col-start-1 lg:row-start-1 w-full">
                     <div className="bg-[#1a1a1a]/90 backdrop-blur p-1 border border-gray-800 mb-8 shadow-lg relative">
                         <div className="grid grid-cols-4 gap-1 bg-black p-1 mb-4">
@@ -553,7 +578,6 @@ function App() {
         </main>
       )}
 
-      {/* FOOTER */}
       <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase select-none relative z-20">
           by Viejo · viejorpg@gmail.com · v.1.0
       </footer>
