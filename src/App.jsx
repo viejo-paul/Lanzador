@@ -579,7 +579,7 @@ function App() {
       )}
 
       <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase select-none relative z-20">
-          by Viejo · viejorpg@gmail.com · v.1.0
+          by Viejo · viejorpg@gmail.com · v.0.2
       </footer>
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
