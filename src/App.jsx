@@ -3,6 +3,12 @@ import { database } from './firebase';
 import { ref, push, onValue, limitToLast, query, remove, update } from "firebase/database";
 import DiceBox from '@3d-dice/dice-box'; 
 
+// --- IMPORTACIÓN DE FUENTE PERSONALIZADA ---
+const fontStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
+  .font-consent { font-family: 'Manufacturing Consent', sans-serif !important; text-transform: none !important; }
+`;
+
 // --- GESTOR DE SONIDOS ---
 const playSound = (type) => {
   const sounds = {
@@ -64,7 +70,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
     <div className="fixed inset-0 bg-black/95 z-[90] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}>
       <div className="relative max-w-full max-h-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
         <img src={imageUrl} alt={title} className="max-w-[90vw] max-h-[80vh] border-2 border-[#d4af37] shadow-[0_0_50px_rgba(212,175,55,0.3)] object-contain"/>
-        <h2 className="text-[#d4af37] font-serif text-2xl mt-4 uppercase tracking-widest">{title}</h2>
+        <h2 className="text-[#d4af37] font-consent text-2xl mt-4 uppercase tracking-widest">{title}</h2>
         <button onClick={onClose} className="mt-4 text-gray-400 hover:text-white uppercase text-xs tracking-widest border border-gray-700 px-4 py-2">Cerrar</button>
       </div>
     </div>
@@ -73,7 +79,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
 
 // --- COMPONENTE FICHA ---
 const CharacterSheet = ({ roomName, playerName }) => {
-  const [stats, setStats] = useState({ ruin: 1, ruinInitial: 1, gold: 0, debt: 0, tokens: 0, occupation: '', background: '', drive: '', skills: '', rituals: '', backpack: '', armor: '', weapons: '', foundGear: '', conditions: '', imageUrl: '', realPlayerName: '', notes: '' });
+  const [stats, setStats] = useState({ ruin: 1, ruinInitial: 1, gold: 0, debt: 0, tokens: 0, goldReserve: 0, occupation: '', background: '', drive: '', skills: '', rituals: '', backpack: '', armor: '', weapons: '', foundGear: '', conditions: '', imageUrl: '', realPlayerName: '', notes: '' });
   const [isExpanded, setIsExpanded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -90,12 +96,13 @@ const CharacterSheet = ({ roomName, playerName }) => {
 
   return (
     <>
+    <style>{fontStyles}</style>
     <ImageModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} imageUrl={stats.imageUrl} title={playerName} />
     <div className="w-full border border-[#d4af37] mb-6 shadow-lg transition-all bg-[#1a1a1a]/90 backdrop-blur-sm relative z-10">
       <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
         <div className="flex items-center gap-3">
           {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-          <span className="text-[#d4af37] font-bold text-sm uppercase tracking-widest">{playerName} (TU FICHA)</span>
+          <span className="text-[#d4af37] font-consent font-bold text-sm uppercase tracking-widest">{playerName} (TU FICHA)</span>
         </div>
         <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
       </div>
@@ -147,13 +154,21 @@ const CharacterSheet = ({ roomName, playerName }) => {
               <div><label className="text-gray-500 uppercase block mb-1">Rituales (3)</label><textarea rows="4" value={stats.rituals} onChange={e=>handleChange('rituals',e.target.value)} className="w-full bg-black text-gray-300 border border-gray-700 p-1 resize-none leading-5 outline-none"/></div>
           </div>
           <div className="space-y-3 text-xs">
+             {/* Estados movido aquí arriba */}
+             <div><label className="text-red-500 uppercase block mb-1 font-bold">Estados</label><textarea rows="6" value={stats.conditions} onChange={e=>handleChange('conditions',e.target.value)} placeholder="---" className="w-full bg-black text-gray-300 border border-gray-700 p-2 resize-none outline-none"/></div>
              <div><label className="text-gray-500 uppercase block mb-1">Mochila (6)</label><textarea rows="6" value={stats.backpack} onChange={e=>handleChange('backpack',e.target.value)} className="w-full bg-black text-gray-300 border border-gray-700 p-2 resize-none outline-none"/></div>
              <div className="grid grid-cols-2 gap-2">
                 <div><label className="text-gray-500 uppercase block mb-1">Armas</label><textarea rows="5" value={stats.weapons} onChange={e=>handleChange('weapons',e.target.value)} className="w-full bg-black text-gray-300 border border-gray-700 p-1 resize-none outline-none"/></div>
                 <div><label className="text-gray-500 uppercase block mb-1">Armadura</label><textarea rows="5" value={stats.armor} onChange={e=>handleChange('armor',e.target.value)} className="w-full bg-black text-gray-300 border border-gray-700 p-1 resize-none outline-none"/></div>
              </div>
              <div><label className="text-[#d4af37] uppercase block mb-1">Equipo Encontrado</label><textarea value={stats.foundGear} onChange={e=>handleChange('foundGear',e.target.value)} className="w-full bg-black text-[#f9e29c] border border-[#d4af37] p-2 outline-none min-h-[4rem]"/></div>
-             <div><label className="text-red-500 uppercase block mb-1 font-bold">Estados</label><textarea rows="6" value={stats.conditions} onChange={e=>handleChange('conditions',e.target.value)} placeholder="---" className="w-full bg-black text-gray-300 border border-gray-700 p-2 resize-none outline-none"/></div>
+             
+             {/* Reserva de Oro añadida después de Equipo Encontrado */}
+             <div className="mb-4 border border-[#d4af37]/50 p-2 bg-[#d4af37]/5 flex justify-between items-center">
+                 <label className="text-sm text-[#d4af37] uppercase font-bold">Reserva de Oro</label>
+                 <input type="number" value={stats.goldReserve || 0} onChange={e=>handleChange('goldReserve',+e.target.value)} className="w-16 bg-black border border-[#d4af37] text-[#d4af37] font-bold text-center p-1"/>
+             </div>
+
              <div><label className="text-gray-600 uppercase block mb-1">URL Imagen (Retrato)</label><input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} className="w-full bg-black text-gray-600 text-[10px] border border-gray-800 p-2 outline-none"/></div>
              <div><label className="text-[#d4af37] uppercase block mb-1">Notas</label><textarea value={stats.notes || ''} onChange={e=>handleChange('notes',e.target.value)} className="w-full bg-black text-gray-400 border border-gray-800 p-2 outline-none min-h-[4rem]"/></div>
           </div>
@@ -188,7 +203,7 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                    </div>
                    <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#d4af37] font-bold text-sm uppercase">{n}</span>
+                        <span className="text-[#d4af37] font-consent font-bold text-sm uppercase">{n}</span>
                         {s.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
                       </div>
                       <div className="flex gap-2 text-[10px] uppercase">
@@ -203,14 +218,11 @@ const PartyView = ({ roomName, currentPlayerName }) => {
              </div>
              {expandedCards[n] && (
                <div className="p-3 bg-black/50 border-t border-gray-900 text-xs space-y-3 animate-in slide-in-from-top-1">
-                  {/* Fila 1: Ocupación / Trasfondo */}
                   <div className="grid grid-cols-2 gap-4">
                       <div><span className="text-gray-600 block text-[9px] uppercase">Ocupación</span><p className="text-gray-300">{s.occupation || '-'}</p></div>
                       <div><span className="text-gray-600 block text-[9px] uppercase">Trasfondo</span><p className="text-gray-300">{s.background || '-'}</p></div>
                   </div>
-                  {/* Fila 2: Motivación */}
                   <div><span className="text-gray-600 block text-[9px] uppercase">Motivación</span><p className="text-gray-300">{s.drive || '-'}</p></div>
-                  {/* Fila 3: Habilidades / Rituales */}
                   <div className="grid grid-cols-2 gap-4">
                     <div><span className="text-gray-600 block text-[9px] uppercase mb-1">Habilidades</span><pre className="text-gray-400 font-serif whitespace-pre-wrap border-t border-gray-800 pt-1">{s.skills || '-'}</pre></div>
                     <div><span className="text-gray-600 block text-[9px] uppercase mb-1">Rituales</span><pre className="text-gray-400 font-serif whitespace-pre-wrap border-t border-gray-800 pt-1">{s.rituals || '-'}</pre></div>
@@ -219,6 +231,9 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                     <span className="text-red-500 block text-[11px] uppercase mb-1 font-bold">Estados</span>
                     <p className={s.conditions?'text-red-400 font-bold':'text-green-500'}>{s.conditions||'---'}</p>
                   </div>
+                  {s.goldReserve > 0 && (
+                    <div className="text-[#d4af37] text-[10px] font-bold uppercase border-t border-gray-800 pt-1">Reserva de Oro: {s.goldReserve}</div>
+                  )}
                   {s.notes && (<div><span className="text-gray-600 block text-[9px] uppercase mb-1">Notas</span><p className="text-gray-400 italic text-[10px] border-t border-gray-800 pt-1">{s.notes}</p></div>)}
                </div>
              )}
@@ -362,16 +377,19 @@ function App() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
+      <style>{fontStyles}</style>
       
-      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-xs py-1 font-bold uppercase tracking-[0.2em] relative z-20">Trophy (g)Old</header>
+      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
+        <span className="font-consent">Trophy (g)Old</span>
+      </header>
 
       {!isJoined ? (
         <div className="flex-grow flex items-center justify-center p-4 relative z-10">
           <div className="bg-[#1a1a1a]/95 p-8 max-w-sm w-full border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
-            <h1 className="text-3xl font-bold text-[#d4af37] uppercase text-center mb-6">Trophy (g)Old</h1>
+            <h1 className="text-4xl font-consent text-[#d4af37] text-center mb-6">Trophy (g)Old</h1>
             <input type="text" placeholder="PARTIDA" value={roomName} onChange={e=>setRoomName(e.target.value)} className="w-full bg-black text-white p-3 mb-4 text-center border border-gray-800 outline-none focus:border-[#d4af37]"/>
             <input type="text" placeholder="TU NOMBRE" value={playerName} onChange={e=>setPlayerName(e.target.value)} className="w-full bg-black text-[#f9e29c] p-3 mb-6 text-center border border-gray-800 outline-none focus:border-[#d4af37] font-bold"/>
-            <button onClick={handleJoin} className="w-full bg-[#d4af37] text-black font-bold py-3 tracking-widest hover:bg-white transition-colors">ENTRAR</button>
+            <button onClick={handleJoin} className="w-full bg-[#d4af37] text-black font-consent text-xl py-3 tracking-widest hover:bg-white transition-colors">Entrar</button>
           </div>
         </div>
       ) : (
@@ -380,7 +398,7 @@ function App() {
                 <div className="flex flex-col">
                   <p className="text-[10px] text-gray-500 uppercase">Partida</p>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold text-[#d4af37]">{roomName}</h1>
+                    <h1 className="text-xl font-consent text-[#d4af37]">{roomName}</h1>
                     <button onClick={copyRoomLink} className="text-[#d4af37] hover:text-white transition-colors" title="Copiar enlace">🔗</button>
                   </div>
                 </div>
@@ -406,8 +424,8 @@ function App() {
                             {rollType!=='hunt' && (<div className={rollType==='combat'?'col-span-2':''}><label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label><div className="flex items-center justify-between border border-gray-600 bg-black h-10"><button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button><span className="font-bold">{darkCount}</span><button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button></div></div>)}
                           </div>
                         )}
-                        <button onClick={handleRoll} className={`w-full font-bold py-4 text-lg uppercase tracking-widest shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
-                          {rollType === 'combat' ? '¡ATACAR!' : rollType === 'hunt' ? 'EXPLORAR' : rollType === 'help' ? 'PRESTAR AYUDA' : 'TIRAR DADOS'}
+                        <button onClick={handleRoll} className={`w-full font-consent text-2xl py-4 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
+                          {rollType === 'combat' ? '¡Atacar!' : rollType === 'hunt' ? 'Explorar' : rollType === 'help' ? 'Prestar ayuda' : 'Tirar dados'}
                         </button>
                     </div>
 
@@ -415,7 +433,7 @@ function App() {
                         {history.map((roll, index) => (
                         <div key={roll.id} className={`bg-[#1a1a1a]/95 p-4 border-l-4 shadow-lg animate-in slide-in-from-top-2 ${roll.rollType === 'combat' ? 'border-red-900' : 'border-[#d4af37]'}`}>
                             <div className="flex justify-between items-baseline mb-3 border-b border-black pb-2">
-                                <span className="text-[#f9e29c] font-bold text-sm uppercase">{roll.player} <span className="text-[10px] text-gray-500 font-normal ml-1 border border-gray-800 px-1">{roll.rollType === 'risk' ? 'Riesgo' : roll.rollType === 'hunt' ? 'Explor.' : roll.rollType === 'combat' ? 'Combate' : 'Ayuda'}</span> {roll.isPush && <span className="text-red-500 ml-1">PUSH</span>}</span>
+                                <span className="text-[#f9e29c] font-consent text-lg">{roll.player} <span className="text-[10px] text-gray-500 font-serif ml-1 border border-gray-800 px-1 uppercase">{roll.rollType === 'risk' ? 'Riesgo' : roll.rollType === 'hunt' ? 'Explor.' : roll.rollType === 'combat' ? 'Combate' : 'Ayuda'}</span> {roll.isPush && <span className="text-red-500 ml-1 font-serif text-xs">PUSH</span>}</span>
                                 <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
                             </div>
                             <div className="mb-4">
@@ -440,7 +458,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.3.4 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.3.5 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
