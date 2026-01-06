@@ -153,7 +153,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
                 <div><label className="text-gray-500 uppercase block mb-1">Armadura</label><textarea rows="5" value={stats.armor} onChange={e=>handleChange('armor',e.target.value)} className="w-full bg-black text-gray-300 border border-gray-700 p-1 resize-none outline-none"/></div>
              </div>
              <div><label className="text-[#d4af37] uppercase block mb-1">Equipo Encontrado</label><textarea value={stats.foundGear} onChange={e=>handleChange('foundGear',e.target.value)} className="w-full bg-black text-[#f9e29c] border border-[#d4af37] p-2 outline-none min-h-[4rem]"/></div>
-             <div><label className="text-red-500 uppercase block mb-1 font-bold">Condiciones</label><textarea rows="6" value={stats.conditions} onChange={e=>handleChange('conditions',e.target.value)} placeholder="Sano..." className="w-full bg-black text-gray-300 border border-gray-700 p-2 resize-none outline-none"/></div>
+             <div><label className="text-red-500 uppercase block mb-1 font-bold">Estados</label><textarea rows="6" value={stats.conditions} onChange={e=>handleChange('conditions',e.target.value)} placeholder="---" className="w-full bg-black text-gray-300 border border-gray-700 p-2 resize-none outline-none"/></div>
              <div><label className="text-gray-600 uppercase block mb-1">URL Imagen (Retrato)</label><input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} className="w-full bg-black text-gray-600 text-[10px] border border-gray-800 p-2 outline-none"/></div>
              <div><label className="text-[#d4af37] uppercase block mb-1">Notas</label><textarea value={stats.notes || ''} onChange={e=>handleChange('notes',e.target.value)} className="w-full bg-black text-gray-400 border border-gray-800 p-2 outline-none min-h-[4rem]"/></div>
           </div>
@@ -203,14 +203,22 @@ const PartyView = ({ roomName, currentPlayerName }) => {
              </div>
              {expandedCards[n] && (
                <div className="p-3 bg-black/50 border-t border-gray-900 text-xs space-y-3 animate-in slide-in-from-top-1">
-                  <div className="grid grid-cols-3 gap-2">
+                  {/* Fila 1: Ocupación / Trasfondo */}
+                  <div className="grid grid-cols-2 gap-4">
                       <div><span className="text-gray-600 block text-[9px] uppercase">Ocupación</span><p className="text-gray-300">{s.occupation || '-'}</p></div>
                       <div><span className="text-gray-600 block text-[9px] uppercase">Trasfondo</span><p className="text-gray-300">{s.background || '-'}</p></div>
-                      <div><span className="text-gray-600 block text-[9px] uppercase">Motivación</span><p className="text-gray-300">{s.drive || '-'}</p></div>
                   </div>
-                  <div><span className="text-gray-600 block text-[9px] uppercase mb-1">Habilidades</span><pre className="text-gray-400 font-serif whitespace-pre-wrap border-t border-gray-800 pt-1">{s.skills || '-'}</pre></div>
-                  <div><span className="text-gray-600 block text-[9px] uppercase mb-1">Rituales</span><pre className="text-gray-400 font-serif whitespace-pre-wrap border-t border-gray-800 pt-1">{s.rituals || '-'}</pre></div>
-                  <div className="border border-red-900/30 p-2"><span className="text-red-500 block text-[11px] uppercase mb-1 font-bold">Condiciones</span><p className={s.conditions?'text-red-400 font-bold':'text-green-500'}>{s.conditions||'Sano'}</p></div>
+                  {/* Fila 2: Motivación */}
+                  <div><span className="text-gray-600 block text-[9px] uppercase">Motivación</span><p className="text-gray-300">{s.drive || '-'}</p></div>
+                  {/* Fila 3: Habilidades / Rituales */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><span className="text-gray-600 block text-[9px] uppercase mb-1">Habilidades</span><pre className="text-gray-400 font-serif whitespace-pre-wrap border-t border-gray-800 pt-1">{s.skills || '-'}</pre></div>
+                    <div><span className="text-gray-600 block text-[9px] uppercase mb-1">Rituales</span><pre className="text-gray-400 font-serif whitespace-pre-wrap border-t border-gray-800 pt-1">{s.rituals || '-'}</pre></div>
+                  </div>
+                  <div className="border border-red-900/30 p-2">
+                    <span className="text-red-500 block text-[11px] uppercase mb-1 font-bold">Estados</span>
+                    <p className={s.conditions?'text-red-400 font-bold':'text-green-500'}>{s.conditions||'---'}</p>
+                  </div>
                   {s.notes && (<div><span className="text-gray-600 block text-[9px] uppercase mb-1">Notas</span><p className="text-gray-400 italic text-[10px] border-t border-gray-800 pt-1">{s.notes}</p></div>)}
                </div>
              )}
@@ -347,6 +355,11 @@ function App() {
     push(ref(database, `rooms/${roomName}/rolls`), { id: Date.now(), dice: updatedDice, analysis, player: playerName, isPush: true, rollType: originalRoll.rollType, timestamp: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
   };
 
+  const copyRoomLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    alert('¡Enlace de partida copiado!');
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       
@@ -364,7 +377,13 @@ function App() {
       ) : (
         <main className="flex-grow flex flex-col items-center p-4 relative z-10">
             <div className="w-full max-w-5xl flex justify-between items-end mb-6 border-b border-[#1a1a1a] pb-2 px-2 bg-black/40">
-                <div><p className="text-[10px] text-gray-500 uppercase">Partida</p><h1 className="text-xl font-bold text-[#d4af37]">{roomName}</h1></div>
+                <div className="flex flex-col">
+                  <p className="text-[10px] text-gray-500 uppercase">Partida</p>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-bold text-[#d4af37]">{roomName}</h1>
+                    <button onClick={copyRoomLink} className="text-[#d4af37] hover:text-white transition-colors" title="Copiar enlace">🔗</button>
+                  </div>
+                </div>
                 <div className="flex gap-4 text-[10px] uppercase font-bold">
                     <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ ? Reglas ]</button>
                     <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar Dados ]</button>
@@ -421,7 +440,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.3.3 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.3.4 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
