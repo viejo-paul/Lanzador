@@ -336,10 +336,15 @@ function App() {
       // IMPORTANTE: Ahora apunta a tu carpeta public/assets
       assetPath: '/assets/', 
       theme: 'default',
-      scale: 6,
-      gravity: 3,
+      scale: 10,
+      gravity: 5,
       mass: 5,
-      friction: 0.8
+      friction: 0.5
+      restitution: 0.2, // Rebote. 0 = Plomo (no rebota), 1 = Goma (rebota mucho).
+      linearDamping: 0.5,  // Resistencia al aire al moverse. (0.5 es suave).
+      angularDamping: 0.4, // Resistencia al girar. Más alto = dejan de girar antes.
+      spinForce: 6,     // Cuánto giran al salir disparados.
+      throwForce: 7,    // Con cuánta fuerza salen disparados.
     });
     
     box.init()
@@ -595,7 +600,7 @@ function App() {
       )}
 
       <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase select-none relative z-20">
-          by Viejo · viejorpg@gmail.com · v.0.2.2
+          by Viejo · viejorpg@gmail.com · v.0.2.3
       </footer>
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
