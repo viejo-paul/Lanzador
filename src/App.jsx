@@ -346,20 +346,19 @@ function App() {
     }
   }, [history]);
 
-  // FUNCIÓN PARA LIMPIAR EL NOMBRE DE LA SALA (URL)
+  // Lógica v.0.4.3: slugify y random id
   const slugify = (text) => {
     return text
       .toString()
-      .normalize('NFD')                   // Elimina tildes
-      .replace(/[\u0300-\u036f]/g, '')    // Elimina tildes
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
       .trim()
-      .replace(/\s+/g, '-')               // Reemplaza espacios por -
-      .replace(/[^\w-]+/g, '')             // Elimina caracteres no alfanuméricos (excepto -)
-      .replace(/--+/g, '-');              // Elimina guiones dobles
+      .replace(/\s+/g, '-')
+      .replace(/[^\w-]+/g, '')
+      .replace(/--+/g, '-');
   };
 
-  // FUNCIÓN PARA GENERAR ID ALEATORIO
   const generateRandomID = () => {
     return Math.random().toString(36).substring(2, 6);
   };
@@ -370,7 +369,7 @@ function App() {
     if (roomName && nameToJoin) {
       let finalRoomName = roomName;
 
-      // Si es una creación nueva (no viene de URL ?partida=)
+      // Solo transformamos si no estamos ya dentro de una partida de la URL
       if (!new URLSearchParams(window.location.search).has('partida')) {
         const cleanName = slugify(roomName);
         const randomID = generateRandomID();
@@ -507,6 +506,7 @@ function App() {
 
             <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                 
+                {/* COLUMNA IZQUIERDA: DADOS E HISTORIAL */}
                 <div className="w-full space-y-8">
                     <div className="bg-[#1a1a1a]/90 p-5 border border-gray-800 shadow-xl">
                         <div className="grid grid-cols-4 gap-1 mb-6 bg-black p-1">
@@ -543,6 +543,7 @@ function App() {
                     </div>
                 </div>
 
+                {/* COLUMNA DERECHA: TU FICHA Y GRUPO (JUNTOS) */}
                 <div className="w-full flex flex-col space-y-2">
                     <CharacterSheet roomName={roomName} playerName={playerName} />
                     <PartyView roomName={roomName} currentPlayerName={playerName} />
