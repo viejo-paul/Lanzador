@@ -102,7 +102,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
       <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
         <div className="flex items-center gap-3">
           {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-          <span className="text-[#d4af37] font-consent text-2xl uppercase tracking-widest">{playerName}</span>
+          <span className="text-[#d4af37] font-consent text-4xl uppercase tracking-widest">{playerName}</span>
         </div>
         <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
       </div>
@@ -111,7 +111,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
           <div className="flex flex-col items-center mb-6">
              <div className="w-full flex justify-end mb-2">
                 <div className="flex flex-col items-end">
-                  <label className="text-[9px] text-gray-600 uppercase tracking-tighter">Jugador/a</label>
+                  <label className="text-[10px] text-gray-600 uppercase tracking-tighter">Jugador/a</label>
                   <input type="text" value={stats.realPlayerName || ''} onChange={e=>handleChange('realPlayerName', e.target.value)} className="bg-transparent text-gray-500 text-[10px] text-right outline-none border-b border-gray-900 focus:border-gray-700 w-24" placeholder="Nombre..."/>
                 </div>
              </div>
@@ -203,8 +203,8 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                    </div>
                    <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#d4af37] font-consent text-2xl uppercase">{n}</span>
-                        {s.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
+                        <span className="text-[#d4af37] font-consent text-4xl uppercase">{n}</span>
+                        {s.realPlayerName && <span className="text-[10px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
                       </div>
                       <div className="flex gap-2 text-[10px] uppercase">
                            <span className={s.ruin>=5?'text-red-500 font-bold':'text-gray-500'}>Ruina: {s.ruin}</span>
@@ -379,7 +379,7 @@ function App() {
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       <style>{fontStyles}</style>
       
-      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-xl py-2 font-bold relative z-20">
+      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-4xl py-2 font-bold relative z-20">
         <span className="font-consent">Trophy (g)Old</span>
       </header>
 
