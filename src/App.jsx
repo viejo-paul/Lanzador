@@ -321,21 +321,20 @@ function App() {
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   const isInitialLoad = useRef(true);
 
-  // 1. INICIALIZAR DADOS 3D (VERSIÓN ROBUSTA)
+// 1. INICIALIZAR DADOS 3D (VERSIÓN LOCAL ROBUSTA)
   useEffect(() => {
-    // Si ya existe la instancia, no hacemos nada
     if (diceBoxInstance) return;
 
-    // Buscamos el div por si acaso React aún no lo ha pintado
+    // Buscamos el contenedor
     const container = document.getElementById("dice-box");
     if (!container) return;
 
-    console.log("Iniciando motor 3D...");
+    console.log("Iniciando motor 3D desde local...");
 
     const box = new DiceBox({
       container: "#dice-box", 
-      // Usamos esta URL que suele ser más estable para los assets
-      assetPath: 'https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/assets/',
+      // IMPORTANTE: Ahora apunta a tu carpeta public/assets
+      assetPath: '/assets/', 
       theme: 'default',
       scale: 6,
       gravity: 3,
@@ -345,12 +344,13 @@ function App() {
     
     box.init()
       .then(() => {
-        console.log("¡Motor 3D cargado con éxito!");
+        console.log("✅ ¡Motor 3D cargado correctamente!");
         setDiceBoxInstance(box);
       })
       .catch((error) => {
-        console.error("ERROR FATAL cargando los dados:", error);
-        alert("Error al cargar los dados 3D. Abre la consola (F12) para ver el error rojo.");
+        console.error("❌ ERROR CARGANDO DADOS:", error);
+        // Si falla aquí, es que la carpeta /public/assets no está bien copiada
+        alert("Error: No se encuentran los archivos en /public/assets. Revisa el Paso 2.");
       });
   }, []); // Array vacío para que solo se ejecute al montar
 
@@ -595,7 +595,7 @@ function App() {
       )}
 
       <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase select-none relative z-20">
-          by Viejo · viejorpg@gmail.com · v.0.2
+          by Viejo · viejorpg@gmail.com · v.0.2.2
       </footer>
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
