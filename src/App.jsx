@@ -35,32 +35,79 @@ function analyzeResult(dice, rollType) {
   let soundType = 'fail'; 
 
   if (rollType === 'risk') {
-    if (highestValue === 6) { resultText = '¡ÉXITO COMPLETE!'; resultColor = 'text-[#d4af37] font-bold'; icon = '✨'; soundType = 'success'; }
-    else if (highestValue >= 4) { resultText = 'ÉXITO PARCIAL (CON COSTE)'; resultColor = 'text-[#f9e29c]'; icon = '⚠️'; soundType = 'fail'; }
-    else { resultText = 'FALLO (LA SITUACIÓN EMPEORA)'; resultColor = 'text-gray-400'; icon = '💀'; soundType = 'fail'; }
+    if (highestValue === 6) { resultText = 'LOGRAS LO QUE QUIERES. DESCRIBE CÓMO O PÍDESELO AL GUARDIÁN.'; resultColor = 'text-[#d4af37] font-bold'; icon = '✨'; soundType = 'success'; }
+    else if (highestValue >= 4) { resultText = 'LOGRAS LO QUE QUIERES, PERO CON ALGUNA COMPLICACIÓN. EL GUARDIÁN LA DETERMINA Y TÚ DESCRIBES CÓMO LO CONSIGUES.'; resultColor = 'text-[#f9e29c]'; icon = '⚠️'; soundType = 'fail'; }
+    else { resultText = 'FRACASAS Y TODO VA A PEOR. EL GUARDIÁN DESCRIBE CÓMO.'; resultColor = 'text-gray-400'; icon = '💀'; soundType = 'fail'; }
   } 
   else if (rollType === 'hunt') {
-    const tokens = dice.filter(d => d.value === 6).length;
-    if (tokens > 0) { resultText = `${tokens} CONTADOR${tokens > 1 ? 'ES' : ''} DE EXPLORACIÓN`; resultColor = 'text-[#d4af37] font-bold border border-[#d4af37] px-2 py-1 bg-[#d4af37]/10'; icon = '💎'; soundType = 'success'; }
-    else { resultText = 'SIN CONTADORES'; resultColor = 'text-gray-500'; icon = '🍂'; soundType = 'fail'; }
+    if (highestValue === 6) { 
+        resultText = 'GANAS 1 CONTADOR DE EXPLORACIÓN'; 
+        resultColor = 'text-[#d4af37] font-bold'; 
+        icon = '💎'; 
+        soundType = 'success'; 
+    }
+    else if (highestValue >= 4) { 
+        resultText = 'GANAS 1 CONTADOR, PERO ENCUENTRAS ALGO TERRIBLE'; 
+        resultColor = 'text-[#f9e29c]'; 
+        icon = '⚠️'; 
+        soundType = 'fail'; 
+    }
+    else if (highestValue >= 2) { 
+        resultText = 'ENCUENTRAS ALGO TERRIBLE'; 
+        resultColor = 'text-gray-400'; 
+        icon = '💀'; 
+        soundType = 'fail'; 
+    }
+    else { 
+        resultText = 'PIERDES TODOS TUS CONTADORES Y ENCUENTRAS ALGO TERRIBLE'; 
+        resultColor = 'text-red-500 font-bold animate-pulse'; 
+        icon = '🩸'; 
+        soundType = 'ruin'; 
+    }
   }
   else if (rollType === 'combat') {
-    const sortedValues = dice.map(d => d.value).sort((a, b) => b - a);
-    const attackTotal = (sortedValues[0] || 0) + (sortedValues[1] || 0);
-    resultText = `DAÑO TOTAL: ${attackTotal}`;
-    if (attackTotal >= 10) { resultColor = 'text-red-500 font-bold text-lg animate-pulse'; icon = '⚔️'; soundType = 'ruin'; }
-    else if (attackTotal >= 8) { resultColor = 'text-[#d4af37] font-bold'; icon = '🗡️'; soundType = 'success'; }
-    else { resultColor = 'text-gray-400'; icon = '🛡️'; soundType = 'fail'; }
+    // 1. Separar dados oscuros (Ataque) y claros (Punto Débil)
+    const darkDiceValues = dice.filter(d => d.type === 'dark').map(d => d.value).sort((a, b) => b - a);
+    const lightDiceValues = dice.filter(d => d.type === 'light').map(d => d.value);
+
+    // 2. Calcular Daño: Suma de los 2 dados oscuros más altos
+    // Si no hay dados oscuros, el daño es 0.
+    const damage = (darkDiceValues[0] || 0) + (darkDiceValues[1] || 0);
+
+    // 3. Comprobar Ruina (Si un dado oscuro coincide con tu Punto Débil/Dado Claro)
+    let ruinHits = 0;
+    lightDiceValues.forEach(weakPoint => {
+        const matches = darkDiceValues.filter(val => val === weakPoint).length;
+        ruinHits += matches;
+    });
+
+    // 4. Generar Texto y Estilos
+    resultText = `DAÑO TOTAL: ${damage}`;
+    
+    if (ruinHits > 0) {
+        // Caso: El monstruo golpea tu punto débil
+        resultText += ` | ¡PUNTO DÉBIL GOLPEADO! (+${ruinHits} RUINA)`;
+        resultColor = 'text-red-500 font-bold animate-pulse border-b-2 border-red-500'; 
+        icon = '🩸'; 
+        soundType = 'ruin';
+    } else {
+        // Caso: Ataque normal (sin recibir daño extra)
+        if (damage >= 10) { 
+            resultColor = 'text-[#d4af37] font-bold text-lg'; 
+            icon = '⚔️'; 
+            soundType = 'success'; 
+        } else { 
+            resultColor = 'text-gray-300 font-bold'; 
+            icon = '🗡️'; 
+            soundType = 'click'; 
+        }
+        
+        // Mostrar cuál era el punto débil para referencia visual
+        if (lightDiceValues.length > 0) {
+            resultText += ` (P. Débil: ${lightDiceValues.join(', ')})`;
+        }
+    }
   }
-  else if (rollType === 'help') {
-      const val = dice[0].value;
-      resultText = `DADO DE AYUDA: ${val}`;
-      if (val === 6) { resultColor = 'text-[#d4af37] font-bold'; icon = '🤝'; soundType = 'success'; }
-      else if (val >= 4) { resultColor = 'text-[#f9e29c]'; icon = '✋'; soundType = 'fail'; }
-      else { resultColor = 'text-gray-500'; icon = '🥀'; soundType = 'fail'; }
-  }
-  if (isDarkHighest && highestValue > 0) { soundType = 'ruin'; }
-  return { label: resultText, color: resultColor, isDarkHighest, icon, rollType, soundType };
 }
 
 // --- MODAL DE IMAGEN AMPLIADA ---
@@ -459,12 +506,22 @@ function App() {
   const handleRoll = async () => {
     if (!diceBoxInstance) return;
     const diceToRoll = [];
-    if (rollType === 'help') diceToRoll.push({ sides: 6, qty: 1, themeColor: '#d4af37', foreground: '#000000' });
-    else {
-        if (rollType !== 'combat' && lightCount > 0) diceToRoll.push({ sides: 6, qty: lightCount, themeColor: '#d4af37', foreground: '#000000' });
-        if (rollType !== 'hunt' && darkCount > 0) diceToRoll.push({ sides: 6, qty: darkCount, themeColor: '#1a1a1a', foreground: '#d4af37' });
+    
+    if (rollType === 'help') {
+        diceToRoll.push({ sides: 6, qty: 1, themeColor: '#d4af37', foreground: '#000000' });
+    } else {
+        // CAMBIO AQUÍ: Ya no bloqueamos los dados claros en combate
+        if (lightCount > 0) {
+            diceToRoll.push({ sides: 6, qty: lightCount, themeColor: '#d4af37', foreground: '#000000' });
+        }
+        // Los dados oscuros se añaden siempre excepto en 'hunt' (exploración)
+        if (rollType !== 'hunt' && darkCount > 0) {
+            diceToRoll.push({ sides: 6, qty: darkCount, themeColor: '#1a1a1a', foreground: '#d4af37' });
+        }
     }
+
     if (diceToRoll.length === 0) return;
+    
     diceBoxInstance.clear();
     const result3D = await diceBoxInstance.roll(diceToRoll);
     const newDice = result3D.map(d => ({ type: d.themeColor === '#d4af37' ? 'light' : 'dark', value: d.value, id: Math.random() }));
@@ -579,10 +636,10 @@ function App() {
                   </div>
                 </div>
                 <div className="flex gap-4 text-[9px] uppercase font-bold">
-                    <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ Reglas ]</button>
-                    <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar dados ]</button>
-                    <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Borrar historial ]</button>
-                    <button onClick={handleExit} className="text-gray-500 hover:text-white">[ Salir ]</button>
+                    <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">Reglas</button>
+                    <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">Limpiar dados</button>
+                    <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">Borrar historial</button>
+                    <button onClick={handleExit} className="text-gray-500 hover:text-white">Salir</button>
                 </div>
             </div>
 
@@ -596,8 +653,29 @@ function App() {
                         </div>
                         {rollType!=='help' && (
                           <div className="grid grid-cols-2 gap-4 mb-4">
-                            {rollType!=='combat' && (<div><label className="block text-[11px] text-[#d4af37] mb-1 uppercase text-center">Claros</label><div className="flex items-center justify-between border border-[#d4af37] bg-black h-10"><button onClick={()=>updateDiceCount(setLightCount,lightCount,-1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">-</button><span className="font-bold">{lightCount}</span><button onClick={()=>updateDiceCount(setLightCount,lightCount,1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">+</button></div></div>)}
-                            {rollType!=='hunt' && (<div className={rollType==='combat'?'col-span-2':''}><label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label><div className="flex items-center justify-between border border-gray-600 bg-black h-10"><button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button><span className="font-bold">{darkCount}</span><button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button></div></div>)}
+                            {/* CAMBIO: Se muestra SIEMPRE (quitada la condición rollType!=='combat') */}
+                            <div>
+                                <label className="block text-[11px] text-[#d4af37] mb-1 uppercase text-center">
+                                    {rollType === 'combat' ? 'Punto Débil (Claro)' : 'Claros'}
+                                </label>
+                                <div className="flex items-center justify-between border border-[#d4af37] bg-black h-10">
+                                    <button onClick={()=>updateDiceCount(setLightCount,lightCount,-1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">-</button>
+                                    <span className="font-bold">{lightCount}</span>
+                                    <button onClick={()=>updateDiceCount(setLightCount,lightCount,1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">+</button>
+                                </div>
+                            </div>
+                            
+                            {/* CAMBIO: Quitada la clase col-span-2 dinámica, ya que ahora comparten espacio en combate */}
+                            {rollType!=='hunt' && (
+                                <div>
+                                    <label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label>
+                                    <div className="flex items-center justify-between border border-gray-600 bg-black h-10">
+                                        <button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button>
+                                        <span className="font-bold">{darkCount}</span>
+                                        <button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button>
+                                    </div>
+                                </div>
+                            )}
                           </div>
                         )}
                         <button onClick={handleRoll} className={`w-full font-consent text-3xl py-2 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
@@ -609,17 +687,17 @@ function App() {
                         {history.map((roll, index) => (
                         <div key={roll.id} className={`bg-[#1a1a1a]/95 p-4 border-l-4 shadow-lg animate-in slide-in-from-top-2 ${roll.rollType === 'combat' ? 'border-red-900' : 'border-[#d4af37]'}`}>
                             <div className="flex justify-between items-baseline mb-3 border-b border-black pb-2">
-                                <span className="text-[#f9e29c] font-consent text-2xl">{roll.player} <span className="text-[10px] text-gray-500 font-serif ml-1 border border-gray-800 px-1 uppercase tracking-tighter">{roll.rollType === 'risk' ? 'Riesgo' : roll.rollType === 'hunt' ? 'Explor.' : roll.rollType === 'combat' ? 'Combate' : 'Ayuda'}</span> {roll.isPush && <span className="text-red-500 ml-1 font-serif text-xs">PUSH</span>}</span>
+                                <span className="text-[#f9e29c] font-consent text-2xl">{roll.player} <span className="text-[10px] text-gray-500 font-serif ml-1 border border-gray-800 px-1 uppercase tracking-tighter">{roll.rollType === 'risk' ? 'Riesgo' : roll.rollType === 'hunt' ? 'Explor.' : roll.rollType === 'combat' ? 'Combate' : 'Ayuda'}</span> {roll.isPush && <span className="text-red-500 ml-1 font-serif text-xs">Repetida</span>}</span>
                                 <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
                             </div>
                             <div className="mb-4">
                                 <span className={`font-bold uppercase text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
-                                {roll.analysis.isDarkHighest && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡DADO OSCURO DOMINA! (+1 RUINA)</div>}
+                                {roll.analysis.isDarkHighest && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡DADO OSCURO DOMINA! Si es superior a tu Ruina actual, tu Ruina aumenta +1.</div>}
                             </div>
                             <div className="flex gap-3 mb-2">
                                 {roll.dice.map(d => (<div key={d.id} className={`w-10 h-10 flex items-center justify-center text-xl font-bold ${d.type==='light'?'bg-[#d4af37] text-black':'bg-black text-white border border-gray-700'}`}>{d.value}</div>))}
                             </div>
-                            {index === 0 && roll.player === playerName && roll.rollType!=='help' && (<button onClick={()=>handlePush(roll)} className="mt-3 w-full border border-gray-700 text-gray-400 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2">¿Tentar al destino? (+1 Oscuro)</button>)}
+                            {index === 0 && roll.player === playerName && roll.rollType!=='help' && (<button onClick={()=>handlePush(roll)} className="mt-3 w-full border border-gray-700 text-gray-400 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2">¿Tentar al destino? (Volver a tirar +1d Oscuro)</button>)}
                         </div>
                         ))}
                     </div>
@@ -634,7 +712,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.7 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.8 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
