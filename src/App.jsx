@@ -73,7 +73,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
 
 // --- COMPONENTE FICHA ---
 const CharacterSheet = ({ roomName, playerName }) => {
-  const [stats, setStats] = useState({ ruin: 1, ruinInitial: 1, gold: 0, debt: 0, tokens: 0, occupation: '', background: '', drive: '', skills: '', rituals: '', backpack: '', armor: '', weapons: '', foundGear: '', conditions: '', imageUrl: '', realPlayerName: '' });
+  const [stats, setStats] = useState({ ruin: 1, ruinInitial: 1, gold: 0, debt: 0, tokens: 0, occupation: '', background: '', drive: '', skills: '', rituals: '', backpack: '', armor: '', weapons: '', foundGear: '', conditions: '', imageUrl: '', realPlayerName: '', notes: '' });
   const [isExpanded, setIsExpanded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -95,7 +95,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
       <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
         <div className="flex items-center gap-3">
           {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-          <span className="text-[#d4af37] font-bold text-sm uppercase tracking-widest">TU FICHA ({playerName})</span>
+          <span className="text-[#d4af37] font-bold text-sm uppercase tracking-widest">{playerName} (TU FICHA)</span>
         </div>
         <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
       </div>
@@ -152,9 +152,10 @@ const CharacterSheet = ({ roomName, playerName }) => {
                 <div><label className="text-gray-500 uppercase block mb-1">Armas</label><textarea rows="5" value={stats.weapons} onChange={e=>handleChange('weapons',e.target.value)} className="w-full bg-black text-gray-300 border border-gray-700 p-1 resize-none outline-none"/></div>
                 <div><label className="text-gray-500 uppercase block mb-1">Armadura</label><textarea rows="5" value={stats.armor} onChange={e=>handleChange('armor',e.target.value)} className="w-full bg-black text-gray-300 border border-gray-700 p-1 resize-none outline-none"/></div>
              </div>
-             <div><label className="text-[#d4af37] uppercase block mb-1">Equipo Encontrado</label><textarea rows="3" value={stats.foundGear} onChange={e=>handleChange('foundGear',e.target.value)} className="w-full bg-black text-[#f9e29c] border border-[#d4af37] p-2 resize-none outline-none"/></div>
-             <div><label className="text-red-500 uppercase block mb-1 font-bold">Condiciones</label><textarea value={stats.conditions} onChange={e=>handleChange('conditions',e.target.value)} placeholder="Sano..." className="w-full bg-black text-gray-300 border border-gray-700 p-2 h-16 outline-none"/></div>
-             <input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} placeholder="URL Imagen (Retrato)" className="w-full bg-black text-gray-600 text-[10px] border border-gray-800 p-2 outline-none"/>
+             <div><label className="text-[#d4af37] uppercase block mb-1">Equipo Encontrado</label><textarea value={stats.foundGear} onChange={e=>handleChange('foundGear',e.target.value)} className="w-full bg-black text-[#f9e29c] border border-[#d4af37] p-2 outline-none min-h-[4rem]"/></div>
+             <div><label className="text-red-500 uppercase block mb-1 font-bold">Condiciones</label><textarea rows="6" value={stats.conditions} onChange={e=>handleChange('conditions',e.target.value)} placeholder="Sano..." className="w-full bg-black text-gray-300 border border-gray-700 p-2 resize-none outline-none"/></div>
+             <div><label className="text-gray-600 uppercase block mb-1">URL Imagen (Retrato)</label><input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} className="w-full bg-black text-gray-600 text-[10px] border border-gray-800 p-2 outline-none"/></div>
+             <div><label className="text-[#d4af37] uppercase block mb-1">Notas</label><textarea value={stats.notes || ''} onChange={e=>handleChange('notes',e.target.value)} className="w-full bg-black text-gray-400 border border-gray-800 p-2 outline-none min-h-[4rem]"/></div>
           </div>
         </div>
       )}
@@ -185,18 +186,32 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                    <div onClick={(e) => { if(s.imageUrl) { e.stopPropagation(); setModalImage({ open: true, url: s.imageUrl, name: n }); } }} className={`w-10 h-10 rounded-full bg-black border border-gray-700 overflow-hidden ${s.imageUrl ? 'cursor-zoom-in hover:border-[#d4af37]' : ''}`}>
                     {s.imageUrl ? <img src={s.imageUrl} className="w-full h-full object-cover" alt={n}/> : null}
                    </div>
-                   <div><span className="text-[#d4af37] font-bold text-sm uppercase block">{n}</span><div className="flex gap-2 text-[11px] uppercase text-gray-500"><span className={s.ruin>=5?'text-red-500 font-bold':''}>R: {s.ruin}</span><span className="text-[#f9e29c]">O: {s.gold}</span><span className="text-red-400">D: {s.debt||0}</span><span className="text-[#d4af37]">C: {s.tokens||0}</span></div></div>
+                   <div className="flex flex-col">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[#d4af37] font-bold text-sm uppercase">{n}</span>
+                        {s.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
+                      </div>
+                      <div className="flex gap-2 text-[10px] uppercase">
+                           <span className={s.ruin>=5?'text-red-500 font-bold':'text-gray-500'}>Ruina: {s.ruin}</span>
+                           <span className="text-[#f9e29c]">Oro: {s.gold}</span>
+                           <span className="text-red-400 text-[9px]">Deuda: {s.debt||0}</span>
+                           <span className="text-[#d4af37] text-[9px]">Contadores: {s.tokens||0}</span>
+                      </div>
+                   </div>
                 </div>
                 <span className="text-gray-600">{expandedCards[n] ? '▲' : '▼'}</span>
              </div>
              {expandedCards[n] && (
-               <div className="p-3 bg-black/50 border-t border-gray-900 text-xs space-y-2 animate-in slide-in-from-top-1">
-                  <div className="grid grid-cols-2 gap-4">
-                      <div><span className="text-gray-600 block text-[11px] uppercase">Ocupación</span><p className="text-gray-300">{s.occupation || '-'}</p></div>
-                      <div><span className="text-gray-600 block text-[11px] uppercase">Motivación</span><p className="text-gray-300">{s.drive || '-'}</p></div>
+               <div className="p-3 bg-black/50 border-t border-gray-900 text-xs space-y-3 animate-in slide-in-from-top-1">
+                  <div className="grid grid-cols-3 gap-2">
+                      <div><span className="text-gray-600 block text-[9px] uppercase">Ocupación</span><p className="text-gray-300">{s.occupation || '-'}</p></div>
+                      <div><span className="text-gray-600 block text-[9px] uppercase">Trasfondo</span><p className="text-gray-300">{s.background || '-'}</p></div>
+                      <div><span className="text-gray-600 block text-[9px] uppercase">Motivación</span><p className="text-gray-300">{s.drive || '-'}</p></div>
                   </div>
-                  <pre className="text-gray-400 font-serif whitespace-pre-wrap border-t border-gray-800 pt-2">{s.skills}</pre>
-                  <div className="border border-red-900/30 p-2"><span className="text-red-500 block text-[11px] uppercase mb-1">Condiciones</span><p className={s.conditions?'text-red-400 font-bold':'text-green-500'}>{s.conditions||'Sano'}</p></div>
+                  <div><span className="text-gray-600 block text-[9px] uppercase mb-1">Habilidades</span><pre className="text-gray-400 font-serif whitespace-pre-wrap border-t border-gray-800 pt-1">{s.skills || '-'}</pre></div>
+                  <div><span className="text-gray-600 block text-[9px] uppercase mb-1">Rituales</span><pre className="text-gray-400 font-serif whitespace-pre-wrap border-t border-gray-800 pt-1">{s.rituals || '-'}</pre></div>
+                  <div className="border border-red-900/30 p-2"><span className="text-red-500 block text-[11px] uppercase mb-1 font-bold">Condiciones</span><p className={s.conditions?'text-red-400 font-bold':'text-green-500'}>{s.conditions||'Sano'}</p></div>
+                  {s.notes && (<div><span className="text-gray-600 block text-[9px] uppercase mb-1">Notas</span><p className="text-gray-400 italic text-[10px] border-t border-gray-800 pt-1">{s.notes}</p></div>)}
                </div>
              )}
           </div>
@@ -406,7 +421,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.3.2 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.3.3 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
