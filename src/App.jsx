@@ -73,7 +73,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
 
 // --- COMPONENTE FICHA ---
 const CharacterSheet = ({ roomName, playerName }) => {
-  const [stats, setStats] = useState({ ruin: 1, ruinInitial: 1, gold: 0, debt: 0, tokens: 0, occupation: '', background: '', drive: '', skills: '', rituals: '', backpack: '', armor: '', weapons: '', foundGear: '', conditions: '', imageUrl: '' });
+  const [stats, setStats] = useState({ ruin: 1, ruinInitial: 1, gold: 0, debt: 0, tokens: 0, occupation: '', background: '', drive: '', skills: '', rituals: '', backpack: '', armor: '', weapons: '', foundGear: '', conditions: '', imageUrl: '', realPlayerName: '' });
   const [isExpanded, setIsExpanded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -101,7 +101,13 @@ const CharacterSheet = ({ roomName, playerName }) => {
       </div>
       {isExpanded && (
         <div className="p-4 animate-in slide-in-from-top-2">
-          <div className="flex justify-center mb-6">
+          <div className="flex flex-col items-center mb-6">
+             <div className="w-full flex justify-end mb-2">
+                <div className="flex flex-col items-end">
+                  <label className="text-[9px] text-gray-600 uppercase tracking-tighter">Jugador/a</label>
+                  <input type="text" value={stats.realPlayerName || ''} onChange={e=>handleChange('realPlayerName', e.target.value)} className="bg-transparent text-gray-500 text-[10px] text-right outline-none border-b border-gray-900 focus:border-gray-700 w-24" placeholder="Nombre..."/>
+                </div>
+             </div>
              <div onClick={() => stats.imageUrl && setIsModalOpen(true)} className={`w-24 h-24 rounded-full border-2 border-[#d4af37] bg-black overflow-hidden ${stats.imageUrl ? 'cursor-zoom-in hover:border-white transition-colors' : ''}`}>
                 {stats.imageUrl ? <img src={stats.imageUrl} className="w-full h-full object-cover" alt="Avatar"/> : <div className="w-full h-full flex items-center justify-center text-[#d4af37] opacity-20 text-4xl">?</div>}
              </div>
@@ -122,10 +128,19 @@ const CharacterSheet = ({ roomName, playerName }) => {
                  <label className="text-sm text-[#d4af37] uppercase font-bold">Contadores Exploración</label>
                  <input type="number" value={stats.tokens || 0} onChange={e=>handleChange('tokens',+e.target.value)} className="w-16 bg-black border border-[#d4af37] text-[#d4af37] font-bold text-center p-1"/>
           </div>
-          <div className="space-y-2 mb-4">
-              <input type="text" value={stats.occupation} onChange={e=>handleChange('occupation',e.target.value)} placeholder="Ocupación" className="w-full bg-black text-white text-sm border border-gray-800 p-2 placeholder-gray-600 outline-none focus:border-[#d4af37]"/>
-              <input type="text" value={stats.background} onChange={e=>handleChange('background',e.target.value)} placeholder="Trasfondo" className="w-full bg-black text-white text-sm border border-gray-800 p-2 placeholder-gray-600 outline-none focus:border-[#d4af37]"/>
-              <input type="text" value={stats.drive} onChange={e=>handleChange('drive',e.target.value)} placeholder="Motivación" className="w-full bg-black text-white text-sm border border-gray-800 p-2 placeholder-gray-600 outline-none focus:border-[#d4af37]"/>
+          <div className="space-y-3 mb-4">
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase block mb-1">Ocupación</label>
+                <input type="text" value={stats.occupation} onChange={e=>handleChange('occupation',e.target.value)} className="w-full bg-black text-white text-sm border border-gray-800 p-2 outline-none focus:border-[#d4af37]"/>
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase block mb-1">Trasfondo</label>
+                <input type="text" value={stats.background} onChange={e=>handleChange('background',e.target.value)} className="w-full bg-black text-white text-sm border border-gray-800 p-2 outline-none focus:border-[#d4af37]"/>
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase block mb-1">Motivación</label>
+                <input type="text" value={stats.drive} onChange={e=>handleChange('drive',e.target.value)} className="w-full bg-black text-white text-sm border border-gray-800 p-2 outline-none focus:border-[#d4af37]"/>
+              </div>
           </div>
           <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
               <div><label className="text-gray-500 uppercase block mb-1">Habilidades (4)</label><textarea rows="4" value={stats.skills} onChange={e=>handleChange('skills',e.target.value)} className="w-full bg-black text-gray-300 border border-gray-700 p-1 resize-none leading-5 outline-none"/></div>
@@ -336,9 +351,9 @@ function App() {
             <div className="w-full max-w-5xl flex justify-between items-end mb-6 border-b border-[#1a1a1a] pb-2 px-2 bg-black/40">
                 <div><p className="text-[10px] text-gray-500 uppercase">Partida</p><h1 className="text-xl font-bold text-[#d4af37]">{roomName}</h1></div>
                 <div className="flex gap-4 text-[10px] uppercase font-bold">
-                    <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ ? ]</button>
+                    <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ ? Reglas ]</button>
                     <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar Dados ]</button>
-                    <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Purgar Logs ]</button>
+                    <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Limpiar Historial ]</button>
                     <button onClick={handleExit} className="text-gray-500 hover:text-white">[ Salir ]</button>
                 </div>
             </div>
@@ -349,7 +364,7 @@ function App() {
                 <div className="w-full space-y-8">
                     <div className="bg-[#1a1a1a]/90 p-5 border border-gray-800 shadow-xl">
                         <div className="grid grid-cols-4 gap-1 mb-6 bg-black p-1">
-                            {['risk','hunt','combat','help'].map(t=>(<button key={t} onClick={()=>setRollType(t)} className={`py-2 text-[10px] uppercase font-bold transition-all ${rollType===t?(t==='combat'?'bg-red-900':'bg-[#d4af37] text-black'):'text-gray-500 hover:text-gray-300'}`}>{t==='risk'?'Riesgo':t==='hunt'?'Caza':t==='combat'?'Combate':'Ayuda'}</button>))}
+                            {['risk','hunt','combat','help'].map(t=>(<button key={t} onClick={()=>setRollType(t)} className={`py-2 text-[10px] uppercase font-bold transition-all ${rollType===t?(t==='combat'?'bg-red-900':'bg-[#d4af37] text-black'):'text-gray-500 hover:text-gray-300'}`}>{t==='risk'?'Riesgo':t==='hunt'?'Explor.':t==='combat'?'Combate':'Ayuda'}</button>))}
                         </div>
                         {rollType!=='help' && (
                           <div className="grid grid-cols-2 gap-4 mb-4">
@@ -357,14 +372,16 @@ function App() {
                             {rollType!=='hunt' && (<div className={rollType==='combat'?'col-span-2':''}><label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label><div className="flex items-center justify-between border border-gray-600 bg-black h-10"><button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button><span className="font-bold">{darkCount}</span><button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button></div></div>)}
                           </div>
                         )}
-                        <button onClick={handleRoll} className={`w-full font-bold py-4 text-lg uppercase tracking-widest shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>TIRAR DADOS</button>
+                        <button onClick={handleRoll} className={`w-full font-bold py-4 text-lg uppercase tracking-widest shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
+                          {rollType === 'combat' ? '¡ATACAR!' : rollType === 'hunt' ? 'EXPLORAR' : rollType === 'help' ? 'PRESTAR AYUDA' : 'TIRAR DADOS'}
+                        </button>
                     </div>
 
                     <div className="space-y-4">
                         {history.map((roll, index) => (
                         <div key={roll.id} className={`bg-[#1a1a1a]/95 p-4 border-l-4 shadow-lg animate-in slide-in-from-top-2 ${roll.rollType === 'combat' ? 'border-red-900' : 'border-[#d4af37]'}`}>
                             <div className="flex justify-between items-baseline mb-3 border-b border-black pb-2">
-                                <span className="text-[#f9e29c] font-bold text-sm uppercase">{roll.player} <span className="text-[10px] text-gray-500 font-normal ml-1 border border-gray-800 px-1">{roll.rollType}</span> {roll.isPush && <span className="text-red-500 ml-1">PUSH</span>}</span>
+                                <span className="text-[#f9e29c] font-bold text-sm uppercase">{roll.player} <span className="text-[10px] text-gray-500 font-normal ml-1 border border-gray-800 px-1">{roll.rollType === 'risk' ? 'Riesgo' : roll.rollType === 'hunt' ? 'Explor.' : roll.rollType === 'combat' ? 'Combate' : 'Ayuda'}</span> {roll.isPush && <span className="text-red-500 ml-1">PUSH</span>}</span>
                                 <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
                             </div>
                             <div className="mb-4">
@@ -389,7 +406,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-300 text-[10px] py-1 font-mono uppercase">v.0.3.1 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.3.2 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
