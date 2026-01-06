@@ -354,6 +354,7 @@ function App() {
     const container = document.getElementById("dice-box");
     if (!container) return;
 
+    // Motor de dados 3D
     const box = new DiceBox({
       container: "#dice-box", 
       assetPath: '/assets/', 
@@ -470,8 +471,8 @@ function App() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       
-      {/* 3D CANVAS - CAMBIADO: z-[50] y pointer-events-none para que esté ARRIBA pero deje clicar debajo */}
-      <div id="dice-box" className="fixed inset-0 w-full h-full z-[50] pointer-events-none"></div>
+      {/* 3D CANVAS - CORREGIDO: Fuera de cualquier contenedor relativo de grid */}
+      <div id="dice-box" className="fixed top-0 left-0 w-screen h-screen z-[50] pointer-events-none"></div>
 
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-xs py-1 font-bold uppercase tracking-[0.2em] select-none relative z-20">
           Trophy (g)Old
@@ -589,7 +590,7 @@ function App() {
       )}
 
       <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase select-none relative z-20">
-          by Viejo · viejorpg@gmail.com · v.0.2.6
+          by Viejo · viejorpg@gmail.com · v.0.2.7
       </footer>
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
