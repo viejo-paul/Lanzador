@@ -5,27 +5,20 @@ import DiceBox from '@3d-dice/dice-box';
 
 // --- GESTOR DE SONIDOS ---
 const playSound = (type) => {
-  // Lista de rutas
   const sounds = {
     click: '/sounds/click.mp3',
     success: '/sounds/success.mp3',
     fail: '/sounds/fail.mp3',
     ruin: '/sounds/glitch.mp3',
   };
-
-  // Intentamos reproducir solo si el archivo existe (evita errores masivos en consola)
   const audio = new Audio(sounds[type]);
   audio.volume = 0.5;
-  audio.play().catch(e => {
-    // Silenciamos el error en consola si faltan los archivos o no hay interacción
-    // console.log("Audio no reproducido (falta archivo o permisos)"); 
-  });
+  audio.play().catch(e => {});
 };
 
 // --- LÓGICA DE REGLAS TROPHY GOLD ---
 function analyzeResult(dice, rollType) {
   if (dice.length === 0) return { label: 'Sin dados', color: 'text-gray-500' };
-
   const highestValue = Math.max(...dice.map(d => d.value));
   const highestDice = dice.filter(d => d.value === highestValue);
   const isDarkHighest = highestDice.some(d => d.type === 'dark');
@@ -35,7 +28,6 @@ function analyzeResult(dice, rollType) {
   let icon = '';
   let soundType = 'fail'; 
 
-  // --- MODO RIESGO ---
   if (rollType === 'risk') {
     if (highestValue === 6) {
       resultText = '¡ÉXITO COMPLETE!'; 
@@ -54,8 +46,6 @@ function analyzeResult(dice, rollType) {
       soundType = 'fail';
     }
   } 
-  
-  // --- MODO EXPLORACIÓN ---
   else if (rollType === 'hunt') {
     const tokens = dice.filter(d => d.value === 6).length;
     if (tokens > 0) {
@@ -70,13 +60,10 @@ function analyzeResult(dice, rollType) {
       soundType = 'fail';
     }
   }
-
-  // --- MODO COMBATE ---
   else if (rollType === 'combat') {
     const sortedValues = dice.map(d => d.value).sort((a, b) => b - a);
     const attackTotal = (sortedValues[0] || 0) + (sortedValues[1] || 0);
     resultText = `DAÑO TOTAL: ${attackTotal}`;
-    
     if (attackTotal >= 10) {
         resultColor = 'text-red-500 font-bold text-lg animate-pulse';
         icon = '⚔️';
@@ -91,8 +78,6 @@ function analyzeResult(dice, rollType) {
         soundType = 'fail';
     }
   }
-
-  // --- MODO AYUDAR ---
   else if (rollType === 'help') {
       const val = dice[0].value;
       resultText = `DADO DE AYUDA: ${val}`;
@@ -110,13 +95,27 @@ function analyzeResult(dice, rollType) {
           soundType = 'fail';
       }
   }
-
-  if (isDarkHighest && highestValue > 0) {
-      soundType = 'ruin'; 
-  }
-
+  if (isDarkHighest && highestValue > 0) { soundType = 'ruin'; }
   return { label: resultText, color: resultColor, isDarkHighest, icon, rollType, soundType };
 }
+
+// --- MODAL DE IMAGEN AMPLIADA ---
+const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
+  if (!isOpen || !imageUrl) return null;
+  return (
+    <div className="fixed inset-0 bg-black/95 z-[70] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}>
+      <div className="relative max-w-full max-h-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
+        <img 
+          src={imageUrl} 
+          alt={title} 
+          className="max-w-[90vw] max-h-[80vh] border-2 border-[#d4af37] shadow-[0_0_50px_rgba(212,175,55,0.3)] object-contain"
+        />
+        <h2 className="text-[#d4af37] font-serif text-2xl mt-4 uppercase tracking-widest">{title}</h2>
+        <button onClick={onClose} className="mt-4 text-gray-400 hover:text-white uppercase text-xs tracking-widest border border-gray-700 px-4 py-2">Cerrar</button>
+      </div>
+    </div>
+  );
+};
 
 // --- COMPONENTE FICHA ---
 const CharacterSheet = ({ roomName, playerName }) => {
@@ -126,6 +125,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
     backpack: '', armor: '', weapons: '', foundGear: '', conditions: '', imageUrl: '' 
   });
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onValue(ref(database, `rooms/${roomName}/characters/${playerName}`), s => s.val() && setStats(s.val()));
@@ -139,11 +139,13 @@ const CharacterSheet = ({ roomName, playerName }) => {
   };
 
   return (
+    <>
+    <ImageModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} imageUrl={stats.imageUrl} title={playerName} />
     <div className="w-full border border-[#d4af37] mb-6 shadow-lg transition-all bg-[#1a1a1a]/90 backdrop-blur-sm relative z-10">
       <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
         <div className="flex items-center gap-3">
           {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-          <span className="text-[#d4af37] font-bold text-xs uppercase tracking-widest">TU FICHA ({playerName})</span>
+          <span className="text-[#d4af37] font-bold text-sm uppercase tracking-widest">TU FICHA ({playerName})</span>
         </div>
         <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
       </div>
@@ -151,11 +153,16 @@ const CharacterSheet = ({ roomName, playerName }) => {
       {isExpanded && (
         <div className="p-4 animate-in slide-in-from-top-2">
           <div className="flex justify-center mb-6">
-             <div className="w-24 h-24 rounded-full border-2 border-[#d4af37] bg-black overflow-hidden">{stats.imageUrl ? <img src={stats.imageUrl} className="w-full h-full object-cover" alt="Avatar"/> : <div className="w-full h-full flex items-center justify-center text-[#d4af37] opacity-20 text-4xl">?</div>}</div>
+             <div 
+              onClick={() => stats.imageUrl && setIsModalOpen(true)}
+              className={`w-24 h-24 rounded-full border-2 border-[#d4af37] bg-black overflow-hidden ${stats.imageUrl ? 'cursor-zoom-in hover:border-white transition-colors' : ''}`}
+             >
+                {stats.imageUrl ? <img src={stats.imageUrl} className="w-full h-full object-cover" alt="Avatar"/> : <div className="w-full h-full flex items-center justify-center text-[#d4af37] opacity-20 text-4xl">?</div>}
+             </div>
           </div>
           <div className="grid grid-cols-4 gap-2 mb-4">
             <div className="col-span-2 border border-gray-700 p-1 bg-black">
-                <label className="text-[9px] text-gray-500 uppercase block text-center mb-1">Ruina (Inicial / Actual)</label>
+                <label className="text-[11px] text-gray-500 uppercase block text-center mb-1">Ruina (Inicial / Actual)</label>
                 <div className="flex items-center gap-1">
                     <input type="number" min="1" max="6" value={stats.ruinInitial || 1} onChange={e=>handleChange('ruinInitial',+e.target.value)} className="w-full bg-[#111] text-gray-400 text-center font-bold outline-none border-r border-gray-800"/>
                     <span className="text-gray-600">/</span>
@@ -163,17 +170,17 @@ const CharacterSheet = ({ roomName, playerName }) => {
                 </div>
             </div>
             <div className="border border-gray-700 p-1 bg-black">
-                <label className="text-[9px] text-[#f9e29c] uppercase block text-center mb-1">Oro</label>
+                <label className="text-[11px] text-[#f9e29c] uppercase block text-center mb-1">Oro</label>
                 <input type="number" value={stats.gold} onChange={e=>handleChange('gold',+e.target.value)} className="w-full bg-transparent text-[#d4af37] text-center font-bold outline-none"/>
             </div>
              <div className="border border-gray-700 p-1 bg-black">
-                <label className="text-[9px] text-red-400 uppercase block text-center mb-1">Deuda</label>
+                <label className="text-[11px] text-red-400 uppercase block text-center mb-1">Deuda</label>
                 <input type="number" value={stats.debt || 0} onChange={e=>handleChange('debt',+e.target.value)} className="w-full bg-transparent text-red-400 text-center font-bold outline-none"/>
             </div>
           </div>
           <div className="mb-4 border border-[#d4af37]/50 p-2 bg-[#d4af37]/5">
              <div className="flex justify-between items-center">
-                 <label className="text-xs text-[#d4af37] uppercase font-bold">Contadores Exploración</label>
+                 <label className="text-sm text-[#d4af37] uppercase font-bold">Contadores Exploración</label>
                  <input type="number" value={stats.tokens || 0} onChange={e=>handleChange('tokens',+e.target.value)} className="w-16 bg-black border border-[#d4af37] text-[#d4af37] font-bold text-center p-1"/>
              </div>
           </div>
@@ -184,35 +191,35 @@ const CharacterSheet = ({ roomName, playerName }) => {
           </div>
           <div className="grid grid-cols-2 gap-2 mb-4">
               <div>
-                  <label className="text-[10px] text-gray-500 uppercase block mb-1">Habilidades (4)</label>
+                  <label className="text-xs text-gray-500 uppercase block mb-1">Habilidades (4)</label>
                   <textarea rows="4" value={stats.skills} onChange={e=>handleChange('skills',e.target.value)} className="w-full bg-black text-gray-300 text-xs border border-gray-700 p-1 resize-none leading-5" placeholder={"1.\n2.\n3.\n4."}/>
               </div>
               <div>
-                  <label className="text-[10px] text-gray-500 uppercase block mb-1">Rituales (3)</label>
+                  <label className="text-xs text-gray-500 uppercase block mb-1">Rituales (3)</label>
                   <textarea rows="4" value={stats.rituals} onChange={e=>handleChange('rituals',e.target.value)} className="w-full bg-black text-gray-300 text-xs border border-gray-700 p-1 resize-none leading-5" placeholder={"1.\n2.\n3."}/>
               </div>
           </div>
           <div className="space-y-3">
              <div>
-                 <label className="text-[10px] text-gray-500 uppercase block mb-1">Equipo en la Mochila (6)</label>
+                 <label className="text-xs text-gray-500 uppercase block mb-1">Equipo en la Mochila (6)</label>
                  <textarea rows="6" value={stats.backpack} onChange={e=>handleChange('backpack',e.target.value)} placeholder={"1.\n2.\n..."} className="w-full bg-black text-gray-300 text-xs border border-gray-700 p-2 resize-none"/>
              </div>
              <div className="grid grid-cols-2 gap-2">
                 <div>
-                    <label className="text-[10px] text-gray-500 uppercase block mb-1">Armas (5)</label>
+                    <label className="text-xs text-gray-500 uppercase block mb-1">Armas (5)</label>
                     <textarea rows="5" value={stats.weapons} onChange={e=>handleChange('weapons',e.target.value)} className="w-full bg-black text-gray-300 text-xs border border-gray-700 p-1 resize-none"/>
                 </div>
                 <div>
-                    <label className="text-[10px] text-gray-500 uppercase block mb-1">Armaduras (5)</label>
+                    <label className="text-xs text-gray-500 uppercase block mb-1">Armaduras (5)</label>
                     <textarea rows="5" value={stats.armor} onChange={e=>handleChange('armor',e.target.value)} className="w-full bg-black text-gray-300 text-xs border border-gray-700 p-1 resize-none"/>
                 </div>
              </div>
              <div>
-                 <label className="text-[10px] text-[#d4af37] uppercase block mb-1">Equipo Encontrado</label>
+                 <label className="text-xs text-[#d4af37] uppercase block mb-1">Equipo Encontrado</label>
                  <textarea rows="3" value={stats.foundGear} onChange={e=>handleChange('foundGear',e.target.value)} className="w-full bg-black text-[#f9e29c] text-xs border border-[#d4af37] p-2 resize-none"/>
              </div>
              <div>
-                 <label className="text-[10px] text-red-500 uppercase block mb-1">Condiciones (Heridas)</label>
+                 <label className="text-xs text-red-500 uppercase block mb-1 font-bold">Condiciones (Heridas)</label>
                  <textarea value={stats.conditions} onChange={e=>handleChange('conditions',e.target.value)} placeholder="Sin traumas..." className="w-full bg-black text-gray-300 text-xs border border-gray-700 p-2 h-16"/>
              </div>
              <input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} placeholder="URL Imagen (Retrato)" className="w-full bg-black text-gray-600 text-xs border border-gray-800 p-2"/>
@@ -220,6 +227,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 
@@ -227,6 +235,8 @@ const CharacterSheet = ({ roomName, playerName }) => {
 const PartyView = ({ roomName, currentPlayerName }) => {
   const [party, setParty] = useState({});
   const [expandedCards, setExpandedCards] = useState({});
+  const [modalImage, setModalImage] = useState({ open: false, url: '', name: '' });
+
   useEffect(() => {
     if(!roomName)return;
     return onValue(ref(database, `rooms/${roomName}/characters`), s => s.val() && setParty(s.val()));
@@ -238,6 +248,13 @@ const PartyView = ({ roomName, currentPlayerName }) => {
   if(players.length===0) return null;
 
   return (
+    <>
+    <ImageModal 
+      isOpen={modalImage.open} 
+      onClose={() => setModalImage({ ...modalImage, open: false })} 
+      imageUrl={modalImage.url} 
+      title={modalImage.name} 
+    />
     <div className="w-full mt-8 border-t border-gray-900 pt-8 relative z-10">
       <h3 className="text-gray-500 text-xs uppercase tracking-[0.3em] text-center mb-6">El Resto del Grupo</h3>
       <div className="space-y-3">
@@ -245,10 +262,20 @@ const PartyView = ({ roomName, currentPlayerName }) => {
           <div key={n} className="border border-gray-800 bg-[#0a0a0a]/90 backdrop-blur-sm">
              <div onClick={()=>toggle(n)} className="flex justify-between p-3 cursor-pointer hover:bg-[#1a1a1a]">
                 <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 rounded-full bg-black border border-gray-700 overflow-hidden">{s.imageUrl ? <img src={s.imageUrl} className="w-full h-full object-cover" alt={n}/> : null}</div>
+                   <div 
+                    onClick={(e) => {
+                      if(s.imageUrl) {
+                        e.stopPropagation();
+                        setModalImage({ open: true, url: s.imageUrl, name: n });
+                      }
+                    }}
+                    className={`w-10 h-10 rounded-full bg-black border border-gray-700 overflow-hidden ${s.imageUrl ? 'cursor-zoom-in hover:border-[#d4af37]' : ''}`}
+                   >
+                    {s.imageUrl ? <img src={s.imageUrl} className="w-full h-full object-cover" alt={n}/> : null}
+                   </div>
                    <div>
                        <span className="text-[#d4af37] font-bold text-sm uppercase block">{n}</span>
-                       <div className="flex gap-2 text-[9px] uppercase text-gray-500">
+                       <div className="flex gap-2 text-[11px] uppercase text-gray-500">
                            <span className={s.ruin>=5?'text-red-500 font-bold':''}>R: {s.ruin}/{s.ruinInitial||1}</span>
                            <span className="text-[#f9e29c]">O: {s.gold}</span>
                            <span className="text-red-400">D: {s.debt||0}</span>
@@ -261,26 +288,27 @@ const PartyView = ({ roomName, currentPlayerName }) => {
              {expandedCards[n] && (
                <div className="p-3 bg-black/50 border-t border-gray-900 text-xs">
                   <div className="grid grid-cols-2 gap-4 mb-2">
-                      <div><span className="text-gray-600 block text-[9px]">Ocupación</span><p className="text-gray-300">{s.occupation || '-'}</p></div>
-                      <div><span className="text-gray-600 block text-[9px]">Motivación</span><p className="text-gray-300">{s.drive || '-'}</p></div>
+                      <div><span className="text-gray-600 block text-[11px] uppercase">Ocupación</span><p className="text-gray-300">{s.occupation || '-'}</p></div>
+                      <div><span className="text-gray-600 block text-[11px] uppercase">Motivación</span><p className="text-gray-300">{s.drive || '-'}</p></div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 mb-2">
-                     <div className="border border-gray-800 p-2"><span className="text-gray-600 block text-[9px] uppercase mb-1">Habilidades</span><pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.skills}</pre></div>
-                     <div className="border border-gray-800 p-2"><span className="text-gray-600 block text-[9px] uppercase mb-1">Rituales</span><pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.rituals}</pre></div>
+                     <div className="border border-gray-800 p-2"><span className="text-gray-600 block text-[11px] uppercase mb-1">Habilidades</span><pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.skills}</pre></div>
+                     <div className="border border-gray-800 p-2"><span className="text-gray-600 block text-[11px] uppercase mb-1">Rituales</span><pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.rituals}</pre></div>
                   </div>
-                  <div className="mb-2 border border-gray-800 p-2"><span className="text-gray-600 block text-[9px] uppercase mb-1">Mochila</span><pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.backpack}</pre></div>
+                  <div className="mb-2 border border-gray-800 p-2"><span className="text-gray-600 block text-[11px] uppercase mb-1">Mochila</span><pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.backpack}</pre></div>
                   <div className="grid grid-cols-2 gap-2 mb-2">
-                      <div className="border border-gray-800 p-2"><span className="text-gray-600 block text-[9px] uppercase mb-1">Armas</span><pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.weapons}</pre></div>
-                      <div className="border border-gray-800 p-2"><span className="text-gray-600 block text-[9px] uppercase mb-1">Armadura</span><pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.armor}</pre></div>
+                      <div className="border border-gray-800 p-2"><span className="text-gray-600 block text-[11px] uppercase mb-1">Armas</span><pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.weapons}</pre></div>
+                      <div className="border border-gray-800 p-2"><span className="text-gray-600 block text-[11px] uppercase mb-1">Armadura</span><pre className="text-gray-400 font-serif whitespace-pre-wrap">{s.armor}</pre></div>
                   </div>
-                  {s.foundGear && (<div className="mb-2 border border-[#d4af37]/30 p-2"><span className="text-[#d4af37] block text-[9px] uppercase mb-1">Equipo Encontrado</span><pre className="text-[#f9e29c] font-serif whitespace-pre-wrap">{s.foundGear}</pre></div>)}
-                  <div className="border border-red-900/30 p-2"><span className="text-red-500 block text-[9px] uppercase mb-1">Condiciones</span><p className={s.conditions?'text-red-400':'text-green-500'}>{s.conditions||'Sano'}</p></div>
+                  {s.foundGear && (<div className="mb-2 border border-[#d4af37]/30 p-2"><span className="text-[#d4af37] block text-[11px] uppercase mb-1">Equipo Encontrado</span><pre className="text-[#f9e29c] font-serif whitespace-pre-wrap">{s.foundGear}</pre></div>)}
+                  <div className="border border-red-900/30 p-2"><span className="text-red-500 block text-[11px] uppercase mb-1 font-bold">Condiciones</span><p className={s.conditions?'text-red-400':'text-green-500'}>{s.conditions||'Sano'}</p></div>
                </div>
              )}
           </div>
         ))}
       </div>
     </div>
+    </>
   );
 };
 
@@ -317,49 +345,39 @@ function App() {
   const [rollType, setRollType] = useState('risk');
   const [showRules, setShowRules] = useState(false);
   
-  // REFERENCIA MOTOR 3D
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   const isInitialLoad = useRef(true);
 
-// 1. INICIALIZAR DADOS 3D (VERSIÓN LOCAL ROBUSTA)
   useEffect(() => {
     if (diceBoxInstance) return;
 
-    // Buscamos el contenedor
     const container = document.getElementById("dice-box");
     if (!container) return;
 
-    console.log("Iniciando motor 3D desde local...");
-
     const box = new DiceBox({
       container: "#dice-box", 
-      // IMPORTANTE: Ahora apunta a tu carpeta public/assets
       assetPath: '/assets/', 
       theme: 'default',
       scale: 10,
       gravity: 5,
       mass: 5,
-      friction: 0.5
-      restitution: 0.2, // Rebote. 0 = Plomo (no rebota), 1 = Goma (rebota mucho).
-      linearDamping: 0.5,  // Resistencia al aire al moverse. (0.5 es suave).
-      angularDamping: 0.4, // Resistencia al girar. Más alto = dejan de girar antes.
-      spinForce: 6,     // Cuánto giran al salir disparados.
-      throwForce: 7,    // Con cuánta fuerza salen disparados.
+      friction: 0.5,
+      restitution: 0.2, 
+      linearDamping: 0.5,
+      angularDamping: 0.4,
+      spinForce: 6,
+      throwForce: 7,
     });
     
     box.init()
       .then(() => {
-        console.log("✅ ¡Motor 3D cargado correctamente!");
         setDiceBoxInstance(box);
       })
       .catch((error) => {
         console.error("❌ ERROR CARGANDO DADOS:", error);
-        // Si falla aquí, es que la carpeta /public/assets no está bien copiada
-        alert("Error: No se encuentran los archivos en /public/assets. Revisa el Paso 2.");
       });
-  }, []); // Array vacío para que solo se ejecute al montar
+  }, []);
 
-  // 2. CONFIGURACIÓN
   useEffect(() => {
     document.title = "Trophy (g)Old";
     const p = new URLSearchParams(window.location.search);
@@ -376,14 +394,12 @@ function App() {
     return () => unsubscribe();
   }, [isJoined, roomName]);
 
-  // 3. EFECTO SONIDO
   useEffect(() => {
     if (history.length > 0) {
       if (isInitialLoad.current) {
         isInitialLoad.current = false;
       } else {
         const latestRoll = history[0];
-        // Sincronizar sonido con fin de animación 3D
         setTimeout(() => {
             if (latestRoll.analysis.soundType) playSound(latestRoll.analysis.soundType);
             else playSound('click');
@@ -397,39 +413,18 @@ function App() {
   const handleClear = () => { if (window.confirm("¿Deseas purgar el historial?")) remove(ref(database, `rooms/${roomName}/rolls`)); };
   const updateDiceCount = (setter, c, ch) => { const v = c+ch; if(v>=0 && v<=10) { setter(v); playSound('click'); } };
 
-  // --- TIRAR DADOS 3D (CORREGIDO COLORES) ---
   const handleRoll = async () => {
     if (!diceBoxInstance) { alert("Cargando dados 3D..."); return; }
     
     const diceToRoll = [];
-    
-    // DEFINICIÓN DE COLORES: theme: 'default' siempre, usamos themeColor para teñir
     if (rollType === 'help') {
-        // DADO AYUDA (Oro)
-        diceToRoll.push({ 
-            sides: 6, qty: 1, 
-            theme: 'default', 
-            themeColor: '#d4af37', // Cuerpo dorado
-            foreground: '#000000'  // Tinta negra
-        });
+        diceToRoll.push({ sides: 6, qty: 1, theme: 'default', themeColor: '#d4af37', foreground: '#000000' });
     } else {
         if (rollType !== 'combat' && lightCount > 0) {
-            // DADOS CLAROS (Oro)
-            diceToRoll.push({ 
-                sides: 6, qty: lightCount, 
-                theme: 'default', 
-                themeColor: '#d4af37', 
-                foreground: '#000000'
-            });
+            diceToRoll.push({ sides: 6, qty: lightCount, theme: 'default', themeColor: '#d4af37', foreground: '#000000' });
         }
         if (rollType !== 'hunt' && darkCount > 0) {
-            // DADOS OSCUROS (Negro)
-            diceToRoll.push({ 
-                sides: 6, qty: darkCount, 
-                theme: 'default', 
-                themeColor: '#1a1a1a', 
-                foreground: '#d4af37' // Tinta dorada
-            });
+            diceToRoll.push({ sides: 6, qty: darkCount, theme: 'default', themeColor: '#1a1a1a', foreground: '#d4af37' });
         }
     }
 
@@ -438,7 +433,6 @@ function App() {
     diceBoxInstance.clear();
     const result3D = await diceBoxInstance.roll(diceToRoll);
 
-    // Mapear resultado: Si el cuerpo es Oro (#d4af37) es Light, si no es Dark
     const newDice = result3D.map(d => ({
         type: d.themeColor === '#d4af37' ? 'light' : 'dark',
         value: d.value,
@@ -456,7 +450,6 @@ function App() {
     if (!diceBoxInstance) return;
     diceBoxInstance.clear();
     
-    // 1 Dado Oscuro
     const result3D = await diceBoxInstance.roll([{ 
         sides: 6, qty: 1, 
         theme: 'default',
@@ -474,14 +467,11 @@ function App() {
     });
   };
 
-  // --- RENDER ---
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       
-      {/* 3D CANVAS */}
       <div id="dice-box" className="fixed inset-0 w-full h-full z-0 pointer-events-none"></div>
 
-      {/* HEADER */}
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-xs py-1 font-bold uppercase tracking-[0.2em] select-none relative z-20">
           Trophy (g)Old
       </header>
@@ -500,7 +490,6 @@ function App() {
         </div>
       ) : (
         <main className="flex-grow flex flex-col items-center p-4 relative z-10">
-            {/* BARRA SUPERIOR MESA */}
             <div className="w-full max-w-5xl flex justify-between items-end mb-6 border-b border-[#1a1a1a] pb-2 bg-black/40 backdrop-blur-sm rounded px-2">
                 <div onClick={()=>{navigator.clipboard.writeText(window.location.href);alert('Link Copiado')}} className="cursor-pointer group">
                 <p className="text-[10px] text-gray-500 uppercase tracking-widest">Partida</p>
@@ -515,12 +504,10 @@ function App() {
 
             <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                 
-                {/* COL 1: FICHA + GRUPO */}
                 <div className="lg:col-start-2 lg:row-start-1 w-full">
                     <CharacterSheet roomName={roomName} playerName={playerName} />
                 </div>
 
-                {/* COL 2: DADOS + HISTORIAL */}
                 <div className="lg:col-start-1 lg:row-start-1 w-full">
                     <div className="bg-[#1a1a1a]/90 backdrop-blur p-1 border border-gray-800 mb-8 shadow-lg relative">
                         <div className="grid grid-cols-4 gap-1 bg-black p-1 mb-4">
@@ -534,7 +521,7 @@ function App() {
                                 <div className="grid grid-cols-2 gap-4 mb-4">
                                     {(rollType === 'risk' || rollType === 'hunt') && (
                                         <div>
-                                            <label className="block text-[10px] text-[#d4af37] mb-1 uppercase tracking-widest text-center">Claros</label>
+                                            <label className="block text-[11px] text-[#d4af37] mb-1 uppercase tracking-widest text-center">Claros</label>
                                             <div className="flex items-center justify-between border border-[#d4af37] bg-black h-10">
                                                 <button onClick={() => updateDiceCount(setLightCount, lightCount, -1)} className="w-8 h-full text-[#d4af37] text-xl font-bold hover:bg-[#d4af37] hover:text-black">-</button>
                                                 <span className="text-[#d4af37] text-xl font-bold">{lightCount}</span>
@@ -544,7 +531,7 @@ function App() {
                                     )}
                                     {(rollType === 'risk' || rollType === 'combat') && (
                                         <div className={rollType === 'combat' ? 'col-span-2' : ''}> 
-                                            <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-widest text-center">Oscuros</label>
+                                            <label className="block text-[11px] text-gray-500 mb-1 uppercase tracking-widest text-center">Oscuros</label>
                                             <div className="flex items-center justify-between border border-gray-600 bg-black h-10">
                                                 <button onClick={() => updateDiceCount(setDarkCount, darkCount, -1)} className="w-8 h-full text-gray-500 text-xl font-bold hover:bg-gray-700 hover:text-white">-</button>
                                                 <span className="text-gray-400 text-xl font-bold">{darkCount}</span>
@@ -567,16 +554,16 @@ function App() {
                             <div className="flex justify-between items-baseline mb-2 pb-2 border-b border-black">
                             <span className="text-[#f9e29c] font-bold text-sm uppercase tracking-wider">
                                 {roll.player} 
-                                <span className="text-[9px] text-gray-500 ml-2 border border-gray-800 px-1 rounded">
+                                <span className="text-[10px] text-gray-500 ml-2 border border-gray-800 px-1 rounded">
                                     {roll.rollType === 'combat' ? 'COMBATE' : roll.rollType === 'hunt' ? 'EXPLORACIÓN' : roll.rollType === 'help' ? 'AYUDA' : 'RIESGO'}
                                 </span>
-                                {roll.isPush && <span className="text-[9px] text-red-500 ml-2 animate-pulse">(PUSH)</span>}
+                                {roll.isPush && <span className="text-[10px] text-red-500 ml-2 animate-pulse">(PUSH)</span>}
                             </span>
                             <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
                             </div>
                             <div className="mb-3 flex flex-col">
                             <span className={`font-bold uppercase text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
-                            {roll.analysis.isDarkHighest && (<span className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/20 p-1 text-center border border-red-900/50">⚠️ ¡EL DADO OSCURO ES EL MÁS ALTO!</span>)}
+                            {roll.analysis.isDarkHighest && (<span className="text-[11px] text-red-500 font-bold mt-1 bg-red-900/20 p-1 text-center border border-red-900/50">⚠️ ¡EL DADO OSCURO ES EL MÁS ALTO!</span>)}
                             </div>
                             <div className="flex flex-wrap gap-3">
                             {roll.dice.map((d) => (
@@ -600,7 +587,7 @@ function App() {
       )}
 
       <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase select-none relative z-20">
-          by Viejo · viejorpg@gmail.com · v.0.2.3
+          by Viejo · viejorpg@gmail.com · v.0.2.4
       </footer>
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
