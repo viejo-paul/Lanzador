@@ -70,7 +70,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
     <div className="fixed inset-0 bg-black/95 z-[90] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}>
       <div className="relative max-w-full max-h-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
         <img src={imageUrl} alt={title} className="max-w-[90vw] max-h-[80vh] border-2 border-[#d4af37] shadow-[0_0_50px_rgba(212,175,55,0.3)] object-contain"/>
-        <h2 className="text-[#d4af37] font-consent text-2xl mt-4 uppercase tracking-widest">{title}</h2>
+        <h2 className="text-[#d4af37] font-consent text-4xl mt-4 uppercase tracking-widest">{title}</h2>
         <button onClick={onClose} className="mt-4 text-gray-400 hover:text-white uppercase text-xs tracking-widest border border-gray-700 px-4 py-2">Cerrar</button>
       </div>
     </div>
@@ -102,7 +102,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
       <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
         <div className="flex items-center gap-3">
           {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-          <span className="text-[#d4af37] font-consent font-bold text-sm uppercase tracking-widest">{playerName} (TU FICHA)</span>
+          <span className="text-[#d4af37] font-consent font-bold text-xl uppercase tracking-widest">{playerName}</span>
         </div>
         <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
       </div>
@@ -203,7 +203,7 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                    </div>
                    <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#d4af37] font-consent font-bold text-sm uppercase">{n}</span>
+                        <span className="text-[#d4af37] font-consent font-bold text-xl uppercase">{n}</span>
                         {s.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
                       </div>
                       <div className="flex gap-2 text-[10px] uppercase">
@@ -379,14 +379,14 @@ function App() {
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       <style>{fontStyles}</style>
       
-      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
-        <span className="font-consent">Trophy (g)Old</span>
+      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-xl py-2 font-bold relative z-20">
+        <span className="font-consent">TROPHY (g)Old</span>
       </header>
 
       {!isJoined ? (
         <div className="flex-grow flex items-center justify-center p-4 relative z-10">
           <div className="bg-[#1a1a1a]/95 p-8 max-w-sm w-full border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
-            <h1 className="text-4xl font-consent text-[#d4af37] text-center mb-6">Trophy (g)Old</h1>
+            <h1 className="text-4xl font-consent text-[#d4af37] text-center mb-6">TROPHY (g)Old</h1>
             <input type="text" placeholder="PARTIDA" value={roomName} onChange={e=>setRoomName(e.target.value)} className="w-full bg-black text-white p-3 mb-4 text-center border border-gray-800 outline-none focus:border-[#d4af37]"/>
             <input type="text" placeholder="TU NOMBRE" value={playerName} onChange={e=>setPlayerName(e.target.value)} className="w-full bg-black text-[#f9e29c] p-3 mb-6 text-center border border-gray-800 outline-none focus:border-[#d4af37] font-bold"/>
             <button onClick={handleJoin} className="w-full bg-[#d4af37] text-black font-consent text-xl py-3 tracking-widest hover:bg-white transition-colors">Entrar</button>
@@ -398,7 +398,7 @@ function App() {
                 <div className="flex flex-col">
                   <p className="text-[10px] text-gray-500 uppercase">Partida</p>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-consent text-[#d4af37]">{roomName}</h1>
+                    <h1 className="text-2xl font-consent text-[#d4af37]">{roomName}</h1>
                     <button onClick={copyRoomLink} className="text-[#d4af37] hover:text-white transition-colors" title="Copiar enlace">🔗</button>
                   </div>
                 </div>
@@ -433,7 +433,7 @@ function App() {
                         {history.map((roll, index) => (
                         <div key={roll.id} className={`bg-[#1a1a1a]/95 p-4 border-l-4 shadow-lg animate-in slide-in-from-top-2 ${roll.rollType === 'combat' ? 'border-red-900' : 'border-[#d4af37]'}`}>
                             <div className="flex justify-between items-baseline mb-3 border-b border-black pb-2">
-                                <span className="text-[#f9e29c] font-consent text-lg">{roll.player} <span className="text-[10px] text-gray-500 font-serif ml-1 border border-gray-800 px-1 uppercase">{roll.rollType === 'risk' ? 'Riesgo' : roll.rollType === 'hunt' ? 'Explor.' : roll.rollType === 'combat' ? 'Combate' : 'Ayuda'}</span> {roll.isPush && <span className="text-red-500 ml-1 font-serif text-xs">PUSH</span>}</span>
+                                <span className="text-[#f9e29c] font-consent text-2xl">{roll.player} <span className="text-[10px] text-gray-500 font-serif ml-1 border border-gray-800 px-1 uppercase">{roll.rollType === 'risk' ? 'Riesgo' : roll.rollType === 'hunt' ? 'Explor.' : roll.rollType === 'combat' ? 'Combate' : 'Ayuda'}</span> {roll.isPush && <span className="text-red-500 ml-1 font-serif text-xs">PUSH</span>}</span>
                                 <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
                             </div>
                             <div className="mb-4">
