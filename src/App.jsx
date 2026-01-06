@@ -317,7 +317,7 @@ const RulesModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-[#1a1a1a] border border-[#d4af37] max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-[0_0_30px_rgba(212,175,55,0.2)] relative">
+      <div className="bg-[#1a1a1a] border border-[#d4af37] max-lg w-full max-h-[80vh] overflow-y-auto shadow-[0_0_30px_rgba(212,175,55,0.2)] relative">
         <div className="sticky top-0 bg-[#d4af37] text-black p-3 flex justify-between items-center font-bold uppercase tracking-widest z-10">
           <span>Grimorio de Reglas</span>
           <button onClick={onClose} className="text-xl hover:text-white px-2">×</button>
@@ -348,23 +348,36 @@ function App() {
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   const isInitialLoad = useRef(true);
 
-  // 1. INICIALIZAR DADOS 3D (VERSIÓN DEFINITIVA PANTALLA COMPLETA)
+  // 1. INICIALIZAR DADOS 3D (VERSIÓN DEFINITIVA "PANTALLA COMPLETA")
   useEffect(() => {
     if (diceBoxInstance) return;
 
-    const container = document.getElementById("dice-box");
-    if (!container) return;
+    // FORZAMOS LA CREACIÓN DEL DIV SI NO EXISTE EN EL BODY
+    let container = document.getElementById("dice-box");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "dice-box";
+        document.body.appendChild(container);
+    }
+    
+    // ESTILO AGRESIVO PARA QUE OCUPE TODO
+    container.style.position = "fixed";
+    container.style.top = "0";
+    container.style.left = "0";
+    container.style.width = "100vw";
+    container.style.height = "100vh";
+    container.style.zIndex = "50";
+    container.style.pointerEvents = "none";
 
-    // CONFIGURACIÓN AGRESIVA DE PANTALLA COMPLETA
     const box = new DiceBox({
       container: "#dice-box", 
       assetPath: '/assets/', 
       theme: 'default',
-      // Obligamos al motor a leer el tamaño de la ventana actual
+      // Damos dimensiones explícitas al motor
       width: window.innerWidth,
       height: window.innerHeight,
-      scale: 12,
-      gravity: 4,
+      scale: 14,
+      gravity: 5,
       mass: 1,
       friction: 0.6,
       restitution: 0.1, 
@@ -377,15 +390,17 @@ function App() {
     box.init()
       .then(() => {
         setDiceBoxInstance(box);
-        // Pequeño hack para asegurar que el canvas no capture ratón
+        // Pequeño ajuste para que el canvas ignore el ratón
         const canvas = container.querySelector('canvas');
-        if (canvas) canvas.style.pointerEvents = 'none';
+        if (canvas) {
+            canvas.style.pointerEvents = 'none';
+            canvas.style.backgroundColor = 'transparent';
+        }
       })
       .catch((error) => {
         console.error("❌ ERROR CARGANDO DADOS:", error);
       });
 
-    // Reajustar si se cambia el tamaño de la ventana
     const handleResize = () => {
         if (box && box.renderer) {
             box.renderer.resize(window.innerWidth, window.innerHeight);
@@ -488,13 +503,7 @@ function App() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       
-      {/* 3D CANVAS - FORZADO AL MÁXIMO */}
-      <div 
-        id="dice-box" 
-        className="fixed inset-0 z-[50] pointer-events-none"
-        style={{ width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0 }}
-      ></div>
-
+      {/* HEADER */}
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-xs py-1 font-bold uppercase tracking-[0.2em] select-none relative z-20">
           Trophy (g)Old
       </header>
@@ -611,7 +620,7 @@ function App() {
       )}
 
       <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase select-none relative z-20">
-          by Viejo · viejorpg@gmail.com · v.0.2.8
+          by Viejo · viejorpg@gmail.com · v.0.2.9
       </footer>
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
