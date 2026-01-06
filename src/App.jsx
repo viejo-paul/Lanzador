@@ -321,22 +321,38 @@ function App() {
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   const isInitialLoad = useRef(true);
 
-  // 1. INICIALIZAR DADOS 3D (CORREGIDO PARA NUEVA API)
+  // 1. INICIALIZAR DADOS 3D (VERSIÓN ROBUSTA)
   useEffect(() => {
+    // Si ya existe la instancia, no hacemos nada
     if (diceBoxInstance) return;
 
-    // Usamos CDN para evitar problemas de archivos locales
+    // Buscamos el div por si acaso React aún no lo ha pintado
+    const container = document.getElementById("dice-box");
+    if (!container) return;
+
+    console.log("Iniciando motor 3D...");
+
     const box = new DiceBox({
       container: "#dice-box", 
+      // Usamos esta URL que suele ser más estable para los assets
       assetPath: 'https://unpkg.com/@3d-dice/dice-box@1.1.3/dist/assets/',
+      theme: 'default',
       scale: 6,
       gravity: 3,
       mass: 5,
       friction: 0.8
     });
     
-    box.init().then(() => setDiceBoxInstance(box));
-  }, []);
+    box.init()
+      .then(() => {
+        console.log("¡Motor 3D cargado con éxito!");
+        setDiceBoxInstance(box);
+      })
+      .catch((error) => {
+        console.error("ERROR FATAL cargando los dados:", error);
+        alert("Error al cargar los dados 3D. Abre la consola (F12) para ver el error rojo.");
+      });
+  }, []); // Array vacío para que solo se ejecute al montar
 
   // 2. CONFIGURACIÓN
   useEffect(() => {
