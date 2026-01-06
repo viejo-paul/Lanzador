@@ -70,7 +70,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
     <div className="fixed inset-0 bg-black/95 z-[90] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}>
       <div className="relative max-w-full max-h-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
         <img src={imageUrl} alt={title} className="max-w-[90vw] max-h-[80vh] border-2 border-[#d4af37] shadow-[0_0_50px_rgba(212,175,55,0.3)] object-contain"/>
-        <h2 className="text-[#d4af37] font-consent text-4xl mt-4 tracking-widest">{title}</h2>
+        <h2 className="text-[#d4af37] font-consent text-6xl mt-4 tracking-widest">{title}</h2>
         <button onClick={onClose} className="mt-4 text-gray-400 hover:text-white uppercase text-xs tracking-widest border border-gray-700 px-4 py-2">Cerrar</button>
       </div>
     </div>
@@ -102,7 +102,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
       <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
         <div className="flex items-center gap-3">
           {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-          <span className="text-[#d4af37] font-consent font-bold text-xl tracking-widest">{playerName} (TU FICHA)</span>
+          <span className="text-[#d4af37] font-consent text-2xl tracking-widest">{playerName}</span>
         </div>
         <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
       </div>
@@ -201,8 +201,8 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                    </div>
                    <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#d4af37] font-consent font-bold text-xl tracking-wide">{n}</span>
-                        {s.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
+                        <span className="text-[#d4af37] font-consent text-2xl tracking-wide">{n}</span>
+                        {s.realPlayerName && <span className="text-[9px] text-gray-600 italic">({s.realPlayerName})</span>}
                       </div>
                       <div className="flex gap-2 text-[10px] uppercase">
                            <span className={s.ruin>=5?'text-red-500 font-bold':'text-gray-500'}>Ruina: {s.ruin}</span>
@@ -346,7 +346,7 @@ function App() {
     }
   }, [history]);
 
-  // Lógica v.0.4.3: slugify y random id
+  // --- FUNCIONES AUXILIARES v.0.4.3 ---
   const slugify = (text) => {
     return text
       .toString()
@@ -362,6 +362,7 @@ function App() {
   const generateRandomID = () => {
     return Math.random().toString(36).substring(2, 6);
   };
+  // -----------------------------------
 
   const handleJoin = (selectedName) => {
     const nameToJoin = selectedName || playerName;
@@ -369,7 +370,7 @@ function App() {
     if (roomName && nameToJoin) {
       let finalRoomName = roomName;
 
-      // Solo transformamos si no estamos ya dentro de una partida de la URL
+      // Solo si es NUEVA partida (no hay ?partida= en la URL)
       if (!new URLSearchParams(window.location.search).has('partida')) {
         const cleanName = slugify(roomName);
         const randomID = generateRandomID();
@@ -422,22 +423,22 @@ function App() {
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       <style>{fontStyles}</style>
       
-      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
-        <span className="font-consent text-xl">Trophy (g)Old</span>
+      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 relative z-20">
+        <span className="font-consent text-2xl">Trophy (g)Old</span>
       </header>
 
       {!isJoined ? (
         <div className="flex-grow flex items-center justify-center p-4 relative z-10 overflow-y-auto">
           <div className="max-w-sm w-full space-y-6 my-8">
             <div className="bg-[#1a1a1a]/95 p-8 border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
-              <h1 className="text-4xl font-consent text-[#d4af37] text-center mb-6">Trophy (g)Old</h1>
+              <h1 className="text-6xl font-consent text-[#d4af37] text-center mb-6">Trophy (g)Old</h1>
               
               <div className="space-y-4">
                 <div className="relative">
                   <label className="text-[9px] text-gray-500 uppercase absolute -top-2 left-2 bg-[#1a1a1a] px-1">Partida</label>
                   <input 
                     type="text" 
-                    placeholder="NOMBRE DE LA PARTIDA" 
+                    placeholder="Título de la partida" 
                     value={roomName} 
                     onChange={e=>setRoomName(e.target.value)} 
                     disabled={new URLSearchParams(window.location.search).has('partida')}
@@ -451,7 +452,7 @@ function App() {
                   </label>
                   <input 
                     type="text" 
-                    placeholder="NOMBRE DEL PERSONAJE" 
+                    placeholder="Nombre del personaje" 
                     value={playerName} 
                     onChange={e=>setPlayerName(e.target.value)} 
                     className="w-full bg-black text-[#f9e29c] p-3 text-center border border-gray-800 outline-none focus:border-[#d4af37] font-bold"
@@ -478,7 +479,7 @@ function App() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[#d4af37] font-consent text-2xl tracking-wide leading-none mb-1">{name}</span>
-                      {data.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic leading-none">jugado por {data.realPlayerName}</span>}
+                      {data.realPlayerName && <span className="text-[10px] text-gray-600 italic leading-none">jugado por {data.realPlayerName}</span>}
                     </div>
                   </button>
                 ))}
@@ -496,7 +497,7 @@ function App() {
                     <button onClick={copyRoomLink} className="text-[#d4af37] hover:text-white transition-colors" title="Copiar enlace">🔗</button>
                   </div>
                 </div>
-                <div className="flex gap-4 text-[10px] uppercase font-bold">
+                <div className="flex gap-4 text-[9px] uppercase font-bold">
                     <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ ? Reglas ]</button>
                     <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar Dados ]</button>
                     <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Limpiar Historial ]</button>
@@ -518,7 +519,7 @@ function App() {
                             {rollType!=='hunt' && (<div className={rollType==='combat'?'col-span-2':''}><label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label><div className="flex items-center justify-between border border-gray-600 bg-black h-10"><button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button><span className="font-bold">{darkCount}</span><button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button></div></div>)}
                           </div>
                         )}
-                        <button onClick={handleRoll} className={`w-full font-consent text-3xl py-4 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
+                        <button onClick={handleRoll} className={`w-full font-consent text-3xl py-2 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
                           {rollType === 'combat' ? '¡Atacar!' : rollType === 'hunt' ? 'Explorar' : rollType === 'help' ? 'Prestar ayuda' : 'Tirar dados'}
                         </button>
                     </div>
