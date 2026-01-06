@@ -70,7 +70,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
     <div className="fixed inset-0 bg-black/95 z-[90] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}>
       <div className="relative max-w-full max-h-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
         <img src={imageUrl} alt={title} className="max-w-[90vw] max-h-[80vh] border-2 border-[#d4af37] shadow-[0_0_50px_rgba(212,175,55,0.3)] object-contain"/>
-        <h2 className="text-[#d4af37] font-consent text-4xl mt-4 tracking-widest">{title}</h2>
+        <h2 className="text-[#d4af37] font-consent text-6xl mt-4 tracking-widest">{title}</h2>
         <button onClick={onClose} className="mt-4 text-gray-400 hover:text-white uppercase text-xs tracking-widest border border-gray-700 px-4 py-2">Cerrar</button>
       </div>
     </div>
@@ -94,21 +94,48 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
       update(ref(database, `rooms/${roomName}/characters/${playerName}`), newStats); 
   };
 
-  // --- RENDERIZADO PARA GUARDIÁN (SIMPLIFICADO) ---
+  // --- RENDERIZADO PARA GUARDIÁN (CON AVATAR Y DATOS) ---
   if (role === 'guardian') {
     return (
+      <>
+      <style>{fontStyles}</style>
+      <ImageModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} imageUrl={stats.imageUrl} title={playerName} />
       <div className="w-full border border-[#d4af37] mb-6 shadow-lg transition-all bg-[#1a1a1a]/90 backdrop-blur-sm relative z-10">
          <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
-            <span className="text-[#d4af37] font-consent font-bold text-xl tracking-widest">GUARDIÁN</span>
+            <div className="flex items-center gap-3">
+              {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
+              <span className="text-[#d4af37] font-consent text-xl tracking-widest">Guardián</span>
+            </div>
             <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
          </div>
          {isExpanded && (
            <div className="p-4 animate-in slide-in-from-top-2">
+             
+             {/* Bloque de Avatar y Nombre Real (Igual que ficha de jugador) */}
+             <div className="flex flex-col items-center mb-6">
+                <div className="w-full flex justify-end mb-2">
+                   <div className="flex flex-col items-end">
+                     <label className="text-[9px] text-gray-600 uppercase tracking-tighter">Jugador/a</label>
+                     <input type="text" value={stats.realPlayerName || ''} onChange={e=>handleChange('realPlayerName', e.target.value)} className="bg-transparent text-gray-500 text-[10px] text-right outline-none border-b border-gray-900 focus:border-gray-700 w-24" placeholder="Nombre..."/>
+                   </div>
+                </div>
+                <div onClick={() => stats.imageUrl && setIsModalOpen(true)} className={`w-24 h-24 rounded-full border-2 border-[#d4af37] bg-black overflow-hidden ${stats.imageUrl ? 'cursor-zoom-in hover:border-white transition-colors' : ''}`}>
+                   {stats.imageUrl ? <img src={stats.imageUrl} className="w-full h-full object-cover" alt="Avatar"/> : <div className="w-full h-full flex items-center justify-center text-[#d4af37] opacity-20 text-4xl">?</div>}
+                </div>
+             </div>
+
              <label className="text-[#d4af37] uppercase block mb-1">Notas de la partida</label>
              <textarea value={stats.notes || ''} onChange={e=>handleChange('notes',e.target.value)} className="w-full bg-black text-gray-400 border border-gray-800 p-2 outline-none min-h-[10rem]"/>
+             
+             {/* Campo URL Imagen */}
+             <div className="mt-4">
+                <label className="text-gray-600 uppercase block mb-1 text-xs">URL Imagen (Retrato)</label>
+                <input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} className="w-full bg-black text-gray-600 text-[10px] border border-gray-800 p-2 outline-none"/>
+             </div>
            </div>
          )}
       </div>
+      </>
     );
   }
 
@@ -123,7 +150,7 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
         <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
             <div className="flex items-center gap-3">
             {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-            <span className="text-[#d4af37] font-consent font-bold text-xl tracking-widest">{playerName} (TU FICHA)</span>
+            <span className="text-[#d4af37] font-consent text-2xl tracking-widest">{playerName}</span>
             </div>
             <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
         </div>
@@ -134,7 +161,7 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
           <div className="flex flex-col items-center mb-6">
              <div className="w-full flex justify-end mb-2">
                 <div className="flex flex-col items-end">
-                  <label className="text-[9px] text-gray-600 uppercase tracking-tighter">Jugador/a</label>
+                  <label className="text-[10px] text-gray-600 uppercase tracking-tighter">Jugador/a</label>
                   <input type="text" value={stats.realPlayerName || ''} onChange={e=>handleChange('realPlayerName', e.target.value)} className="bg-transparent text-gray-500 text-[10px] text-right outline-none border-b border-gray-900 focus:border-gray-700 w-24" placeholder="Nombre..."/>
                 </div>
              </div>
@@ -227,8 +254,8 @@ const PartyView = ({ roomName, currentPlayerName, isGM }) => {
                    </div>
                    <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#d4af37] font-consent font-bold text-xl tracking-wide">{n}</span>
-                        {s.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
+                        <span className="text-[#d4af37] font-consent text-xl tracking-wide">{n}</span>
+                        {s.realPlayerName && <span className="text-[10px] text-gray-600 italic">({s.realPlayerName})</span>}
                       </div>
                       <div className="flex gap-2 text-[10px] uppercase">
                            <span className={s.ruin>=5?'text-red-500 font-bold':'text-gray-500'}>Ruina: {s.ruin}</span>
@@ -464,21 +491,21 @@ function App() {
       <style>{fontStyles}</style>
       
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
-        <span className="font-consent text-xl">Trophy (g)Old</span>
+        <span className="font-consent text-2xl">Trophy (g)Old</span>
       </header>
 
       {!isJoined ? (
         <div className="flex-grow flex items-center justify-center p-4 relative z-10 overflow-y-auto">
           <div className="max-w-sm w-full space-y-6 my-8">
             <div className="bg-[#1a1a1a]/95 p-8 border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
-              <h1 className="text-4xl font-consent text-[#d4af37] text-center mb-6">Trophy (g)Old</h1>
+              <h1 className="text-6xl font-consent text-[#d4af37] text-center mb-6">Trophy (g)Old</h1>
               
               <div className="space-y-4">
                 <div className="relative">
                   <label className="text-[9px] text-gray-500 uppercase absolute -top-2 left-2 bg-[#1a1a1a] px-1">Partida</label>
                   <input 
                     type="text" 
-                    placeholder="NOMBRE DE LA PARTIDA" 
+                    placeholder="Título de la partida" 
                     value={roomName} 
                     onChange={e=>setRoomName(e.target.value)} 
                     disabled={new URLSearchParams(window.location.search).has('partida')}
@@ -492,7 +519,7 @@ function App() {
                   </label>
                   <input 
                     type="text" 
-                    placeholder="NOMBRE DEL PERSONAJE" 
+                    placeholder="Nombre del personaje" 
                     value={playerName} 
                     onChange={e=>setPlayerName(e.target.value)} 
                     className="w-full bg-black text-[#f9e29c] p-3 text-center border border-gray-800 outline-none focus:border-[#d4af37] font-bold"
@@ -500,7 +527,7 @@ function App() {
                 </div>
               </div>
 
-              <button onClick={() => handleJoin()} className="w-full mt-6 bg-[#d4af37] text-black font-consent text-xl py-3 tracking-widest hover:bg-white transition-colors">
+              <button onClick={() => handleJoin()} className="w-full mt-6 bg-[#d4af37] text-black font-consent text-xl py-2 tracking-widest hover:bg-white transition-colors">
                 {Object.keys(existingCharacters).length > 0 ? "Crear nuevo" : "Entrar"}
               </button>
             </div>
@@ -519,7 +546,7 @@ function App() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[#d4af37] font-consent text-2xl tracking-wide leading-none mb-1">{name}</span>
-                      {data.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic leading-none">jugado por {data.realPlayerName}</span>}
+                      {data.realPlayerName && <span className="text-[10px] text-gray-600 italic leading-none">jugado por {data.realPlayerName}</span>}
                     </div>
                   </button>
                 ))}
@@ -541,14 +568,14 @@ function App() {
                 <div className="flex flex-col">
                   <p className="text-[10px] text-gray-500 uppercase">Partida</p>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-consent text-[#d4af37]">{roomName}</h1>
+                    <h1 className="text-3xl font-consent text-[#d4af37]">{roomName}</h1>
                     <button onClick={copyRoomLink} className="text-[#d4af37] hover:text-white transition-colors" title="Copiar enlace">🔗</button>
                   </div>
                 </div>
-                <div className="flex gap-4 text-[10px] uppercase font-bold">
-                    <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ ? Reglas ]</button>
-                    <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar Dados ]</button>
-                    <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Limpiar Historial ]</button>
+                <div className="flex gap-4 text-[9px] uppercase font-bold">
+                    <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ Reglas ]</button>
+                    <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar dados ]</button>
+                    <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Borrar historial ]</button>
                     <button onClick={handleExit} className="text-gray-500 hover:text-white">[ Salir ]</button>
                 </div>
             </div>
@@ -567,7 +594,7 @@ function App() {
                             {rollType!=='hunt' && (<div className={rollType==='combat'?'col-span-2':''}><label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label><div className="flex items-center justify-between border border-gray-600 bg-black h-10"><button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button><span className="font-bold">{darkCount}</span><button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button></div></div>)}
                           </div>
                         )}
-                        <button onClick={handleRoll} className={`w-full font-consent text-3xl py-4 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
+                        <button onClick={handleRoll} className={`w-full font-consent text-3xl py-2 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
                           {rollType === 'combat' ? '¡Atacar!' : rollType === 'hunt' ? 'Explorar' : rollType === 'help' ? 'Prestar ayuda' : 'Tirar dados'}
                         </button>
                     </div>
@@ -601,7 +628,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.5 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.6 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
