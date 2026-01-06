@@ -379,7 +379,7 @@ function App() {
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       <style>{fontStyles}</style>
       
-      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-4xl py-2 font-bold relative z-20">
+      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-4xl py-2 relative z-20">
         <span className="font-consent">Trophy (g)Old</span>
       </header>
 
