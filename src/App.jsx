@@ -498,7 +498,8 @@ function App() {
                 </div>
                 <div className="flex gap-4">
                     <button onClick={() => {playSound('click'); setShowRules(true)}} className="text-[10px] text-[#d4af37] hover:text-white uppercase font-bold border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ ? Reglas ]</button>
-                    <button onClick={handleClear} className="text-[10px] text-gray-500 hover:text-red-500 uppercase cursor-pointer">[ Limpiar ]</button>
+                    <button onClick={() => diceBoxInstance?.clear()} className="text-[10px] text-gray-500 hover:text-[#d4af37] uppercase cursor-pointer">[ Limpiar Dados ]</button>
+                    <button onClick={handleClear} className="text-[10px] text-gray-500 hover:text-red-500 uppercase cursor-pointer">[ Limpiar Historial ]</button>
                     <button onClick={handleExit} className="text-[10px] text-gray-500 hover:text-white uppercase cursor-pointer">[ Salir ]</button>
                 </div>
             </div>
@@ -588,7 +589,7 @@ function App() {
       )}
 
       <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase select-none relative z-20">
-          by Viejo · viejorpg@gmail.com · v.0.2.5
+          by Viejo · viejorpg@gmail.com · v.0.2.6
       </footer>
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
