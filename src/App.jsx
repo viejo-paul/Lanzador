@@ -70,7 +70,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
     <div className="fixed inset-0 bg-black/95 z-[90] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}>
       <div className="relative max-w-full max-h-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
         <img src={imageUrl} alt={title} className="max-w-[90vw] max-h-[80vh] border-2 border-[#d4af37] shadow-[0_0_50px_rgba(212,175,55,0.3)] object-contain"/>
-        <h2 className="text-[#d4af37] font-consent text-8xl mt-4 tracking-widest">{title}</h2>
+        <h2 className="text-[#d4af37] font-consent text-4xl mt-4 tracking-widest">{title}</h2>
         <button onClick={onClose} className="mt-4 text-gray-400 hover:text-white uppercase text-xs tracking-widest border border-gray-700 px-4 py-2">Cerrar</button>
       </div>
     </div>
@@ -102,7 +102,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
       <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
         <div className="flex items-center gap-3">
           {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-          <span className="text-[#d4af37] font-consent text-4xl tracking-widest">{playerName}</span>
+          <span className="text-[#d4af37] font-consent font-bold text-xl tracking-widest">{playerName} (TU FICHA)</span>
         </div>
         <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
       </div>
@@ -201,7 +201,7 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                    </div>
                    <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#d4af37] font-consent text-2xl tracking-wide">{n}</span>
+                        <span className="text-[#d4af37] font-consent font-bold text-xl tracking-wide">{n}</span>
                         {s.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
                       </div>
                       <div className="flex gap-2 text-[10px] uppercase">
@@ -274,7 +274,6 @@ function App() {
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   const isInitialLoad = useRef(true);
 
-  // Inicialización de DiceBox
   useEffect(() => {
     if (diceBoxInstance) return;
     let container = document.getElementById("dice-box-full");
@@ -313,25 +312,19 @@ function App() {
     return () => { window.removeEventListener('resize', handleResize); };
   }, []);
 
-  // Leer URL y cargar personajes existentes si hay partida
   useEffect(() => {
     document.title = "Trophy (g)Old";
     const p = new URLSearchParams(window.location.search);
     const partidaURL = p.get('partida');
     if (partidaURL) {
       setRoomName(partidaURL);
-      // Escuchar personajes de esta sala
       onValue(ref(database, `rooms/${partidaURL}/characters`), (snapshot) => {
-        if (snapshot.exists()) {
-          setExistingCharacters(snapshot.val());
-        } else {
-          setExistingCharacters({});
-        }
+        if (snapshot.exists()) { setExistingCharacters(snapshot.val()); } 
+        else { setExistingCharacters({}); }
       });
     }
   }, []);
 
-  // Escuchar historial de tiradas
   useEffect(() => {
     if (!isJoined || !roomName) return;
     return onValue(query(ref(database, `rooms/${roomName}/rolls`), limitToLast(20)), s => {
@@ -340,7 +333,6 @@ function App() {
     });
   }, [isJoined, roomName]);
 
-  // Sonidos de tiradas
   useEffect(() => {
     if (history.length > 0) {
       if (isInitialLoad.current) { isInitialLoad.current = false; } 
@@ -354,13 +346,42 @@ function App() {
     }
   }, [history]);
 
+  // FUNCIÓN PARA LIMPIAR EL NOMBRE DE LA SALA (URL)
+  const slugify = (text) => {
+    return text
+      .toString()
+      .normalize('NFD')                   // Elimina tildes
+      .replace(/[\u0300-\u036f]/g, '')    // Elimina tildes
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')               // Reemplaza espacios por -
+      .replace(/[^\w-]+/g, '')             // Elimina caracteres no alfanuméricos (excepto -)
+      .replace(/--+/g, '-');              // Elimina guiones dobles
+  };
+
+  // FUNCIÓN PARA GENERAR ID ALEATORIO
+  const generateRandomID = () => {
+    return Math.random().toString(36).substring(2, 6);
+  };
+
   const handleJoin = (selectedName) => {
     const nameToJoin = selectedName || playerName;
-    if(roomName && nameToJoin) {
+    
+    if (roomName && nameToJoin) {
+      let finalRoomName = roomName;
+
+      // Si es una creación nueva (no viene de URL ?partida=)
+      if (!new URLSearchParams(window.location.search).has('partida')) {
+        const cleanName = slugify(roomName);
+        const randomID = generateRandomID();
+        finalRoomName = `${cleanName}-${randomID}`;
+        setRoomName(finalRoomName);
+      }
+
       setPlayerName(nameToJoin);
       setIsJoined(true);
       playSound('click');
-      window.history.pushState({}, '', `?partida=${roomName}`);
+      window.history.pushState({}, '', `?partida=${finalRoomName}`);
     }
   };
 
@@ -402,24 +423,22 @@ function App() {
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       <style>{fontStyles}</style>
       
-      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 relative z-20">
-        <span className="font-consent text-4xl">Trophy (g)Old</span>
+      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
+        <span className="font-consent text-xl">Trophy (g)Old</span>
       </header>
 
       {!isJoined ? (
         <div className="flex-grow flex items-center justify-center p-4 relative z-10 overflow-y-auto">
           <div className="max-w-sm w-full space-y-6 my-8">
-            {/* CUADRO DE ENTRADA / CREACIÓN */}
             <div className="bg-[#1a1a1a]/95 p-8 border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
-              <h1 className="text-6xl font-consent text-[#d4af37] text-center mb-6">Trophy (g)Old</h1>
+              <h1 className="text-4xl font-consent text-[#d4af37] text-center mb-6">Trophy (g)Old</h1>
               
               <div className="space-y-4">
-                {/* CAJÓN 1: PARTIDA */}
                 <div className="relative">
                   <label className="text-[9px] text-gray-500 uppercase absolute -top-2 left-2 bg-[#1a1a1a] px-1">Partida</label>
                   <input 
                     type="text" 
-                    placeholder="Nombre de la partida" 
+                    placeholder="NOMBRE DE LA PARTIDA" 
                     value={roomName} 
                     onChange={e=>setRoomName(e.target.value)} 
                     disabled={new URLSearchParams(window.location.search).has('partida')}
@@ -427,14 +446,13 @@ function App() {
                   />
                 </div>
 
-                {/* CAJÓN 2: PERSONAJE */}
                 <div className="relative">
-                  <label className="text-[9px] text-gray-500 absolute -top-2 left-2 bg-[#1a1a1a] px-1">
+                  <label className="text-[9px] text-gray-500 uppercase absolute -top-2 left-2 bg-[#1a1a1a] px-1">
                     {Object.keys(existingCharacters).length > 0 ? "Elige o crea un personaje" : "Tu personaje"}
                   </label>
                   <input 
                     type="text" 
-                    placeholder="Nombre del personaje" 
+                    placeholder="NOMBRE DEL PERSONAJE" 
                     value={playerName} 
                     onChange={e=>setPlayerName(e.target.value)} 
                     className="w-full bg-black text-[#f9e29c] p-3 text-center border border-gray-800 outline-none focus:border-[#d4af37] font-bold"
@@ -447,10 +465,9 @@ function App() {
               </button>
             </div>
 
-            {/* LISTA DE PERSONAJES EXISTENTES */}
             {Object.keys(existingCharacters).length > 0 && (
               <div className="space-y-3 animate-in fade-in duration-500">
-                <p className="text-gray-600 text-[14px] uppercase tracking-widest text-center">Personajes en esta partida</p>
+                <p className="text-gray-600 text-[10px] uppercase tracking-widest text-center">Personajes en esta partida</p>
                 {Object.entries(existingCharacters).map(([name, data]) => (
                   <button 
                     key={name}
@@ -462,7 +479,7 @@ function App() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[#d4af37] font-consent text-2xl tracking-wide leading-none mb-1">{name}</span>
-                      {data.realPlayerName && <span className="text-[10px] text-gray-600 italic leading-none">jugado por {data.realPlayerName}</span>}
+                      {data.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic leading-none">jugado por {data.realPlayerName}</span>}
                     </div>
                   </button>
                 ))}
@@ -476,11 +493,11 @@ function App() {
                 <div className="flex flex-col">
                   <p className="text-[10px] text-gray-500 uppercase">Partida</p>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-4xl font-consent text-[#d4af37]">{roomName}</h1>
+                    <h1 className="text-2xl font-consent text-[#d4af37]">{roomName}</h1>
                     <button onClick={copyRoomLink} className="text-[#d4af37] hover:text-white transition-colors" title="Copiar enlace">🔗</button>
                   </div>
                 </div>
-                <div className="flex gap-4 text-[9px] uppercase font-bold">
+                <div className="flex gap-4 text-[10px] uppercase font-bold">
                     <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ ? Reglas ]</button>
                     <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar Dados ]</button>
                     <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Limpiar Historial ]</button>
@@ -490,7 +507,6 @@ function App() {
 
             <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                 
-                {/* COLUMNA IZQUIERDA: DADOS E HISTORIAL */}
                 <div className="w-full space-y-8">
                     <div className="bg-[#1a1a1a]/90 p-5 border border-gray-800 shadow-xl">
                         <div className="grid grid-cols-4 gap-1 mb-6 bg-black p-1">
@@ -502,7 +518,7 @@ function App() {
                             {rollType!=='hunt' && (<div className={rollType==='combat'?'col-span-2':''}><label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label><div className="flex items-center justify-between border border-gray-600 bg-black h-10"><button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button><span className="font-bold">{darkCount}</span><button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button></div></div>)}
                           </div>
                         )}
-                        <button onClick={handleRoll} className={`w-full font-consent text-3xl 2 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
+                        <button onClick={handleRoll} className={`w-full font-consent text-3xl py-4 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
                           {rollType === 'combat' ? '¡Atacar!' : rollType === 'hunt' ? 'Explorar' : rollType === 'help' ? 'Prestar ayuda' : 'Tirar dados'}
                         </button>
                     </div>
@@ -527,7 +543,6 @@ function App() {
                     </div>
                 </div>
 
-                {/* COLUMNA DERECHA: TU FICHA Y GRUPO (JUNTOS) */}
                 <div className="w-full flex flex-col space-y-2">
                     <CharacterSheet roomName={roomName} playerName={playerName} />
                     <PartyView roomName={roomName} currentPlayerName={playerName} />
@@ -536,7 +551,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.2 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.3 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
