@@ -25,7 +25,6 @@ const playSound = (type) => {
 // --- LÓGICA DE REGLAS TROPHY GOLD ---
 function analyzeResult(dice, rollType) {
   if (dice.length === 0) return { label: 'Sin dados', color: 'text-gray-500' };
-  
   const highestValue = Math.max(...dice.map(d => d.value));
   const highestDice = dice.filter(d => d.value === highestValue);
   const isDarkHighest = highestDice.some(d => d.type === 'dark');
@@ -41,69 +40,17 @@ function analyzeResult(dice, rollType) {
     else { resultText = 'FALLO (LA SITUACIÓN EMPEORA)'; resultColor = 'text-gray-400'; icon = '💀'; soundType = 'fail'; }
   } 
   else if (rollType === 'hunt') {
-    if (highestValue === 6) { 
-        resultText = 'GANAS 1 CONTADOR DE EXPLORACIÓN'; 
-        resultColor = 'text-[#d4af37] font-bold'; 
-        icon = '💎'; 
-        soundType = 'success'; 
-    }
-    else if (highestValue >= 4) { 
-        resultText = 'GANAS 1 CONTADOR, PERO ENCUENTRAS ALGO TERRIBLE'; 
-        resultColor = 'text-[#f9e29c]'; 
-        icon = '⚠️'; 
-        soundType = 'fail'; 
-    }
-    else if (highestValue >= 2) { 
-        resultText = 'ENCUENTRAS ALGO TERRIBLE'; 
-        resultColor = 'text-gray-400'; 
-        icon = '💀'; 
-        soundType = 'fail'; 
-    }
-    else { 
-        resultText = 'PIERDES TODOS TUS CONTADORES Y ENCUENTRAS ALGO TERRIBLE'; 
-        resultColor = 'text-red-500 font-bold animate-pulse'; 
-        icon = '🩸'; 
-        soundType = 'ruin'; 
-    }
+    const tokens = dice.filter(d => d.value === 6).length;
+    if (tokens > 0) { resultText = `${tokens} CONTADOR${tokens > 1 ? 'ES' : ''} DE EXPLORACIÓN`; resultColor = 'text-[#d4af37] font-bold border border-[#d4af37] px-2 py-1 bg-[#d4af37]/10'; icon = '💎'; soundType = 'success'; }
+    else { resultText = 'SIN CONTADORES'; resultColor = 'text-gray-500'; icon = '🍂'; soundType = 'fail'; }
   }
   else if (rollType === 'combat') {
-    // 1. Separar dados oscuros (Ataque) y claros (Punto Débil)
-    const darkDiceValues = dice.filter(d => d.type === 'dark').map(d => d.value).sort((a, b) => b - a);
-    const lightDiceValues = dice.filter(d => d.type === 'light').map(d => d.value);
-
-    // 2. Calcular Daño: Suma de los 2 dados oscuros más altos
-    const damage = (darkDiceValues[0] || 0) + (darkDiceValues[1] || 0);
-
-    // 3. Comprobar Ruina (Si un dado oscuro coincide con tu Punto Débil)
-    let ruinHits = 0;
-    lightDiceValues.forEach(weakPoint => {
-        const matches = darkDiceValues.filter(val => val === weakPoint).length;
-        ruinHits += matches;
-    });
-
-    // 4. Generar Texto y Estilos
-    resultText = `DAÑO TOTAL: ${damage}`;
-    
-    if (ruinHits > 0) {
-        resultText += ` | ¡PUNTO DÉBIL GOLPEADO! (+${ruinHits} RUINA)`;
-        resultColor = 'text-red-500 font-bold animate-pulse border-b-2 border-red-500'; 
-        icon = '🩸'; 
-        soundType = 'ruin';
-    } else {
-        if (damage >= 10) { 
-            resultColor = 'text-[#d4af37] font-bold text-lg'; 
-            icon = '⚔️'; 
-            soundType = 'success'; 
-        } else { 
-            resultColor = 'text-gray-300 font-bold'; 
-            icon = '🗡️'; 
-            soundType = 'click'; 
-        }
-        
-        if (lightDiceValues.length > 0) {
-            resultText += ` (P. Débil: ${lightDiceValues.join(', ')})`;
-        }
-    }
+    const sortedValues = dice.map(d => d.value).sort((a, b) => b - a);
+    const attackTotal = (sortedValues[0] || 0) + (sortedValues[1] || 0);
+    resultText = `DAÑO TOTAL: ${attackTotal}`;
+    if (attackTotal >= 10) { resultColor = 'text-red-500 font-bold text-lg animate-pulse'; icon = '⚔️'; soundType = 'ruin'; }
+    else if (attackTotal >= 8) { resultColor = 'text-[#d4af37] font-bold'; icon = '🗡️'; soundType = 'success'; }
+    else { resultColor = 'text-gray-400'; icon = '🛡️'; soundType = 'fail'; }
   }
   else if (rollType === 'help') {
       const val = dice[0].value;
@@ -112,10 +59,7 @@ function analyzeResult(dice, rollType) {
       else if (val >= 4) { resultColor = 'text-[#f9e29c]'; icon = '✋'; soundType = 'fail'; }
       else { resultColor = 'text-gray-500'; icon = '🥀'; soundType = 'fail'; }
   }
-
-  // Alerta genérica de dado oscuro (excepto en combate donde tiene su propia lógica de ruina)
-  if (rollType !== 'combat' && isDarkHighest && highestValue > 0) { soundType = 'ruin'; }
-  
+  if (isDarkHighest && highestValue > 0) { soundType = 'ruin'; }
   return { label: resultText, color: resultColor, isDarkHighest, icon, rollType, soundType };
 }
 
@@ -126,7 +70,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
     <div className="fixed inset-0 bg-black/95 z-[90] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}>
       <div className="relative max-w-full max-h-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
         <img src={imageUrl} alt={title} className="max-w-[90vw] max-h-[80vh] border-2 border-[#d4af37] shadow-[0_0_50px_rgba(212,175,55,0.3)] object-contain"/>
-        <h2 className="text-[#d4af37] font-consent text-4xl mt-4 tracking-widest">{title}</h2>
+        <h2 className="text-[#d4af37] font-consent text-6xl mt-4 tracking-widest">{title}</h2>
         <button onClick={onClose} className="mt-4 text-gray-400 hover:text-white uppercase text-xs tracking-widest border border-gray-700 px-4 py-2">Cerrar</button>
       </div>
     </div>
@@ -136,7 +80,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
 // --- COMPONENTE FICHA PERSONAL ---
 const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = false }) => {
   const [stats, setStats] = useState({ ruin: 1, ruinInitial: 1, gold: 0, debt: 0, tokens: 0, goldReserve: 0, occupation: '', background: '', drive: '', skills: '', rituals: '', backpack: '', armor: '', weapons: '', foundGear: '', conditions: '', imageUrl: '', realPlayerName: '', notes: '' });
-  const [isExpanded, setIsExpanded] = useState(embedded);
+  const [isExpanded, setIsExpanded] = useState(embedded); // Si está incrustada, empieza expandida
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -150,7 +94,7 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
       update(ref(database, `rooms/${roomName}/characters/${playerName}`), newStats); 
   };
 
-  // --- RENDERIZADO PARA GUARDIÁN ---
+  // --- RENDERIZADO PARA GUARDIÁN (CON AVATAR Y DATOS) ---
   if (role === 'guardian') {
     return (
       <>
@@ -160,30 +104,33 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
          <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
             <div className="flex items-center gap-3">
               {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-              <span className="text-[#d4af37] font-consent font-bold text-xl tracking-widest">GUARDIÁN</span>
+              <span className="text-[#d4af37] font-consent text-xl tracking-widest">Guardián</span>
             </div>
             <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
          </div>
          {isExpanded && (
            <div className="p-4 animate-in slide-in-from-top-2">
+             
+             {/* Bloque de Avatar y Nombre Real (Igual que ficha de jugador) */}
              <div className="flex flex-col items-center mb-6">
                 <div className="w-full flex justify-end mb-2">
                    <div className="flex flex-col items-end">
-                     <label className="text-[9px] text-gray-600 uppercase tracking-tighter">Nombre Real</label>
-                     <input type="text" value={stats.realPlayerName || ''} onChange={e=>handleChange('realPlayerName', e.target.value)} className="bg-transparent text-gray-500 text-[10px] text-right outline-none border-b border-gray-900 focus:border-gray-700 w-32" placeholder="Tu nombre..."/>
+                     <label className="text-[9px] text-gray-600 uppercase tracking-tighter">Jugador/a</label>
+                     <input type="text" value={stats.realPlayerName || ''} onChange={e=>handleChange('realPlayerName', e.target.value)} className="bg-transparent text-gray-500 text-[10px] text-right outline-none border-b border-gray-900 focus:border-gray-700 w-24" placeholder="Nombre..."/>
                    </div>
                 </div>
                 <div onClick={() => stats.imageUrl && setIsModalOpen(true)} className={`w-24 h-24 rounded-full border-2 border-[#d4af37] bg-black overflow-hidden ${stats.imageUrl ? 'cursor-zoom-in hover:border-white transition-colors' : ''}`}>
                    {stats.imageUrl ? <img src={stats.imageUrl} className="w-full h-full object-cover" alt="Avatar"/> : <div className="w-full h-full flex items-center justify-center text-[#d4af37] opacity-20 text-4xl">?</div>}
                 </div>
              </div>
-             <div className="mb-4">
-               <label className="text-[#d4af37] uppercase block mb-1 font-bold text-xs tracking-widest">Cuaderno de Notas</label>
-               <textarea value={stats.notes || ''} onChange={e=>handleChange('notes',e.target.value)} className="w-full bg-black text-gray-300 border border-gray-700 p-3 outline-none min-h-[12rem] font-serif leading-relaxed resize-y"/>
-             </div>
-             <div>
-                <label className="text-gray-600 uppercase block mb-1 text-[10px]">URL Imagen (Retrato)</label>
-                <input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} className="w-full bg-black text-gray-600 text-[10px] border border-gray-800 p-2 outline-none focus:border-[#d4af37] transition-colors"/>
+
+             <label className="text-[#d4af37] uppercase block mb-1">Notas de la partida</label>
+             <textarea value={stats.notes || ''} onChange={e=>handleChange('notes',e.target.value)} className="w-full bg-black text-gray-400 border border-gray-800 p-2 outline-none min-h-[10rem]"/>
+             
+             {/* Campo URL Imagen */}
+             <div className="mt-4">
+                <label className="text-gray-600 uppercase block mb-1 text-xs">URL Imagen (Retrato)</label>
+                <input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} className="w-full bg-black text-gray-600 text-[10px] border border-gray-800 p-2 outline-none"/>
              </div>
            </div>
          )}
@@ -192,17 +139,18 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
     );
   }
 
-  // --- RENDERIZADO PARA JUGADOR ---
+  // --- RENDERIZADO NORMAL (JUGADOR) ---
   return (
     <>
     <style>{fontStyles}</style>
     <ImageModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} imageUrl={stats.imageUrl} title={playerName} />
     <div className={`w-full border border-[#d4af37] ${embedded ? 'border-t-0' : 'mb-6 shadow-lg'} transition-all bg-[#1a1a1a]/90 backdrop-blur-sm relative z-10`}>
+      {/* Si es incrustada (vista por el Guardián en la lista), no mostramos la cabecera "TU FICHA" porque ya tiene la del acordeón */}
       {!embedded && (
         <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
             <div className="flex items-center gap-3">
             {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-            <span className="text-[#d4af37] font-consent font-bold text-xl tracking-widest">{playerName} (TU FICHA)</span>
+            <span className="text-[#d4af37] font-consent text-2xl tracking-widest">{playerName}</span>
             </div>
             <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
         </div>
@@ -213,7 +161,7 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
           <div className="flex flex-col items-center mb-6">
              <div className="w-full flex justify-end mb-2">
                 <div className="flex flex-col items-end">
-                  <label className="text-[9px] text-gray-600 uppercase tracking-tighter">Jugador/a</label>
+                  <label className="text-[10px] text-gray-600 uppercase tracking-tighter">Jugador/a</label>
                   <input type="text" value={stats.realPlayerName || ''} onChange={e=>handleChange('realPlayerName', e.target.value)} className="bg-transparent text-gray-500 text-[10px] text-right outline-none border-b border-gray-900 focus:border-gray-700 w-24" placeholder="Nombre..."/>
                 </div>
              </div>
@@ -287,8 +235,8 @@ const PartyView = ({ roomName, currentPlayerName, isGM }) => {
   useEffect(() => { if(!roomName)return; return onValue(ref(database, `rooms/${roomName}/characters`), s => s.val() && setParty(s.val())); }, [roomName]);
   const toggle = (n) => { setExpandedCards(p => ({...p, [n]: !p[n]})); playSound('click'); };
   
-  // Filtramos para que el Guardián no aparezca en la lista visual del grupo
-  const players = Object.entries(party).filter(([n]) => n !== currentPlayerName && n !== 'Guardián');
+  // Si soy el Guardián, quiero ver a TODOS los jugadores (excepto a mí mismo, que soy 'Guardián')
+const players = Object.entries(party).filter(([n]) => n !== currentPlayerName && n !== 'Guardián');
   
   if(players.length===0) return null;
   return (
@@ -306,8 +254,8 @@ const PartyView = ({ roomName, currentPlayerName, isGM }) => {
                    </div>
                    <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#d4af37] font-consent font-bold text-xl tracking-wide">{n}</span>
-                        {s.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
+                        <span className="text-[#d4af37] font-consent text-xl tracking-wide">{n}</span>
+                        {s.realPlayerName && <span className="text-[10px] text-gray-600 italic">({s.realPlayerName})</span>}
                       </div>
                       <div className="flex gap-2 text-[10px] uppercase">
                            <span className={s.ruin>=5?'text-red-500 font-bold':'text-gray-500'}>Ruina: {s.ruin}</span>
@@ -322,8 +270,10 @@ const PartyView = ({ roomName, currentPlayerName, isGM }) => {
              {expandedCards[n] && (
                <div className="bg-black/50 border-t border-gray-900 animate-in slide-in-from-top-1">
                   {isGM ? (
+                    // VISTA COMPLETA PARA EL GUARDIÁN (usando el componente CharacterSheet incrustado)
                     <CharacterSheet roomName={roomName} playerName={n} embedded={true} />
                   ) : (
+                    // VISTA RESUMEN PARA JUGADORES NORMALES
                     <div className="p-3 text-xs space-y-3">
                       <div className="grid grid-cols-2 gap-4">
                           <div><span className="text-gray-600 block text-[9px] uppercase">Ocupación</span><p className="text-gray-300">{s.occupation || '-'}</p></div>
@@ -375,7 +325,7 @@ function App() {
   const [roomName, setRoomName] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [isJoined, setIsJoined] = useState(false);
-  const [isGM, setIsGM] = useState(false);
+  const [isGM, setIsGM] = useState(false); // Nuevo estado para Guardián
   const [existingCharacters, setExistingCharacters] = useState({});
   const [lightCount, setLightCount] = useState(1);
   const [darkCount, setDarkCount] = useState(0);
@@ -495,7 +445,7 @@ function App() {
       }
 
       setPlayerName(nameToJoin);
-      setIsGM(asGuardian); 
+      setIsGM(asGuardian); // Establecer si es Guardián
       setIsJoined(true);
       playSound('click');
       window.history.pushState({}, '', `?partida=${finalRoomName}`);
@@ -506,29 +456,15 @@ function App() {
   const handleClearHistory = () => { if (window.confirm("¿Purgar historial?")) remove(ref(database, `rooms/${roomName}/rolls`)); };
   const updateDiceCount = (setter, c, ch) => { const v = c+ch; if(v>=0 && v<=10) { setter(v); playSound('click'); } };
 
-  // --- Lógica de Tirada Actualizada ---
   const handleRoll = async () => {
     if (!diceBoxInstance) return;
     const diceToRoll = [];
-    
-    // Configuración de dados según el tipo de tirada
-    if (rollType === 'help') {
-        diceToRoll.push({ sides: 6, qty: 1, themeColor: '#d4af37', foreground: '#000000' });
-    } else {
-        // En combate, los dados claros representan el "Punto Débil". En otros, dados claros normales.
-        // Siempre permitimos añadir dados claros si el contador > 0
-        if (lightCount > 0) {
-            diceToRoll.push({ sides: 6, qty: lightCount, themeColor: '#d4af37', foreground: '#000000' });
-        }
-        
-        // Dados oscuros (siempre excepto en Exploración/Hunt)
-        if (rollType !== 'hunt' && darkCount > 0) {
-            diceToRoll.push({ sides: 6, qty: darkCount, themeColor: '#1a1a1a', foreground: '#d4af37' });
-        }
+    if (rollType === 'help') diceToRoll.push({ sides: 6, qty: 1, themeColor: '#d4af37', foreground: '#000000' });
+    else {
+        if (rollType !== 'combat' && lightCount > 0) diceToRoll.push({ sides: 6, qty: lightCount, themeColor: '#d4af37', foreground: '#000000' });
+        if (rollType !== 'hunt' && darkCount > 0) diceToRoll.push({ sides: 6, qty: darkCount, themeColor: '#1a1a1a', foreground: '#d4af37' });
     }
-
     if (diceToRoll.length === 0) return;
-    
     diceBoxInstance.clear();
     const result3D = await diceBoxInstance.roll(diceToRoll);
     const newDice = result3D.map(d => ({ type: d.themeColor === '#d4af37' ? 'light' : 'dark', value: d.value, id: Math.random() }));
@@ -555,21 +491,21 @@ function App() {
       <style>{fontStyles}</style>
       
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
-        <span className="font-consent text-xl">Trophy (g)Old</span>
+        <span className="font-consent text-2xl">Trophy (g)Old</span>
       </header>
 
       {!isJoined ? (
         <div className="flex-grow flex items-center justify-center p-4 relative z-10 overflow-y-auto">
           <div className="max-w-sm w-full space-y-6 my-8">
             <div className="bg-[#1a1a1a]/95 p-8 border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
-              <h1 className="text-4xl font-consent text-[#d4af37] text-center mb-6">Trophy (g)Old</h1>
+              <h1 className="text-6xl font-consent text-[#d4af37] text-center mb-6">Trophy (g)Old</h1>
               
               <div className="space-y-4">
                 <div className="relative">
                   <label className="text-[9px] text-gray-500 uppercase absolute -top-2 left-2 bg-[#1a1a1a] px-1">Partida</label>
                   <input 
                     type="text" 
-                    placeholder="NOMBRE DE LA PARTIDA" 
+                    placeholder="Título de la partida" 
                     value={roomName} 
                     onChange={e=>setRoomName(e.target.value)} 
                     disabled={new URLSearchParams(window.location.search).has('partida')}
@@ -583,7 +519,7 @@ function App() {
                   </label>
                   <input 
                     type="text" 
-                    placeholder="NOMBRE DEL PERSONAJE" 
+                    placeholder="Nombre del personaje" 
                     value={playerName} 
                     onChange={e=>setPlayerName(e.target.value)} 
                     className="w-full bg-black text-[#f9e29c] p-3 text-center border border-gray-800 outline-none focus:border-[#d4af37] font-bold"
@@ -591,17 +527,21 @@ function App() {
                 </div>
               </div>
 
-              <button onClick={() => handleJoin()} className="w-full mt-6 bg-[#d4af37] text-black font-consent text-xl py-3 tracking-widest hover:bg-white transition-colors">
+              <button onClick={() => handleJoin()} className="w-full mt-6 bg-[#d4af37] text-black font-consent text-xl py-2 tracking-widest hover:bg-white transition-colors">
                 {Object.keys(existingCharacters).length > 0 ? "Crear nuevo" : "Entrar"}
               </button>
             </div>
 
+            {/* LISTA DE PERSONAJES EXISTENTES */}
             {Object.keys(existingCharacters).length > 0 && (
               <div className="space-y-3 animate-in fade-in duration-500">
                 <p className="text-gray-600 text-[10px] uppercase tracking-widest text-center">Personajes en esta partida</p>
+                
+                {/* AQUÍ ESTÁ EL CAMBIO: AÑADIMOS EL FILTER PARA EXCLUIR AL GUARDIÁN */}
                 {Object.entries(existingCharacters)
                   .filter(([name]) => name !== 'Guardián') 
                   .map(([name, data]) => (
+                  
                   <button 
                     key={name}
                     onClick={() => handleJoin(name)}
@@ -612,11 +552,12 @@ function App() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[#d4af37] font-consent text-2xl tracking-wide leading-none mb-1">{name}</span>
-                      {data.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic leading-none">jugado por {data.realPlayerName}</span>}
+                      {data.realPlayerName && <span className="text-[10px] text-gray-600 italic leading-none">jugado por {data.realPlayerName}</span>}
                     </div>
                   </button>
                 ))}
                 
+                {/* BOTÓN ENTRAR COMO GUARDIÁN */}
                 <button 
                   onClick={() => handleJoin(null, true)}
                   className="w-full mt-4 bg-[#d4af37] text-black font-consent text-xl py-3 tracking-widest hover:bg-white transition-colors"
@@ -633,14 +574,14 @@ function App() {
                 <div className="flex flex-col">
                   <p className="text-[10px] text-gray-500 uppercase">Partida</p>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-consent text-[#d4af37]">{roomName}</h1>
+                    <h1 className="text-3xl font-consent text-[#d4af37]">{roomName}</h1>
                     <button onClick={copyRoomLink} className="text-[#d4af37] hover:text-white transition-colors" title="Copiar enlace">🔗</button>
                   </div>
                 </div>
-                <div className="flex gap-4 text-[10px] uppercase font-bold">
-                    <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ ? Reglas ]</button>
-                    <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar Dados ]</button>
-                    <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Limpiar Historial ]</button>
+                <div className="flex gap-4 text-[9px] uppercase font-bold">
+                    <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ Reglas ]</button>
+                    <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar dados ]</button>
+                    <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Borrar historial ]</button>
                     <button onClick={handleExit} className="text-gray-500 hover:text-white">[ Salir ]</button>
                 </div>
             </div>
@@ -655,30 +596,11 @@ function App() {
                         </div>
                         {rollType!=='help' && (
                           <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label className="block text-[11px] text-[#d4af37] mb-1 uppercase text-center">
-                                    {rollType === 'combat' ? 'Punto Débil (Claro)' : 'Claros'}
-                                </label>
-                                <div className="flex items-center justify-between border border-[#d4af37] bg-black h-10">
-                                    <button onClick={()=>updateDiceCount(setLightCount,lightCount,-1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">-</button>
-                                    <span className="font-bold">{lightCount}</span>
-                                    <button onClick={()=>updateDiceCount(setLightCount,lightCount,1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">+</button>
-                                </div>
-                            </div>
-                            
-                            {rollType!=='hunt' && (
-                                <div>
-                                    <label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label>
-                                    <div className="flex items-center justify-between border border-gray-600 bg-black h-10">
-                                        <button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button>
-                                        <span className="font-bold">{darkCount}</span>
-                                        <button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button>
-                                    </div>
-                                </div>
-                            )}
+                            {rollType!=='combat' && (<div><label className="block text-[11px] text-[#d4af37] mb-1 uppercase text-center">Claros</label><div className="flex items-center justify-between border border-[#d4af37] bg-black h-10"><button onClick={()=>updateDiceCount(setLightCount,lightCount,-1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">-</button><span className="font-bold">{lightCount}</span><button onClick={()=>updateDiceCount(setLightCount,lightCount,1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">+</button></div></div>)}
+                            {rollType!=='hunt' && (<div className={rollType==='combat'?'col-span-2':''}><label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label><div className="flex items-center justify-between border border-gray-600 bg-black h-10"><button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button><span className="font-bold">{darkCount}</span><button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button></div></div>)}
                           </div>
                         )}
-                        <button onClick={handleRoll} className={`w-full font-consent text-3xl py-4 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
+                        <button onClick={handleRoll} className={`w-full font-consent text-3xl py-2 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
                           {rollType === 'combat' ? '¡Atacar!' : rollType === 'hunt' ? 'Explorar' : rollType === 'help' ? 'Prestar ayuda' : 'Tirar dados'}
                         </button>
                     </div>
@@ -692,8 +614,7 @@ function App() {
                             </div>
                             <div className="mb-4">
                                 <span className={`font-bold uppercase text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
-                                {/* En combate, ocultamos la alerta genérica de ruina si no es pertinente, o la dejamos si queremos que aplique la regla general también. El código del análisis maneja su propio mensaje de ruina en combate. */}
-                                {roll.rollType !== 'combat' && roll.analysis.isDarkHighest && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡DADO OSCURO DOMINA! (+1 RUINA)</div>}
+                                {roll.analysis.isDarkHighest && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡DADO OSCURO DOMINA! (+1 RUINA)</div>}
                             </div>
                             <div className="flex gap-3 mb-2">
                                 {roll.dice.map(d => (<div key={d.id} className={`w-10 h-10 flex items-center justify-center text-xl font-bold ${d.type==='light'?'bg-[#d4af37] text-black':'bg-black text-white border border-gray-700'}`}>{d.value}</div>))}
@@ -713,7 +634,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.9 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.7 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
