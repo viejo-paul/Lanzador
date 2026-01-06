@@ -102,7 +102,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
       <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
         <div className="flex items-center gap-3">
           {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-          <span className="text-[#d4af37] font-consent font-bold text-xl uppercase tracking-widest">{playerName}</span>
+          <span className="text-[#d4af37] font-consent font-bold text-2xl uppercase tracking-widest">{playerName}</span>
         </div>
         <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
       </div>
@@ -192,7 +192,7 @@ const PartyView = ({ roomName, currentPlayerName }) => {
     <>
     <ImageModal isOpen={modalImage.open} onClose={() => setModalImage({ ...modalImage, open: false })} imageUrl={modalImage.url} title={modalImage.name} />
     <div className="w-full relative z-10">
-      <h3 className="text-gray-500 text-xs uppercase tracking-[0.3em] text-center mb-6">Grupo</h3>
+      <h3 className="text-gray-500 text-xl uppercase tracking-[0.3em] text-center mb-6">Grupo</h3>
       <div className="space-y-3">
         {players.map(([n, s]) => (
           <div key={n} className="border border-gray-800 bg-[#0a0a0a]/90 backdrop-blur-sm">
@@ -203,7 +203,7 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                    </div>
                    <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#d4af37] font-consent font-bold text-xl uppercase">{n}</span>
+                        <span className="text-[#d4af37] font-consent font-bold text-2xl uppercase">{n}</span>
                         {s.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
                       </div>
                       <div className="flex gap-2 text-[10px] uppercase">
@@ -380,16 +380,16 @@ function App() {
       <style>{fontStyles}</style>
       
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-xl py-2 font-bold relative z-20">
-        <span className="font-consent">TROPHY (g)Old</span>
+        <span className="font-consent">Trophy (g)Old</span>
       </header>
 
       {!isJoined ? (
         <div className="flex-grow flex items-center justify-center p-4 relative z-10">
           <div className="bg-[#1a1a1a]/95 p-8 max-w-sm w-full border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
-            <h1 className="text-4xl font-consent text-[#d4af37] text-center mb-6">TROPHY (g)Old</h1>
+            <h1 className="text-4xl font-consent text-[#d4af37] text-center mb-6">Trophy (g)Old</h1>
             <input type="text" placeholder="PARTIDA" value={roomName} onChange={e=>setRoomName(e.target.value)} className="w-full bg-black text-white p-3 mb-4 text-center border border-gray-800 outline-none focus:border-[#d4af37]"/>
             <input type="text" placeholder="TU NOMBRE" value={playerName} onChange={e=>setPlayerName(e.target.value)} className="w-full bg-black text-[#f9e29c] p-3 mb-6 text-center border border-gray-800 outline-none focus:border-[#d4af37] font-bold"/>
-            <button onClick={handleJoin} className="w-full bg-[#d4af37] text-black font-consent text-xl py-3 tracking-widest hover:bg-white transition-colors">Entrar</button>
+            <button onClick={handleJoin} className="w-full bg-[#d4af37] text-black font-consent text-2xl py-3 tracking-widest hover:bg-white transition-colors">Entrar</button>
           </div>
         </div>
       ) : (
@@ -398,7 +398,7 @@ function App() {
                 <div className="flex flex-col">
                   <p className="text-[10px] text-gray-500 uppercase">Partida</p>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-consent text-[#d4af37]">{roomName}</h1>
+                    <h1 className="text-4xl font-consent text-[#d4af37]">{roomName}</h1>
                     <button onClick={copyRoomLink} className="text-[#d4af37] hover:text-white transition-colors" title="Copiar enlace">🔗</button>
                   </div>
                 </div>
