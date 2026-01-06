@@ -102,7 +102,7 @@ const CharacterSheet = ({ roomName, playerName }) => {
       <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
         <div className="flex items-center gap-3">
           {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-          <span className="text-[#d4af37] font-consent font-bold text-2xl uppercase tracking-widest">{playerName}</span>
+          <span className="text-[#d4af37] font-consent text-2xl uppercase tracking-widest">{playerName}</span>
         </div>
         <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
       </div>
@@ -203,7 +203,7 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                    </div>
                    <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#d4af37] font-consent font-bold text-2xl uppercase">{n}</span>
+                        <span className="text-[#d4af37] font-consent text-2xl uppercase">{n}</span>
                         {s.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
                       </div>
                       <div className="flex gap-2 text-[10px] uppercase">
