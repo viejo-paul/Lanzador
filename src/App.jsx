@@ -192,7 +192,7 @@ const PartyView = ({ roomName, currentPlayerName }) => {
     <>
     <ImageModal isOpen={modalImage.open} onClose={() => setModalImage({ ...modalImage, open: false })} imageUrl={modalImage.url} title={modalImage.name} />
     <div className="w-full relative z-10">
-      <h3 className="text-gray-500 text-xl uppercase tracking-[0.3em] text-center mb-6">Grupo</h3>
+      <h3 className="text-gray-500 text-xl uppercase tracking-[0.0em] text-center mb-6">Cazadores de tesoros</h3>
       <div className="space-y-3">
         {players.map(([n, s]) => (
           <div key={n} className="border border-gray-800 bg-[#0a0a0a]/90 backdrop-blur-sm">
@@ -203,7 +203,7 @@ const PartyView = ({ roomName, currentPlayerName }) => {
                    </div>
                    <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#d4af37] font-consent text-4xl uppercase">{n}</span>
+                        <span className="text-[#d4af37] font-consent text-3xl uppercase">{n}</span>
                         {s.realPlayerName && <span className="text-[10px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
                       </div>
                       <div className="flex gap-2 text-[10px] uppercase">
