@@ -348,19 +348,23 @@ function App() {
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   const isInitialLoad = useRef(true);
 
+  // 1. INICIALIZAR DADOS 3D (VERSIÓN DEFINITIVA PANTALLA COMPLETA)
   useEffect(() => {
     if (diceBoxInstance) return;
 
     const container = document.getElementById("dice-box");
     if (!container) return;
 
-    // Motor de dados 3D
+    // CONFIGURACIÓN AGRESIVA DE PANTALLA COMPLETA
     const box = new DiceBox({
       container: "#dice-box", 
       assetPath: '/assets/', 
       theme: 'default',
-      scale: 15,
-      gravity: 5,
+      // Obligamos al motor a leer el tamaño de la ventana actual
+      width: window.innerWidth,
+      height: window.innerHeight,
+      scale: 12,
+      gravity: 4,
       mass: 1,
       friction: 0.6,
       restitution: 0.1, 
@@ -373,10 +377,23 @@ function App() {
     box.init()
       .then(() => {
         setDiceBoxInstance(box);
+        // Pequeño hack para asegurar que el canvas no capture ratón
+        const canvas = container.querySelector('canvas');
+        if (canvas) canvas.style.pointerEvents = 'none';
       })
       .catch((error) => {
         console.error("❌ ERROR CARGANDO DADOS:", error);
       });
+
+    // Reajustar si se cambia el tamaño de la ventana
+    const handleResize = () => {
+        if (box && box.renderer) {
+            box.renderer.resize(window.innerWidth, window.innerHeight);
+        }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+
   }, []);
 
   useEffect(() => {
@@ -471,8 +488,12 @@ function App() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       
-      {/* 3D CANVAS - CORREGIDO: Fuera de cualquier contenedor relativo de grid */}
-      <div id="dice-box" className="fixed top-0 left-0 w-screen h-screen z-[50] pointer-events-none"></div>
+      {/* 3D CANVAS - FORZADO AL MÁXIMO */}
+      <div 
+        id="dice-box" 
+        className="fixed inset-0 z-[50] pointer-events-none"
+        style={{ width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0 }}
+      ></div>
 
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-xs py-1 font-bold uppercase tracking-[0.2em] select-none relative z-20">
           Trophy (g)Old
@@ -590,7 +611,7 @@ function App() {
       )}
 
       <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase select-none relative z-20">
-          by Viejo · viejorpg@gmail.com · v.0.2.7
+          by Viejo · viejorpg@gmail.com · v.0.2.8
       </footer>
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
