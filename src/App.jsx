@@ -374,7 +374,7 @@ const RulesModal = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-[#1a1a1a] border border-[#d4af37] max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-[0_0_30px_rgba(212,175,55,0.2)] relative">
-        <div className="sticky top-0 bg-[#d4af37] text-black p-3 flex justify-between items-center font-bold uppercase tracking-widest z-10">Grimorio de Reglas <button onClick={onClose} className="text-xl px-2">×</button></div>
+        <div className="sticky top-0 bg-[#d4af37] text-black p-3 flex justify-between items-center font-bold uppercase tracking-widest z-10">Reglas <button onClick={onClose} className="text-xl px-2">×</button></div>
         <div className="p-6 space-y-6 text-gray-300 font-serif text-sm">
           <section><h3 className="text-[#d4af37] font-bold uppercase border-b border-gray-700 mb-2">Riesgo</h3><ul className="space-y-1"><li>6: Éxito total.</li><li>4-5: Éxito con coste.</li><li>1-3: Fallo.</li></ul></section>
           <section><h3 className="text-[#d4af37] font-bold uppercase border-b border-gray-700 mb-2">Combate</h3><p>Suma los 2 dados más altos.</p></section>
@@ -673,11 +673,11 @@ function App() {
                         {history.map((roll, index) => (
                         <div key={roll.id} className={`bg-[#1a1a1a]/95 p-4 border-l-4 shadow-lg animate-in slide-in-from-top-2 ${roll.rollType === 'combat' ? 'border-red-900' : 'border-[#d4af37]'}`}>
                             <div className="flex justify-between items-baseline mb-3 border-b border-black pb-2">
-                                <span className="text-[#f9e29c] font-consent text-2xl">{roll.player} <span className="text-[10px] text-gray-500 font-serif ml-1 border border-gray-800 px-1 uppercase tracking-tighter">{roll.rollType === 'risk' ? 'Riesgo' : roll.rollType === 'hunt' ? 'Explor.' : roll.rollType === 'combat' ? 'Combate' : 'Ayuda'}</span> {roll.isPush && <span className="text-red-500 ml-1 font-serif text-xs">PUSH</span>}</span>
+                                <span className="text-[#f9e29c] font-consent text-2xl">{roll.player} <span className="text-[10px] text-gray-500 font-serif ml-1 border border-gray-800 px-1 uppercase tracking-tighter">{roll.rollType === 'risk' ? 'Riesgo' : roll.rollType === 'hunt' ? 'Explor.' : roll.rollType === 'combat' ? 'Combate' : 'Ayuda'}</span> {roll.isPush && <span className="text-red-500 ml-1 font-serif text-xs">Repetida</span>}</span>
                                 <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
                             </div>
                             <div className="mb-4">
-                                <span className={`font-bold uppercase text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
+                                <span className={`font-bold text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
                                 {roll.analysis.isDarkHighest && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡Dado oscuro domina! Si tu de Ruina es inferior, marca +1 Ruina</div>}
                             </div>
                             <div className="flex gap-3 mb-2">
@@ -698,7 +698,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.9 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.10 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
