@@ -453,7 +453,7 @@ const RulesModal = ({ isOpen, onClose }) => {
 
             <div className="bg-[#d4af37]/10 p-2 border border-[#d4af37]/30">
                <p className="text-[#d4af37] text-xs uppercase font-bold">Tentar al destino</p>
-               <p className="text-xs">Si no estás satisfecho, añade 1 dado oscuro y repite. Si el dado más alto es oscuro y supera tu Ruina actual -> +1 Ruina.</p>
+               <p className="text-xs">Si no estás satisfecho, añade 1 dado oscuro y repite. Si el dado más alto es oscuro y supera tu Ruina actual, marca +1 Ruina.</p>
             </div>
           </div>
         );
@@ -559,6 +559,8 @@ function App() {
     const box = new DiceBox({
       container: "#dice-box-full", 
       assetPath: '/assets/', 
+      sounds: true,
+      volume: 0.5,
       theme: 'default',
       width: window.innerWidth,
       height: window.innerHeight,
@@ -874,7 +876,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.2 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.3 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
