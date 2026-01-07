@@ -520,15 +520,25 @@ function App() {
   const handleClearHistory = () => { if (window.confirm("¿Purgar historial?")) remove(ref(database, `rooms/${roomName}/rolls`)); };
   const updateDiceCount = (setter, c, ch) => { const v = c+ch; if(v>=0 && v<=10) { setter(v); playSound('click'); } };
 
-  const handleRoll = async () => {
+ const handleRoll = async () => {
     if (!diceBoxInstance) return;
     const diceToRoll = [];
-    if (rollType === 'help') diceToRoll.push({ sides: 6, qty: 1, themeColor: '#d4af37', foreground: '#000000' });
-    else {
-        if (rollType !== 'combat' && lightCount > 0) diceToRoll.push({ sides: 6, qty: lightCount, themeColor: '#d4af37', foreground: '#000000' });
-        if (rollType !== 'hunt' && darkCount > 0) diceToRoll.push({ sides: 6, qty: darkCount, themeColor: '#1a1a1a', foreground: '#d4af37' });
+    
+    if (rollType === 'help') {
+        diceToRoll.push({ sides: 6, qty: 1, themeColor: '#d4af37', foreground: '#000000' });
+    } else {
+        // CAMBIO AQUÍ: Ya no bloqueamos los dados claros en combate
+        if (lightCount > 0) {
+            diceToRoll.push({ sides: 6, qty: lightCount, themeColor: '#d4af37', foreground: '#000000' });
+        }
+        // Los dados oscuros se añaden siempre excepto en 'hunt' (exploración)
+        if (rollType !== 'hunt' && darkCount > 0) {
+            diceToRoll.push({ sides: 6, qty: darkCount, themeColor: '#1a1a1a', foreground: '#d4af37' });
+        }
     }
+
     if (diceToRoll.length === 0) return;
+    
     diceBoxInstance.clear();
     const result3D = await diceBoxInstance.roll(diceToRoll);
     const newDice = result3D.map(d => ({ type: d.themeColor === '#d4af37' ? 'light' : 'dark', value: d.value, id: Math.random() }));
@@ -718,7 +728,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.10 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.11 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
