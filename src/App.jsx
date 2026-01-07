@@ -35,9 +35,9 @@ function analyzeResult(dice, rollType) {
   let soundType = 'fail'; 
 
   if (rollType === 'risk') {
-    if (highestValue === 6) { resultText = 'Logras lo que quieres. Describe cómo o pídeselo al DJ'; resultColor = 'text-[#d4af37] font-bold'; icon = '✨'; soundType = 'success'; }
-    else if (highestValue >= 4) { resultText = 'Logras lo que quieres, pero con alguna complicación. El DJ la determina y tú describes cómo lo consigues.'; resultColor = 'text-[#f9e29c]'; icon = '⚠️'; soundType = 'fail'; }
-    else { resultText = 'Fracasas y todo va a peor. El DJ describe cómo.'; resultColor = 'text-gray-400'; icon = '💀'; soundType = 'fail'; }
+    if (highestValue === 6) { resultText = 'Logras lo que quieres. Describe cómo o pídeselo al Guardián'; resultColor = 'text-[#d4af37] font-bold'; icon = '✨'; soundType = 'success'; }
+    else if (highestValue >= 4) { resultText = 'Logras lo que quieres, pero con alguna complicación. El Guardián la determina y tú describes cómo lo consigues.'; resultColor = 'text-[#f9e29c]'; icon = '⚠️'; soundType = 'fail'; }
+    else { resultText = 'Fracasas y todo va a peor. El Guardián describe cómo.'; resultColor = 'text-gray-400'; icon = '💀'; soundType = 'fail'; }
   } 
   else if (rollType === 'hunt') {
     if (highestValue === 6) { 
@@ -158,7 +158,7 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
       update(ref(database, `rooms/${roomName}/characters/${playerName}`), newStats); 
   };
 
-  // --- RENDERIZADO PARA DJ (CON AVATAR Y DATOS) ---
+  // --- RENDERIZADO PARA Guardián (CON AVATAR Y DATOS) ---
   if (role === 'guardian') {
     return (
       <>
@@ -168,7 +168,7 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
          <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
             <div className="flex items-center gap-3">
               {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-              <span className="text-[#d4af37] font-consent text-xl tracking-widest">DJ</span>
+              <span className="text-[#d4af37] font-consent text-xl tracking-widest">Guardián</span>
             </div>
             <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
          </div>
@@ -209,7 +209,7 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
     <style>{fontStyles}</style>
     <ImageModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} imageUrl={stats.imageUrl} title={playerName} />
     <div className={`w-full border border-[#d4af37] ${embedded ? 'border-t-0' : 'mb-6 shadow-lg'} transition-all bg-[#1a1a1a]/90 backdrop-blur-sm relative z-10`}>
-      {/* Si es incrustada (vista por el DJ en la lista), no mostramos la cabecera "TU FICHA" porque ya tiene la del acordeón */}
+      {/* Si es incrustada (vista por el Guardián en la lista), no mostramos la cabecera "TU FICHA" porque ya tiene la del acordeón */}
       {!embedded && (
         <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
             <div className="flex items-center gap-3">
@@ -299,8 +299,8 @@ const PartyView = ({ roomName, currentPlayerName, isGM }) => {
   useEffect(() => { if(!roomName)return; return onValue(ref(database, `rooms/${roomName}/characters`), s => s.val() && setParty(s.val())); }, [roomName]);
   const toggle = (n) => { setExpandedCards(p => ({...p, [n]: !p[n]})); playSound('click'); };
   
-  // Si soy el DJ, quiero ver a TODOS los jugadores (excepto a mí mismo, que soy 'DJ')
-const players = Object.entries(party).filter(([n]) => n !== currentPlayerName && n !== 'DJ');
+  // Si soy el Guardián, quiero ver a TODOS los jugadores (excepto a mí mismo, que soy 'Guardián')
+const players = Object.entries(party).filter(([n]) => n !== currentPlayerName && n !== 'Guardián');
   
   if(players.length===0) return null;
   return (
@@ -334,7 +334,7 @@ const players = Object.entries(party).filter(([n]) => n !== currentPlayerName &&
              {expandedCards[n] && (
                <div className="bg-black/50 border-t border-gray-900 animate-in slide-in-from-top-1">
                   {isGM ? (
-                    // VISTA COMPLETA PARA EL DJ (usando el componente CharacterSheet incrustado)
+                    // VISTA COMPLETA PARA EL Guardián (usando el componente CharacterSheet incrustado)
                     <CharacterSheet roomName={roomName} playerName={n} embedded={true} />
                   ) : (
                     // VISTA RESUMEN PARA JUGADORES NORMALES
@@ -389,7 +389,7 @@ function App() {
   const [roomName, setRoomName] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [isJoined, setIsJoined] = useState(false);
-  const [isGM, setIsGM] = useState(false); // Nuevo estado para DJ
+  const [isGM, setIsGM] = useState(false); // Nuevo estado para Guardián
   const [existingCharacters, setExistingCharacters] = useState({});
   const [lightCount, setLightCount] = useState(1);
   const [darkCount, setDarkCount] = useState(0);
@@ -494,7 +494,7 @@ function App() {
     let nameToJoin = selectedName || playerName;
     
     if (asGuardian) {
-      nameToJoin = 'DJ';
+      nameToJoin = 'Guardián';
     }
 
     if (roomName && nameToJoin) {
@@ -509,7 +509,7 @@ function App() {
       }
 
       setPlayerName(nameToJoin);
-      setIsGM(asGuardian); // Establecer si es DJ
+      setIsGM(asGuardian); // Establecer si es Guardián
       setIsJoined(true);
       playSound('click');
       window.history.pushState({}, '', `?partida=${finalRoomName}`);
@@ -601,9 +601,9 @@ function App() {
               <div className="space-y-3 animate-in fade-in duration-500">
                 <p className="text-gray-600 text-[10px] uppercase tracking-widest text-center">Personajes en esta partida</p>
                 
-                {/* AQUÍ ESTÁ EL CAMBIO: AÑADIMOS EL FILTER PARA EXCLUIR AL DJ */}
+                {/* AQUÍ ESTÁ EL CAMBIO: AÑADIMOS EL FILTER PARA EXCLUIR AL Guardián */}
                 {Object.entries(existingCharacters)
-                  .filter(([name]) => name !== 'DJ') 
+                  .filter(([name]) => name !== 'Guardián') 
                   .map(([name, data]) => (
                   
                   <button 
@@ -621,12 +621,12 @@ function App() {
                   </button>
                 ))}
                 
-                {/* BOTÓN ENTRAR COMO DJ */}
+                {/* BOTÓN ENTRAR COMO Guardián */}
                 <button 
                   onClick={() => handleJoin(null, true)}
                   className="w-full mt-4 bg-[#d4af37] text-black font-consent text-xl py-3 tracking-widest hover:bg-white transition-colors"
                 >
-                  Entrar como DJ
+                  Entrar como Guardián
                 </button>
               </div>
             )}
