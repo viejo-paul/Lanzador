@@ -411,13 +411,13 @@ const RulesModal = ({ isOpen, onClose }) => {
              <h4 className="text-[#d4af37] font-bold text-lg uppercase tracking-widest border-b border-[#d4af37]/30 pb-2">Tirada de Combate</h4>
              <p>Cuando te encuentres en combate, podrías colaborar con tus compañeros. Para empezar:</p>
              <ul className="list-disc pl-5 space-y-2 text-gray-400 text-sm">
-               <li>Declara tu vulnerabilidad y tira <strong>un dado claro</strong>. Este es tu <strong>Punto Débil</strong>. (Cada jugador tira el suyo).</li>
-               <li>Tira <strong>un dado oscuro</strong> por cada buscador que participe en el combate (pool común).</li>
+               <li>Declara tu vulnerabilidad y tira <strong>un dado claro</strong>. Este es tu <strong>Punto débil</strong>. (Cada jugador tira el suyo).</li>
+               <li>Tira <strong>un dado oscuro</strong> por cada buscador que participe en el combate (reserva de dados común).</li>
              </ul>
              
              <div className="bg-red-900/10 p-3 border border-red-900/50">
                 <p className="text-red-400 text-xs uppercase mb-1 font-bold">Mecánica de Ruina</p>
-                <p className="text-sm">Si algún dado oscuro iguala tu <strong>Punto Débil</strong>, aumentas tu Ruina en 1 por cada coincidencia.</p>
+                <p className="text-sm">Si algún dado oscuro iguala tu <strong>Punto débil</strong>, aumentas tu Ruina en 1 por cada coincidencia.</p>
              </div>
 
              <div className="bg-black/50 p-3 border border-gray-800">
@@ -554,7 +554,7 @@ function App() {
         container.id = "dice-box-full";
         document.body.appendChild(container);
     }
-    Object.assign(container.style, { position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh', zIndex: '50', pointerEvents: 'none', display: 'block' });
+    Object.assign(container.style, { position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh', zIndex: '250', pointerEvents: 'none', display: 'block' });
 
     const box = new DiceBox({
       container: "#dice-box-full", 
