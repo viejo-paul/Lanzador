@@ -1,0 +1,61 @@
+[33m3bdfd45[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m v.0.4.8.5  cont
+[33m8dec10d[m v.0.4.8.4 Añadido ? a roll.analysis? para optional changing (se rompia el historial ya mostrado)
+[33m5cc6480[m v.0.4.8.2 combate
+[33mdfd275f[m redo v.0.4.8
+[33mc9b0199[m v.0.84.8.2 Tradas de combate mejorada
+[33m9d51715[m v.0.4.8. Rectificamos tiradas de exploración y textos de riesgo
+[33mf6335b5[m redo
+[33m349d4fa[m v.0.4.9 (reconstrucción - comprobar)
+[33mfbc823f[m v.0.4.8 Continuación
+[33m6ea89f9[m v.04.8 Actualización Tiradas de combate y textos resto tiradas acorde al manual
+[33m319eb50[m Favicon
+[33m28f2aa9[m v.0.4.7. Excluir vista guardian
+[33m16bf100[m v.0.4.6 Nombre e Imagen para el Guardián; ajustes css
+[33m4dd59c4[m v.0.4.5 Creación figura "Guardián"
+[33m6ce4d1c[m v.0.4.4 Cambios en URL y reajuste CSS
+[33m4516f5d[m v.0.4.3 subida de nuevo
+[33mae708c6[m v.0.4.3. Cambio en la generación de las URL
+[33m05f5141[m v.0.4.2 Ajustes tamaños css
+[33m8868e8b[m v.0.4.1 - Cambio en página de entrada y gestión de partidas
+[33m2485891[m -tamaño en grupo
+[33mc4cc7c0[m Tamaño título
+[33m762cc16[m Ajustes tamaños
+[33ma8b6d6a[m Tamaños
+[33m38eed6a[m Tamaños fuente Trophy
+[33m7befd74[m Correción tamaño fuente nueva
+[33m0c70552[m v.0.3.5 Ajustes fuentes y detalles fichas (colocación)
+[33m67fabb4[m v.0.3.4. Ajustes menores fichas. Enlace a la partida clickable
+[33ma0c4238[m v.0.3.3 Ajustes en ficha principal; añadidos en fichas secundarias
+[33mfcfe737[m v.0.3.2 Modif. a la ficha
+[33md8f6138[m v.0.3.1 Cambio colocación fichas (Grupo) a la misma altura de col.
+[33ma5de6d4[m Regreso a v.0.2.9
+[33m4ef84e7[m Body-Portal para los dados
+[33mb4be20f[m Manipulación directa del DOm y w/h para que los dados floten
+[33m98cc2f3[m v.0.2.8 forzar dimensiones y css por código
+[33mcb54da6[m v.0.2.7 Dados usan toda la ventana, posicionamiento absoluto
+[33m7362b7b[m v.0.2.6 purgador de dados
+[33m0c629a5[m Recolocación de los dados en z-index
+[33mb24c29d[m Aspecto dados
+[33m2037a06[m v.0.2.4 - click en imagenes
+[33mb4b9c30[m v.0.2.3 valores de los dados
+[33m4e2d27a[m v.0.2.2 3d dados en local
+[33m039353c[m Correccion dados al cargar
+[33m42fe8ae[m v.0.2
+[33mc9a2f98[m Actualización 3d-dice
+[33ma4ab072[m Corrección assets dados
+[33me31ad05[m Añadidos dados 3d-dice
+[33m09752fc[m Cambios layout a dos columnas; añadido header y footer
+[33mbe8a023[m Reducir tiradores; tirada de ayuda; modific. tiradas de exploración y combate
+[33m892255c[m Cambios en nomenclaturas ; añadidos campos en fichas y visualización grupo
+[33m0a096d7[m Corrección de errores (ayuda)
+[33mc696e23[m Añadir Ayuda v0.1
+[33m1b977fb[m Añadir tiras de Exploración y de Combate
+[33mdc72754[m Añadidas fichas de personajes
+[33m54a1b8c[m Readme v 0.1
+[33m71a0ab8[m Añadir nombre de personajes
+[33me243a81[m No cambia a Mycls el nombre de la sala
+[33m849a2b1[m Añadir nombre y url de la sala
+[33m6fff52a[m Fix contraste colores y visibilidad dados
+[33mc38779d[m Fix contraste colores y visibilidad dados
+[33m18cf6e2[m Estilo oro y negro con boton limpiar
+[33mca7bc8d[m primer commit
