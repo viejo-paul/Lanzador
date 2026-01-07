@@ -66,7 +66,7 @@ function analyzeResult(dice, rollType) {
     }
   }
   else if (rollType === 'combat') {
-    // 1. Separar dados oscuros (Ataque) y claros (Punto Débil)
+    // 1. Separar dados oscuros (Ataque) y claros (Punto débil)
     const darkDiceValues = dice.filter(d => d.type === 'dark').map(d => d.value).sort((a, b) => b - a);
     const lightDiceValues = dice.filter(d => d.type === 'light').map(d => d.value);
 
@@ -74,7 +74,7 @@ function analyzeResult(dice, rollType) {
     // Si no hay dados oscuros, el daño es 0.
     const damage = (darkDiceValues[0] || 0) + (darkDiceValues[1] || 0);
 
-    // 3. Comprobar Ruina (Si un dado oscuro coincide con tu Punto Débil/Dado Claro)
+    // 3. Comprobar Ruina (Si un dado oscuro coincide con tu Punto débil/Dado Claro)
     let ruinHits = 0;
     lightDiceValues.forEach(weakPoint => {
         const matches = darkDiceValues.filter(val => val === weakPoint).length;
@@ -428,7 +428,7 @@ const RulesModal = ({ isOpen, onClose }) => {
                  <li><strong>Fallo:</strong> Se añade un dado oscuro extra y se vuelve a tirar (ronda 2).</li>
                </ul>
              </div>
-             <p className="text-xs text-gray-500">Si te retiras, debes entregar tu Punto Débil a otro jugador, quien se vuelve vulnerable a ambos números.</p>
+             <p className="text-xs text-gray-500">Si te retiras, debes entregar tu Punto débil a otro jugador, quien se vuelve vulnerable a ambos números.</p>
           </div>
         );
       case 'risk':
@@ -554,7 +554,7 @@ function App() {
         container.id = "dice-box-full";
         document.body.appendChild(container);
     }
-    Object.assign(container.style, { position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh', zIndex: '250', pointerEvents: 'none', display: 'block' });
+    Object.assign(container.style, { position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh', zIndex: '50', pointerEvents: 'none', display: 'block' });
 
     const box = new DiceBox({
       container: "#dice-box-full", 
@@ -821,7 +821,7 @@ function App() {
                             {/* CAMBIO: Se muestra SIEMPRE (quitada la condición rollType!=='combat') */}
                             <div>
                                 <label className="block text-[11px] text-[#d4af37] mb-1 uppercase text-center">
-                                    {rollType === 'combat' ? 'Punto Débil (Claro)' : 'Claros'}
+                                    {rollType === 'combat' ? 'Punto débil (Claro)' : 'Claros'}
                                 </label>
                                 <div className="flex items-center justify-between border border-[#d4af37] bg-black h-10">
                                     <button onClick={()=>updateDiceCount(setLightCount,lightCount,-1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">-</button>
