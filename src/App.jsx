@@ -368,17 +368,163 @@ const players = Object.entries(party).filter(([n]) => n !== currentPlayerName &&
   );
 };
 
-// --- MODAL DE REGLAS ---
+// --- MODAL DE REGLAS INTERACTIVO ---
 const RulesModal = ({ isOpen, onClose }) => {
+  const [activeTab, setActiveTab] = useState('risk'); // 'risk', 'hunt', 'combat', 'help', 'contest'
+
   if (!isOpen) return null;
+
+  const tabs = [
+    { id: 'risk', label: 'Riesgo' },
+    { id: 'hunt', label: 'Exploración' },
+    { id: 'combat', label: 'Combate' },
+    { id: 'help', label: 'Ayuda' },
+    { id: 'contest', label: 'Enfrentada' },
+  ];
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'hunt':
+        return (
+          <div className="space-y-4 animate-in fade-in duration-300">
+            <h4 className="text-[#d4af37] font-bold text-lg uppercase tracking-widest border-b border-[#d4af37]/30 pb-2">Tirada de Exploración</h4>
+            <p>Cuando profundices en tu objetivo o hagas preguntas sobre el mundo, describe cómo exploras tu entorno. Luego, con un dado de seis caras, tira:</p>
+            <ul className="list-disc pl-5 space-y-1 text-gray-400">
+              <li><strong>1 dado blanco</strong> para hacer preguntas sobre el mundo.</li>
+              <li><strong>1 dado blanco adicional</strong> si tienes una habilidad o pieza de equipo que facilitaría tu búsqueda.</li>
+            </ul>
+            <div className="bg-black/50 p-3 border border-gray-800">
+              <p className="text-[#d4af37] text-xs uppercase mb-2 font-bold">Resultados (Dado más alto):</p>
+              <ul className="space-y-2 text-sm">
+                <li><strong className="text-red-500">1:</strong> Pierdes todos tus contadores de exploración y te encuentras con algo terrible.</li>
+                <li><strong className="text-gray-300">2-3:</strong> Te encuentras con algo terrible.</li>
+                <li><strong className="text-[#f9e29c]">4-5:</strong> Ganas 1 contador de exploración, pero te encuentras con algo terrible.</li>
+                <li><strong className="text-[#d4af37]">6:</strong> Ganas 1 contador de exploración.</li>
+              </ul>
+            </div>
+            <p className="text-xs italic text-gray-500">El que encuentres o no lo que buscas puede ser distinto a los resultados de tu tirada y depender de tus preguntas.</p>
+          </div>
+        );
+      case 'combat':
+        return (
+          <div className="space-y-4 animate-in fade-in duration-300">
+             <h4 className="text-[#d4af37] font-bold text-lg uppercase tracking-widest border-b border-[#d4af37]/30 pb-2">Tirada de Combate</h4>
+             <p>Cuando te encuentres en combate, podrías colaborar con tus compañeros. Para empezar:</p>
+             <ul className="list-disc pl-5 space-y-2 text-gray-400 text-sm">
+               <li>Declara tu vulnerabilidad y tira <strong>un dado claro</strong>. Este es tu <strong>Punto Débil</strong>. (Cada jugador tira el suyo).</li>
+               <li>Tira <strong>un dado oscuro</strong> por cada buscador que participe en el combate (pool común).</li>
+             </ul>
+             
+             <div className="bg-red-900/10 p-3 border border-red-900/50">
+                <p className="text-red-400 text-xs uppercase mb-1 font-bold">Mecánica de Ruina</p>
+                <p className="text-sm">Si algún dado oscuro iguala tu <strong>Punto Débil</strong>, aumentas tu Ruina en 1 por cada coincidencia.</p>
+             </div>
+
+             <div className="bg-black/50 p-3 border border-gray-800">
+               <p className="text-[#d4af37] text-xs uppercase mb-2 font-bold">Resolución</p>
+               <p className="text-sm mb-2">Se suma los <strong>dos dados oscuros más altos</strong> contra la Resistencia del enemigo (2-12).</p>
+               <ul className="space-y-1 text-sm text-gray-400">
+                 <li><strong>Éxito:</strong> El enemigo es derrotado.</li>
+                 <li><strong>Fallo:</strong> Se añade un dado oscuro extra y se vuelve a tirar (ronda 2).</li>
+               </ul>
+             </div>
+             <p className="text-xs text-gray-500">Si te retiras, debes entregar tu Punto Débil a otro jugador, quien se vuelve vulnerable a ambos números.</p>
+          </div>
+        );
+      case 'risk':
+        return (
+          <div className="space-y-4 animate-in fade-in duration-300">
+             <h4 className="text-[#d4af37] font-bold text-lg uppercase tracking-widest border-b border-[#d4af37]/30 pb-2">Tirada de Riesgo</h4>
+             <p>Al intentar una tarea arriesgada, declara qué esperas que suceda. Tu reserva de dados:</p>
+             <ul className="list-disc pl-5 space-y-1 text-gray-400 text-sm">
+               <li><strong>1 dado claro</strong> si tu Trasfondo, Ocupación o equipo ayudan.</li>
+               <li><strong>1 dado claro</strong> por aceptar un Pacto con el Diablo.</li>
+               <li><strong>1 dado oscuro</strong> si arriesgas cuerpo/mente o realizas un Ritual.</li>
+             </ul>
+
+             <div className="bg-black/50 p-3 border border-gray-800">
+              <p className="text-[#d4af37] text-xs uppercase mb-2 font-bold">Resultados (Dado más alto):</p>
+              <ul className="space-y-2 text-sm">
+                <li><strong className="text-gray-400">1-3:</strong> Fracasas y la situación empeora.</li>
+                <li><strong className="text-[#f9e29c]">4-5:</strong> Tienes éxito, pero hay una complicación (o pacto previo).</li>
+                <li><strong className="text-[#d4af37]">6:</strong> Éxito total.</li>
+              </ul>
+            </div>
+
+            <div className="bg-[#d4af37]/10 p-2 border border-[#d4af37]/30">
+               <p className="text-[#d4af37] text-xs uppercase font-bold">Tentar al destino</p>
+               <p className="text-xs">Si no estás satisfecho, añade 1 dado oscuro y repite. Si el dado más alto es oscuro y supera tu Ruina actual -> +1 Ruina.</p>
+            </div>
+          </div>
+        );
+      case 'help':
+        return (
+          <div className="space-y-4 animate-in fade-in duration-300">
+             <h4 className="text-[#d4af37] font-bold text-lg uppercase tracking-widest border-b border-[#d4af37]/30 pb-2">Tirada de Ayuda</h4>
+             <p>Si otro cazador realiza una Tirada de Riesgo con dados oscuros, puedes ayudarle.</p>
+             <ul className="list-disc pl-5 space-y-2 text-gray-400">
+               <li>Explica cómo te expones al peligro y tira <strong>1 dado claro</strong>.</li>
+               <li>El otro jugador puede usar tu resultado como si fuera suyo.</li>
+             </ul>
+             <div className="bg-red-900/10 p-3 border border-red-900/50 mt-4">
+                <strong className="text-red-500 text-sm block mb-1">¡PELIGRO!</strong>
+                <p className="text-sm">Si tu dado claro coincide con alguno de los dados oscuros de la tirada principal, tu Ruina aumenta en 1.</p>
+             </div>
+          </div>
+        );
+      case 'contest':
+        return (
+          <div className="space-y-4 animate-in fade-in duration-300">
+             <h4 className="text-[#d4af37] font-bold text-lg uppercase tracking-widest border-b border-[#d4af37]/30 pb-2">Tirada Enfrentada</h4>
+             <p>Cuando los cazadores compiten entre sí (PvP). Cada jugador reúne:</p>
+             <ul className="list-disc pl-5 space-y-1 text-gray-400 text-sm">
+               <li><strong>1 dado claro</strong> si tu Ocupación/Trasfondo da ventaja.</li>
+               <li><strong>1 dado claro</strong> por cada punto de Ruina que tengas actualmente.</li>
+               <li><strong>1 dado oscuro</strong> si es inherentemente peligroso.</li>
+               <li>Tantos <strong>dados oscuros extra</strong> como quieras arriesgar.</li>
+             </ul>
+             <div className="bg-black/50 p-3 border border-gray-800 mt-2">
+               <p className="text-[#d4af37] text-xs uppercase mb-1 font-bold">Resolución</p>
+               <p className="text-sm">Cuenta los 6s. En empate, cuenta los 5s, etc.</p>
+             </div>
+             <p className="text-red-400 text-xs mt-2 font-bold">Cada dado oscuro que saque un 1 aumenta tu Ruina en 1.</p>
+          </div>
+        );
+      default: return null;
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-[#1a1a1a] border border-[#d4af37] max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-[0_0_30px_rgba(212,175,55,0.2)] relative">
-        <div className="sticky top-0 bg-[#d4af37] text-black p-3 flex justify-between items-center font-bold uppercase tracking-widest z-10">Reglas <button onClick={onClose} className="text-xl px-2">×</button></div>
-        <div className="p-6 space-y-6 text-gray-300 font-serif text-sm">
-          <section><h3 className="text-[#d4af37] font-bold uppercase border-b border-gray-700 mb-2">Riesgo</h3><ul className="space-y-1"><li>6: Éxito total.</li><li>4-5: Éxito con coste.</li><li>1-3: Fallo.</li></ul></section>
-          <section><h3 className="text-[#d4af37] font-bold uppercase border-b border-gray-700 mb-2">Combate</h3><p>Suma los 2 dados más altos.</p></section>
+    <div className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-[#1a1a1a] border border-[#d4af37] max-w-2xl w-full h-[80vh] flex flex-col shadow-[0_0_40px_rgba(212,175,55,0.15)]">
+        
+        {/* CABECERA */}
+        <div className="bg-[#d4af37] text-black p-4 flex justify-between items-center z-10 shrink-0">
+          <h2 className="font-consent text-2xl tracking-widest font-bold">Grimorio de Reglas</h2>
+          <button onClick={onClose} className="text-2xl font-bold px-2 hover:bg-black/10 rounded transition-colors">×</button>
         </div>
+
+        {/* NAVEGACIÓN */}
+        <div className="flex flex-wrap bg-black border-b border-gray-800 shrink-0">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-3 px-2 text-[10px] sm:text-xs uppercase font-bold tracking-wider transition-all
+                ${activeTab === tab.id 
+                  ? 'bg-[#1a1a1a] text-[#d4af37] border-b-2 border-[#d4af37]' 
+                  : 'text-gray-500 hover:text-gray-300 hover:bg-[#111]'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* CONTENIDO SCROLLABLE */}
+        <div className="flex-grow overflow-y-auto p-6 text-gray-300 font-serif leading-relaxed">
+          {renderContent()}
+        </div>
+
       </div>
     </div>
   );
@@ -708,7 +854,7 @@ function App() {
                             </div>
                             <div className="mb-4">
                                 <span className={`font-bold text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
-                                {roll.analysis.isDarkHighest && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡Dado oscuro domina! Si tu de Ruina es inferior, marca +1 Ruina</div>}
+                                {roll.analysis.isDarkHighest && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡Dado oscuro domina! Si tu valor de Ruina es inferior, marca +1 Ruina</div>}
                             </div>
                             <div className="flex gap-3 mb-2">
                                 {roll.dice.map(d => (<div key={d.id} className={`w-10 h-10 flex items-center justify-center text-xl font-bold ${d.type==='light'?'bg-[#d4af37] text-black':'bg-black text-white border border-gray-700'}`}>{d.value}</div>))}
@@ -728,7 +874,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.11 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.1 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
