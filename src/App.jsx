@@ -876,7 +876,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.4 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.3 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
