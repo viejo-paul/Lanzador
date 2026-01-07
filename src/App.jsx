@@ -35,14 +35,78 @@ function analyzeResult(dice, rollType) {
   let soundType = 'fail'; 
 
   if (rollType === 'risk') {
-    if (highestValue === 6) { resultText = '¡ÉXITO COMPLETE!'; resultColor = 'text-[#d4af37] font-bold'; icon = '✨'; soundType = 'success'; }
-    else if (highestValue >= 4) { resultText = 'ÉXITO PARCIAL (CON COSTE)'; resultColor = 'text-[#f9e29c]'; icon = '⚠️'; soundType = 'fail'; }
-    else { resultText = 'FALLO (LA SITUACIÓN EMPEORA)'; resultColor = 'text-gray-400'; icon = '💀'; soundType = 'fail'; }
+    if (highestValue === 6) { resultText = 'LOGRAS LO QUE QUIERES. DESCRIBE CÓMO O PÍDESELO AL GUARDIÁN.'; resultColor = 'text-[#d4af37] font-bold'; icon = '✨'; soundType = 'success'; }
+    else if (highestValue >= 4) { resultText = 'LOGRAS LO QUE QUIERES, PERO CON ALGUNA COMPLICACIÓN. EL GUARDIÁN LA DETERMINA Y TÚ DESCRIBES CÓMO LO CONSIGUES.'; resultColor = 'text-[#f9e29c]'; icon = '⚠️'; soundType = 'fail'; }
+    else { resultText = 'FRACASAS Y TODO VA A PEOR. EL GUARDIÁN DESCRIBE CÓMO.'; resultColor = 'text-gray-400'; icon = '💀'; soundType = 'fail'; }
   } 
   else if (rollType === 'hunt') {
-    const tokens = dice.filter(d => d.value === 6).length;
-    if (tokens > 0) { resultText = `${tokens} CONTADOR${tokens > 1 ? 'ES' : ''} DE EXPLORACIÓN`; resultColor = 'text-[#d4af37] font-bold border border-[#d4af37] px-2 py-1 bg-[#d4af37]/10'; icon = '💎'; soundType = 'success'; }
-    else { resultText = 'SIN CONTADORES'; resultColor = 'text-gray-500'; icon = '🍂'; soundType = 'fail'; }
+    if (highestValue === 6) { 
+        resultText = 'GANAS 1 CONTADOR DE EXPLORACIÓN'; 
+        resultColor = 'text-[#d4af37] font-bold'; 
+        icon = '💎'; 
+        soundType = 'success'; 
+    }
+    else if (highestValue >= 4) { 
+        resultText = 'GANAS 1 CONTADOR, PERO ENCUENTRAS ALGO TERRIBLE'; 
+        resultColor = 'text-[#f9e29c]'; 
+        icon = '⚠️'; 
+        soundType = 'fail'; 
+    }
+    else if (highestValue >= 2) { 
+        resultText = 'ENCUENTRAS ALGO TERRIBLE'; 
+        resultColor = 'text-gray-400'; 
+        icon = '💀'; 
+        soundType = 'fail'; 
+    }
+    else { 
+        resultText = 'PIERDES TODOS TUS CONTADORES Y ENCUENTRAS ALGO TERRIBLE'; 
+        resultColor = 'text-red-500 font-bold animate-pulse'; 
+        icon = '🩸'; 
+        soundType = 'ruin'; 
+    }
+  }
+  else if (rollType === 'combat') {
+    // 1. Separar dados oscuros (Ataque) y claros (Punto Débil)
+    const darkDiceValues = dice.filter(d => d.type === 'dark').map(d => d.value).sort((a, b) => b - a);
+    const lightDiceValues = dice.filter(d => d.type === 'light').map(d => d.value);
+
+    // 2. Calcular Daño: Suma de los 2 dados oscuros más altos
+    // Si no hay dados oscuros, el daño es 0.
+    const damage = (darkDiceValues[0] || 0) + (darkDiceValues[1] || 0);
+
+    // 3. Comprobar Ruina (Si un dado oscuro coincide con tu Punto Débil/Dado Claro)
+    let ruinHits = 0;
+    lightDiceValues.forEach(weakPoint => {
+        const matches = darkDiceValues.filter(val => val === weakPoint).length;
+        ruinHits += matches;
+    });
+
+    // 4. Generar Texto y Estilos
+    resultText = `DAÑO TOTAL: ${damage}`;
+    
+    if (ruinHits > 0) {
+        // Caso: El monstruo golpea tu punto débil
+        resultText += ` | ¡PUNTO DÉBIL GOLPEADO! (+${ruinHits} RUINA)`;
+        resultColor = 'text-red-500 font-bold animate-pulse border-b-2 border-red-500'; 
+        icon = '🩸'; 
+        soundType = 'ruin';
+    } else {
+        // Caso: Ataque normal (sin recibir daño extra)
+        if (damage >= 10) { 
+            resultColor = 'text-[#d4af37] font-bold text-lg'; 
+            icon = '⚔️'; 
+            soundType = 'success'; 
+        } else { 
+            resultColor = 'text-gray-300 font-bold'; 
+            icon = '🗡️'; 
+            soundType = 'click'; 
+        }
+        
+        // Mostrar cuál era el punto débil para referencia visual
+        if (lightDiceValues.length > 0) {
+            resultText += ` (P. Débil: ${lightDiceValues.join(', ')})`;
+        }
+    }
   }
   else if (rollType === 'combat') {
     const sortedValues = dice.map(d => d.value).sort((a, b) => b - a);
@@ -634,7 +698,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.7 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.8 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
