@@ -565,7 +565,7 @@ function App() {
       theme: 'default',
       width: window.innerWidth,
       height: window.innerHeight,
-      scale: 20,
+      scale: 14,
       gravity: 5,
       mass: 1,
       friction: 0.6,
