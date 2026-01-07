@@ -516,18 +516,23 @@ function App() {
     }
   };
 
-  const handleExit = () => { setIsJoined(false); setIsGM(false); window.history.pushState({}, '', window.location.pathname); };
-  const handleClearHistory = () => { if (window.confirm("¿Purgar historial?")) remove(ref(database, `rooms/${roomName}/rolls`)); };
-  const updateDiceCount = (setter, c, ch) => { const v = c+ch; if(v>=0 && v<=10) { setter(v); playSound('click'); } };
-
   const handleRoll = async () => {
     if (!diceBoxInstance) return;
     const diceToRoll = [];
-    if (rollType === 'help') diceToRoll.push({ sides: 6, qty: 1, themeColor: '#d4af37', foreground: '#000000' });
-    else {
-        if (rollType !== 'combat' && lightCount > 0) diceToRoll.push({ sides: 6, qty: lightCount, themeColor: '#d4af37', foreground: '#000000' });
-        if (rollType !== 'hunt' && darkCount > 0) diceToRoll.push({ sides: 6, qty: darkCount, themeColor: '#1a1a1a', foreground: '#d4af37' });
+    
+    if (rollType === 'help') {
+        diceToRoll.push({ sides: 6, qty: 1, themeColor: '#d4af37', foreground: '#000000' });
+    } else {
+        // CAMBIO AQUÍ: Ya no bloqueamos los dados claros en combate
+        if (lightCount > 0) {
+            diceToRoll.push({ sides: 6, qty: lightCount, themeColor: '#d4af37', foreground: '#000000' });
+        }
+        // Los dados oscuros se añaden siempre excepto en 'hunt' (exploración)
+        if (rollType !== 'hunt' && darkCount > 0) {
+            diceToRoll.push({ sides: 6, qty: darkCount, themeColor: '#1a1a1a', foreground: '#d4af37' });
+        }
     }
+
     if (diceToRoll.length === 0) return;
     
     diceBoxInstance.clear();
@@ -661,8 +666,29 @@ function App() {
                         </div>
                         {rollType!=='help' && (
                           <div className="grid grid-cols-2 gap-4 mb-4">
-                            {rollType!=='combat' && (<div><label className="block text-[11px] text-[#d4af37] mb-1 uppercase text-center">Claros</label><div className="flex items-center justify-between border border-[#d4af37] bg-black h-10"><button onClick={()=>updateDiceCount(setLightCount,lightCount,-1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">-</button><span className="font-bold">{lightCount}</span><button onClick={()=>updateDiceCount(setLightCount,lightCount,1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">+</button></div></div>)}
-                            {rollType!=='hunt' && (<div className={rollType==='combat'?'col-span-2':''}><label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label><div className="flex items-center justify-between border border-gray-600 bg-black h-10"><button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button><span className="font-bold">{darkCount}</span><button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button></div></div>)}
+                            {/* CAMBIO: Se muestra SIEMPRE (quitada la condición rollType!=='combat') */}
+                            <div>
+                                <label className="block text-[11px] text-[#d4af37] mb-1 uppercase text-center">
+                                    {rollType === 'combat' ? 'Punto Débil (Claro)' : 'Claros'}
+                                </label>
+                                <div className="flex items-center justify-between border border-[#d4af37] bg-black h-10">
+                                    <button onClick={()=>updateDiceCount(setLightCount,lightCount,-1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">-</button>
+                                    <span className="font-bold">{lightCount}</span>
+                                    <button onClick={()=>updateDiceCount(setLightCount,lightCount,1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">+</button>
+                                </div>
+                            </div>
+                            
+                            {/* CAMBIO: Quitada la clase col-span-2 dinámica, ya que ahora comparten espacio en combate */}
+                            {rollType!=='hunt' && (
+                                <div>
+                                    <label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label>
+                                    <div className="flex items-center justify-between border border-gray-600 bg-black h-10">
+                                        <button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button>
+                                        <span className="font-bold">{darkCount}</span>
+                                        <button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button>
+                                    </div>
+                                </div>
+                            )}
                           </div>
                         )}
                         <button onClick={handleRoll} className={`w-full font-consent text-3xl py-2 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
@@ -699,7 +725,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.4.8 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-300 text-[10px] py-1 font-mono uppercase">v.0.4.8.3 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
