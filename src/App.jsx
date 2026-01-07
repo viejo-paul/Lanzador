@@ -66,7 +66,7 @@ function analyzeResult(dice, rollType) {
     }
   }
   else if (rollType === 'combat') {
-    // 1. Separar dados oscuros (Ataque) y claros (Punto débil)
+    // 1. Separar dados oscuros (Ataque) y claros (Punto Débil)
     const darkDiceValues = dice.filter(d => d.type === 'dark').map(d => d.value).sort((a, b) => b - a);
     const lightDiceValues = dice.filter(d => d.type === 'light').map(d => d.value);
 
@@ -74,7 +74,7 @@ function analyzeResult(dice, rollType) {
     // Si no hay dados oscuros, el daño es 0.
     const damage = (darkDiceValues[0] || 0) + (darkDiceValues[1] || 0);
 
-    // 3. Comprobar Ruina (Si un dado oscuro coincide con tu Punto débil/Dado Claro)
+    // 3. Comprobar Ruina (Si un dado oscuro coincide con tu Punto Débil/Dado Claro)
     let ruinHits = 0;
     lightDiceValues.forEach(weakPoint => {
         const matches = darkDiceValues.filter(val => val === weakPoint).length;
@@ -411,13 +411,13 @@ const RulesModal = ({ isOpen, onClose }) => {
              <h4 className="text-[#d4af37] font-bold text-lg uppercase tracking-widest border-b border-[#d4af37]/30 pb-2">Tirada de Combate</h4>
              <p>Cuando te encuentres en combate, podrías colaborar con tus compañeros. Para empezar:</p>
              <ul className="list-disc pl-5 space-y-2 text-gray-400 text-sm">
-               <li>Declara tu vulnerabilidad y tira <strong>un dado claro</strong>. Este es tu <strong>Punto débil</strong>. (Cada jugador tira el suyo).</li>
-               <li>Tira <strong>un dado oscuro</strong> por cada buscador que participe en el combate (reserva de dados común).</li>
+               <li>Declara tu vulnerabilidad y tira <strong>un dado claro</strong>. Este es tu <strong>Punto Débil</strong>. (Cada jugador tira el suyo).</li>
+               <li>Tira <strong>un dado oscuro</strong> por cada buscador que participe en el combate (pool común).</li>
              </ul>
              
              <div className="bg-red-900/10 p-3 border border-red-900/50">
                 <p className="text-red-400 text-xs uppercase mb-1 font-bold">Mecánica de Ruina</p>
-                <p className="text-sm">Si algún dado oscuro iguala tu <strong>Punto débil</strong>, aumentas tu Ruina en 1 por cada coincidencia.</p>
+                <p className="text-sm">Si algún dado oscuro iguala tu <strong>Punto Débil</strong>, aumentas tu Ruina en 1 por cada coincidencia.</p>
              </div>
 
              <div className="bg-black/50 p-3 border border-gray-800">
@@ -428,7 +428,7 @@ const RulesModal = ({ isOpen, onClose }) => {
                  <li><strong>Fallo:</strong> Se añade un dado oscuro extra y se vuelve a tirar (ronda 2).</li>
                </ul>
              </div>
-             <p className="text-xs text-gray-500">Si te retiras, debes entregar tu Punto débil a otro jugador, quien se vuelve vulnerable a ambos números.</p>
+             <p className="text-xs text-gray-500">Si te retiras, debes entregar tu Punto Débil a otro jugador, quien se vuelve vulnerable a ambos números.</p>
           </div>
         );
       case 'risk':
@@ -559,7 +559,6 @@ function App() {
     const box = new DiceBox({
       container: "#dice-box-full", 
       assetPath: '/assets/', 
-      origin: "https://unpkg.com/@3d-dice/dice-box@latest/dist/",
       sounds: true,
       volume: 0.5,
       theme: 'default',
@@ -822,7 +821,7 @@ function App() {
                             {/* CAMBIO: Se muestra SIEMPRE (quitada la condición rollType!=='combat') */}
                             <div>
                                 <label className="block text-[11px] text-[#d4af37] mb-1 uppercase text-center">
-                                    {rollType === 'combat' ? 'Punto débil (Claro)' : 'Claros'}
+                                    {rollType === 'combat' ? 'Punto Débil (Claro)' : 'Claros'}
                                 </label>
                                 <div className="flex items-center justify-between border border-[#d4af37] bg-black h-10">
                                     <button onClick={()=>updateDiceCount(setLightCount,lightCount,-1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">-</button>
@@ -877,7 +876,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.3 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.4 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
