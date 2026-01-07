@@ -206,7 +206,7 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
          <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
             <div className="flex items-center gap-3">
               {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-              <span className="text-[#d4af37] font-consent font-bold text-xl tracking-widest">GUARDIÁN</span>
+              <span className="text-[#d4af37] font-consent text-xl tracking-widest">Guardián</span>
             </div>
             <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
          </div>
@@ -404,13 +404,13 @@ const PartyView = ({ roomName, currentPlayerName, isGM }) => {
               className="text-[10px] bg-red-900/20 text-red-500 border border-red-900/50 px-2 py-1 hover:bg-red-900 hover:text-white transition-all uppercase font-bold"
               title="Restaurar copia de seguridad de todo el grupo"
             >
-              Restaurar Todo
+              Restaurar todo
             </button>
             <button 
               onClick={() => downloadJSON(party, `Partida_Completa_${roomName}`)}
               className="text-[10px] bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/30 px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-all uppercase font-bold"
             >
-              Descargar Todo
+              Descargar todo
             </button>
           </div>
         )}
@@ -426,8 +426,8 @@ const PartyView = ({ roomName, currentPlayerName, isGM }) => {
                    </div>
                    <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#d4af37] font-consent font-bold text-xl tracking-wide">{n}</span>
-                        {s.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
+                        <span className="text-[#d4af37] font-consent text-xl tracking-wide">{n}</span>
+                        {s.realPlayerName && <span className="text-[9px] text-gray-600  italic">({s.realPlayerName})</span>}
                       </div>
                       <div className="flex gap-2 text-[10px] uppercase">
                            <span className={s.ruin>=5?'text-red-500 font-bold':'text-gray-500'}>Ruina: {s.ruin}</span>
@@ -982,7 +982,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.5 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.5.2 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
