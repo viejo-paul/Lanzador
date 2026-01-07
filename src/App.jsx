@@ -558,7 +558,7 @@ function App() {
 
     const box = new DiceBox({
       container: "#dice-box-full", 
-      assetPath: '/assets/sounds/', 
+      assetPath: '/assets/', 
       sounds: true,
       volume: 0.5,
       theme: 'default',
