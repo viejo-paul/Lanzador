@@ -500,7 +500,7 @@ const RulesModal = ({ isOpen, onClose }) => {
         
         {/* CABECERA */}
         <div className="bg-[#d4af37] text-black p-4 flex justify-between items-center z-10 shrink-0">
-          <h2 className="font-consent text-2xl tracking-widest font-bold">Grimorio de Reglas</h2>
+          <h2 className="font-consent text-2xl tracking-widest ">Resumen de reglas</h2>
           <button onClick={onClose} className="text-2xl font-bold px-2 hover:bg-black/10 rounded transition-colors">×</button>
         </div>
 
@@ -874,7 +874,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.1 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.2 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
