@@ -154,14 +154,11 @@ const ImageModal = ({ isOpen, onClose, imageUrl, title }) => {
   );
 };
 
-// --- COMPONENTE FICHA PERSONAL (Con Importar/Exportar) ---
+// --- COMPONENTE FICHA PERSONAL ---
 const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = false }) => {
   const [stats, setStats] = useState({ ruin: 1, ruinInitial: 1, gold: 0, debt: 0, tokens: 0, goldReserve: 0, occupation: '', background: '', drive: '', skills: '', rituals: '', backpack: '', armor: '', weapons: '', foundGear: '', conditions: '', imageUrl: '', realPlayerName: '', notes: '' });
-  const [isExpanded, setIsExpanded] = useState(embedded);
+  const [isExpanded, setIsExpanded] = useState(embedded); // Si está incrustada, empieza expandida
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Referencia para el input de archivo oculto
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const unsubscribe = onValue(ref(database, `rooms/${roomName}/characters/${playerName}`), s => s.val() && setStats(s.val()));
@@ -174,29 +171,7 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
       update(ref(database, `rooms/${roomName}/characters/${playerName}`), newStats); 
   };
 
-  // Lógica de Importación Individual
-  const handleImport = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target.result);
-        if (window.confirm(`¿Sobrescribir ficha de "${playerName}" con los datos del archivo?`)) {
-            update(ref(database, `rooms/${roomName}/characters/${playerName}`), data);
-            playSound('success');
-            alert("Ficha importada correctamente.");
-        }
-      } catch (err) {
-        alert("Error: El archivo no es un JSON válido.");
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = null; 
-  };
-
-  // --- RENDERIZADO PARA GUARDIÁN ---
+  // --- RENDERIZADO PARA Guardián (CON AVATAR Y DATOS) ---
   if (role === 'guardian') {
     return (
       <>
@@ -206,41 +181,33 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
          <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
             <div className="flex items-center gap-3">
               {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-              <span className="text-[#d4af37] font-consent font-bold text-xl tracking-widest">GUARDIÁN</span>
+              <span className="text-[#d4af37] font-consent text-xl tracking-widest">Guardián</span>
             </div>
             <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
          </div>
          {isExpanded && (
            <div className="p-4 animate-in slide-in-from-top-2">
+             
+             {/* Bloque de Avatar y Nombre Real (Igual que ficha de jugador) */}
              <div className="flex flex-col items-center mb-6">
                 <div className="w-full flex justify-end mb-2">
                    <div className="flex flex-col items-end">
-                     <label className="text-[9px] text-gray-600 uppercase tracking-tighter">Nombre Real</label>
-                     <input type="text" value={stats.realPlayerName || ''} onChange={e=>handleChange('realPlayerName', e.target.value)} className="bg-transparent text-gray-500 text-[10px] text-right outline-none border-b border-gray-900 focus:border-gray-700 w-32" placeholder="Tu nombre..."/>
+                     <label className="text-[9px] text-gray-600 uppercase tracking-tighter">Jugador/a</label>
+                     <input type="text" value={stats.realPlayerName || ''} onChange={e=>handleChange('realPlayerName', e.target.value)} className="bg-transparent text-gray-500 text-[10px] text-right outline-none border-b border-gray-900 focus:border-gray-700 w-24" placeholder="Nombre..."/>
                    </div>
                 </div>
                 <div onClick={() => stats.imageUrl && setIsModalOpen(true)} className={`w-24 h-24 rounded-full border-2 border-[#d4af37] bg-black overflow-hidden ${stats.imageUrl ? 'cursor-zoom-in hover:border-white transition-colors' : ''}`}>
                    {stats.imageUrl ? <img src={stats.imageUrl} className="w-full h-full object-cover" alt="Avatar"/> : <div className="w-full h-full flex items-center justify-center text-[#d4af37] opacity-20 text-4xl">?</div>}
                 </div>
              </div>
-             <div className="mb-4">
-               <label className="text-[#d4af37] uppercase block mb-1 font-bold text-xs tracking-widest">Cuaderno de Notas</label>
-               <textarea value={stats.notes || ''} onChange={e=>handleChange('notes',e.target.value)} className="w-full bg-black text-gray-300 border border-gray-700 p-3 outline-none min-h-[12rem] font-serif leading-relaxed resize-y"/>
-             </div>
-             <div>
-                <label className="text-gray-600 uppercase block mb-1 text-[10px]">URL Imagen (Retrato)</label>
-                <input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} className="w-full bg-black text-gray-600 text-[10px] border border-gray-800 p-2 outline-none focus:border-[#d4af37] transition-colors"/>
-             </div>
 
-             {/* BOTONERA IMPORTAR / EXPORTAR (GUARDIÁN) */}
-             <div className="mt-6 pt-4 border-t border-gray-800 flex justify-end gap-4">
-                <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleImport} />
-                <button onClick={() => fileInputRef.current.click()} className="text-[9px] text-gray-500 hover:text-white uppercase tracking-widest flex items-center gap-1 transition-colors">
-                    <span>📤 Importar</span>
-                </button>
-                <button onClick={() => downloadJSON(stats, `Ficha_${playerName}_${roomName}`)} className="text-[9px] text-gray-500 hover:text-[#d4af37] uppercase tracking-widest flex items-center gap-1 transition-colors">
-                    <span>📥 Descargar</span>
-                </button>
+             <label className="text-[#d4af37] uppercase block mb-1">Notas de la partida</label>
+             <textarea value={stats.notes || ''} onChange={e=>handleChange('notes',e.target.value)} className="w-full bg-black text-gray-400 border border-gray-800 p-2 outline-none min-h-[10rem]"/>
+             
+             {/* Campo URL Imagen */}
+             <div className="mt-4">
+                <label className="text-gray-600 uppercase block mb-1 text-xs">URL Imagen (Retrato)</label>
+                <input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} className="w-full bg-black text-gray-600 text-[10px] border border-gray-800 p-2 outline-none"/>
              </div>
            </div>
          )}
@@ -249,17 +216,17 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
     );
   }
 
-  // --- RENDERIZADO PARA JUGADOR ---
+  // --- RENDERIZADO NORMAL (JUGADOR) ---
   return (
     <>
     <style>{fontStyles}</style>
     <ImageModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} imageUrl={stats.imageUrl} title={playerName} />
     <div className={`w-full border border-[#d4af37] ${embedded ? 'border-t-0' : 'mb-6 shadow-lg'} transition-all bg-[#1a1a1a]/90 backdrop-blur-sm relative z-10`}>
+      {/* Si es incrustada (vista por el Guardián en la lista), no mostramos la cabecera "TU FICHA" porque ya tiene la del acordeón */}
       {!embedded && (
         <div onClick={() => {setIsExpanded(!isExpanded); playSound('click');}} className="p-3 bg-black/80 flex items-center justify-between cursor-pointer border-b border-gray-800">
             <div className="flex items-center gap-3">
             {!isExpanded && stats.imageUrl && <img src={stats.imageUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-[#d4af37]" />}
-            {/* AQUÍ MANTENGO TU ESTILO ORIGINAL: text-2xl y sin font-bold */}
             <span className="text-[#d4af37] font-consent text-2xl tracking-widest">{playerName}</span>
             </div>
             <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
@@ -271,7 +238,7 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
           <div className="flex flex-col items-center mb-6">
              <div className="w-full flex justify-end mb-2">
                 <div className="flex flex-col items-end">
-                  <label className="text-[9px] text-gray-600 uppercase tracking-tighter">Jugador/a</label>
+                  <label className="text-[10px] text-gray-600 uppercase tracking-tighter">Jugador/a</label>
                   <input type="text" value={stats.realPlayerName || ''} onChange={e=>handleChange('realPlayerName', e.target.value)} className="bg-transparent text-gray-500 text-[10px] text-right outline-none border-b border-gray-900 focus:border-gray-700 w-24" placeholder="Nombre..."/>
                 </div>
              </div>
@@ -329,17 +296,15 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
 
              <div><label className="text-gray-600 uppercase block mb-1">URL Imagen (Retrato)</label><input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} className="w-full bg-black text-gray-600 text-[10px] border border-gray-800 p-2 outline-none"/></div>
              <div><label className="text-[#d4af37] uppercase block mb-1">Notas</label><textarea value={stats.notes || ''} onChange={e=>handleChange('notes',e.target.value)} className="w-full bg-black text-gray-400 border border-gray-800 p-2 outline-none min-h-[4rem]"/></div>
-             
-             {/* BOTONERA IMPORTAR / EXPORTAR (JUGADOR) */}
-             <div className="mt-6 pt-4 border-t border-gray-800 flex justify-end gap-4">
-                <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleImport} />
-                <button onClick={() => fileInputRef.current.click()} className="text-[9px] text-gray-600 hover:text-white uppercase tracking-widest flex items-center gap-1 transition-colors">
-                    <span>📤 Importar JSON</span>
-                </button>
-                <button onClick={() => downloadJSON(stats, `Ficha_${playerName}_${roomName}`)} className="text-[9px] text-gray-600 hover:text-[#d4af37] uppercase tracking-widest flex items-center gap-1 transition-colors">
-                    <span>📥 Descargar JSON</span>
-                </button>
-             </div>
+             {/* Botón de descarga individual */}
+            <div className="mt-6 pt-4 border-t border-gray-800 flex justify-end">
+              <button 
+                onClick={() => downloadJSON(stats, `Ficha_${playerName}_${roomName}`)}
+                className="text-[9px] text-gray-600 hover:text-[#d4af37] uppercase tracking-widest flex items-center gap-1 transition-colors"
+              >
+                <span>📥 Descargar Ficha JSON</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -348,74 +313,33 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
   );
 };
 
-// --- COMPONENTE VISTA GRUPO (Con Restauración Global para Guardián) ---
+// --- COMPONENTE VISTA GRUPO ---
 const PartyView = ({ roomName, currentPlayerName, isGM }) => {
   const [party, setParty] = useState({});
   const [expandedCards, setExpandedCards] = useState({});
   const [modalImage, setModalImage] = useState({ open: false, url: '', name: '' });
-  
-  // Referencia para importar backup global
-  const fileInputRef = useRef(null);
-
   useEffect(() => { if(!roomName)return; return onValue(ref(database, `rooms/${roomName}/characters`), s => s.val() && setParty(s.val())); }, [roomName]);
-  
   const toggle = (n) => { setExpandedCards(p => ({...p, [n]: !p[n]})); playSound('click'); };
   
-  // Filtro para ocultar al Guardián de la lista visual
-  const players = Object.entries(party).filter(([n]) => n !== currentPlayerName && n !== 'Guardián');
-
-  // Lógica de Restauración Global (Solo GM)
-  const handleImportGlobal = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target.result);
-        if (window.confirm("⚠️ PELIGRO: Esto sobrescribirá TODAS las fichas de los jugadores con los datos del archivo. ¿Estás seguro?")) {
-            update(ref(database, `rooms/${roomName}/characters`), data);
-            playSound('success');
-            alert("Partida restaurada correctamente.");
-        }
-      } catch (err) {
-        alert("Error: Archivo inválido.");
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = null;
-  };
+  // Si soy el Guardián, quiero ver a TODOS los jugadores (excepto a mí mismo, que soy 'Guardián')
+const players = Object.entries(party).filter(([n]) => n !== currentPlayerName && n !== 'Guardián');
   
   if(players.length===0) return null;
-
   return (
     <>
     <ImageModal isOpen={modalImage.open} onClose={() => setModalImage({ ...modalImage, open: false })} imageUrl={modalImage.url} title={modalImage.name} />
     <div className="w-full relative z-10">
-      
-      {/* CABECERA CON BOTONES DE GESTIÓN PARA EL GUARDIÁN */}
       <div className="flex justify-between items-center mb-6 px-2">
         <h3 className="text-gray-500 text-xs uppercase tracking-[0.3em]">Grupo</h3>
         {isGM && (
-          <div className="flex gap-2">
-            <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleImportGlobal} />
-            <button 
-              onClick={() => fileInputRef.current.click()}
-              className="text-[10px] bg-red-900/20 text-red-500 border border-red-900/50 px-2 py-1 hover:bg-red-900 hover:text-white transition-all uppercase font-bold"
-              title="Restaurar copia de seguridad de todo el grupo"
-            >
-              Restaurar Todo
-            </button>
-            <button 
-              onClick={() => downloadJSON(party, `Partida_Completa_${roomName}`)}
-              className="text-[10px] bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/30 px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-all uppercase font-bold"
-            >
-              Descargar Todo
-            </button>
-          </div>
+          <button 
+            onClick={() => downloadJSON(party, `Partida_Completa_${roomName}`)}
+            className="text-[10px] bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/30 px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-all uppercase font-bold"
+          >
+            Descargar Todo (.json)
+          </button>
         )}
       </div>
-
       <div className="space-y-3">
         {players.map(([n, s]) => (
           <div key={n} className="border border-gray-800 bg-[#0a0a0a]/90 backdrop-blur-sm">
@@ -426,8 +350,8 @@ const PartyView = ({ roomName, currentPlayerName, isGM }) => {
                    </div>
                    <div className="flex flex-col">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-[#d4af37] font-consent font-bold text-xl tracking-wide">{n}</span>
-                        {s.realPlayerName && <span className="text-[9px] text-gray-600 lowercase italic">({s.realPlayerName})</span>}
+                        <span className="text-[#d4af37] font-consent text-xl tracking-wide">{n}</span>
+                        {s.realPlayerName && <span className="text-[10px] text-gray-600 italic">({s.realPlayerName})</span>}
                       </div>
                       <div className="flex gap-2 text-[10px] uppercase">
                            <span className={s.ruin>=5?'text-red-500 font-bold':'text-gray-500'}>Ruina: {s.ruin}</span>
@@ -442,8 +366,10 @@ const PartyView = ({ roomName, currentPlayerName, isGM }) => {
              {expandedCards[n] && (
                <div className="bg-black/50 border-t border-gray-900 animate-in slide-in-from-top-1">
                   {isGM ? (
+                    // VISTA COMPLETA PARA EL Guardián (usando el componente CharacterSheet incrustado)
                     <CharacterSheet roomName={roomName} playerName={n} embedded={true} />
                   ) : (
+                    // VISTA RESUMEN PARA JUGADORES NORMALES
                     <div className="p-3 text-xs space-y-3">
                       <div className="grid grid-cols-2 gap-4">
                           <div><span className="text-gray-600 block text-[9px] uppercase">Ocupación</span><p className="text-gray-300">{s.occupation || '-'}</p></div>
@@ -982,7 +908,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.5 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.4 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
