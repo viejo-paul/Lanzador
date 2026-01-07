@@ -9,6 +9,19 @@ const fontStyles = `
   .font-consent { font-family: 'Manufacturing Consent', sans-serif !important; text-transform: none !important; }
 `;
 
+// ---GESTOR DE DESCARGAS JSON ---
+const downloadJSON = (data, fileName) => {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${fileName}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 // --- GESTOR DE SONIDOS ---
 const playSound = (type) => {
   const sounds = {
@@ -283,6 +296,15 @@ const CharacterSheet = ({ roomName, playerName, role = 'player', embedded = fals
 
              <div><label className="text-gray-600 uppercase block mb-1">URL Imagen (Retrato)</label><input type="text" value={stats.imageUrl||''} onChange={e=>handleChange('imageUrl',e.target.value)} className="w-full bg-black text-gray-600 text-[10px] border border-gray-800 p-2 outline-none"/></div>
              <div><label className="text-[#d4af37] uppercase block mb-1">Notas</label><textarea value={stats.notes || ''} onChange={e=>handleChange('notes',e.target.value)} className="w-full bg-black text-gray-400 border border-gray-800 p-2 outline-none min-h-[4rem]"/></div>
+             {/* Botón de descarga individual */}
+            <div className="mt-6 pt-4 border-t border-gray-800 flex justify-end">
+              <button 
+                onClick={() => downloadJSON(stats, `Ficha_${playerName}_${roomName}`)}
+                className="text-[9px] text-gray-600 hover:text-[#d4af37] uppercase tracking-widest flex items-center gap-1 transition-colors"
+              >
+                <span>📥 Descargar Ficha JSON</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -307,7 +329,17 @@ const players = Object.entries(party).filter(([n]) => n !== currentPlayerName &&
     <>
     <ImageModal isOpen={modalImage.open} onClose={() => setModalImage({ ...modalImage, open: false })} imageUrl={modalImage.url} title={modalImage.name} />
     <div className="w-full relative z-10">
-      <h3 className="text-gray-500 text-xs uppercase tracking-[0.3em] text-center mb-6">Grupo</h3>
+      <div className="flex justify-between items-center mb-6 px-2">
+        <h3 className="text-gray-500 text-xs uppercase tracking-[0.3em]">Grupo</h3>
+        {isGM && (
+          <button 
+            onClick={() => downloadJSON(party, `Partida_Completa_${roomName}`)}
+            className="text-[10px] bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/30 px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-all uppercase font-bold"
+          >
+            Descargar Todo (.json)
+          </button>
+        )}
+      </div>
       <div className="space-y-3">
         {players.map(([n, s]) => (
           <div key={n} className="border border-gray-800 bg-[#0a0a0a]/90 backdrop-blur-sm">
@@ -876,7 +908,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.3 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.4 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
