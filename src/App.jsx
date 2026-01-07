@@ -665,32 +665,32 @@ function App() {
                             {['risk','hunt','combat','help'].map(t=>(<button key={t} onClick={()=>setRollType(t)} className={`py-2 text-[10px] uppercase font-bold transition-all ${rollType===t?(t==='combat'?'bg-red-900':'bg-[#d4af37] text-black'):'text-gray-500 hover:text-gray-300'}`}>{t==='risk'?'Riesgo':t==='hunt'?'Explor.':t==='combat'?'Combate':'Ayuda'}</button>))}
                         </div>
                         {rollType!=='help' && (
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            {/* CAMBIO: Se muestra SIEMPRE (quitada la condición rollType!=='combat') */}
-                            <div>
-                                <label className="block text-[11px] text-[#d4af37] mb-1 uppercase text-center">
-                                    {rollType === 'combat' ? 'Punto Débil (Claro)' : 'Claros'}
-                                </label>
-                                <div className="flex items-center justify-between border border-[#d4af37] bg-black h-10">
-                                    <button onClick={()=>updateDiceCount(setLightCount,lightCount,-1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">-</button>
-                                    <span className="font-bold">{lightCount}</span>
-                                    <button onClick={()=>updateDiceCount(setLightCount,lightCount,1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">+</button>
-                                </div>
-                            </div>
-                            
-                            {/* CAMBIO: Quitada la clase col-span-2 dinámica, ya que ahora comparten espacio en combate */}
-                            {rollType!=='hunt' && (
-                                <div>
-                                    <label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label>
-                                    <div className="flex items-center justify-between border border-gray-600 bg-black h-10">
-                                        <button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button>
-                                        <span className="font-bold">{darkCount}</span>
-                                        <button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button>
-                                    </div>
-                                </div>
-                            )}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          {/* COLUMNA 1: DADOS CLAROS / PUNTO DÉBIL */}
+                          <div>
+                              <label className="block text-[11px] text-[#d4af37] mb-1 uppercase text-center">
+                                  {rollType === 'combat' ? 'Punto Débil (Claro)' : 'Claros'}
+                              </label>
+                              <div className="flex items-center justify-between border border-[#d4af37] bg-black h-10">
+                                  <button onClick={()=>updateDiceCount(setLightCount,lightCount,-1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">-</button>
+                                  <span className="font-bold">{lightCount}</span>
+                                  <button onClick={()=>updateDiceCount(setLightCount,lightCount,1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">+</button>
+                              </div>
                           </div>
-                        )}
+                          
+                          {/* COLUMNA 2: DADOS OSCUROS (Oculto en Exploración/Hunt) */}
+                          {rollType!=='hunt' && (
+                              <div>
+                                  <label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label>
+                                  <div className="flex items-center justify-between border border-gray-600 bg-black h-10">
+                                      <button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button>
+                                      <span className="font-bold">{darkCount}</span>
+                                      <button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button>
+                                  </div>
+                              </div>
+                          )}
+                        </div>
+                      )}
                         <button onClick={handleRoll} className={`w-full font-consent text-3xl py-2 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
                           {rollType === 'combat' ? '¡Atacar!' : rollType === 'hunt' ? 'Explorar' : rollType === 'help' ? 'Prestar ayuda' : 'Tirar dados'}
                         </button>
@@ -725,7 +725,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-300 text-[10px] py-1 font-mono uppercase">v.0.4.8.4 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-300 text-[10px] py-1 font-mono uppercase">v.0.4.8.5 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
