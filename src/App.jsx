@@ -823,62 +823,56 @@ function App() {
   };
 
   const handlePush = (roll) => {
-    if (!roll.id) return;
+        if (!roll.id) return;
 
-    // 1. Calcular dados
-    const currentLight = roll.dice.filter(d => d.type === 'light').length;
-    const currentDark = roll.dice.filter(d => d.type === 'dark').length;
-    
-    // Aumentamos oscuros en 1
-    const newDarkCount = currentDark + 1;
-
-    // 2. Calcular Nivel de Push (Asegurando que sea número)
-    // Si no tiene pushLevel, empezamos en 0.
-    const currentLevel = typeof roll.pushLevel === 'number' ? roll.pushLevel : 0;
-    const nextPushLevel = currentLevel + 1;
-
-    console.log(`Tentando al destino: Nivel ${currentLevel} -> ${nextPushLevel}`);
-
-    // 3. Regenerar Dados
-    const newDice = [];
-    // Claros (los mismos que había)
-    for (let i = 0; i < currentLight; i++) {
-        newDice.push({
-            id: Math.random().toString(36).substr(2, 9),
-            value: Math.floor(Math.random() * 6) + 1,
-            type: 'light'
-        });
-    }
-    // Oscuros (los que había + 1)
-    for (let i = 0; i < newDarkCount; i++) {
-        newDice.push({
-            id: Math.random().toString(36).substr(2, 9),
-            value: Math.floor(Math.random() * 6) + 1,
-            type: 'dark'
-        });
-    }
-
-    // 4. IMPORTANTE: Recuperar el tipo de tirada original
-    // Si se pierde esto, sale "Ayuda" o errores.
-    const originalType = roll.rollType || 'risk'; // Por defecto 'risk' si falla
-
-    // 5. Analizar nuevo resultado
-    const newAnalysis = analyzeResult(newDice, originalType);
-
-    // 6. ACTUALIZAR FIREBASE
-    update(ref(database, `rooms/${roomName}/rolls/${roll.id}`), {
-        dice: newDice,
-        analysis: newAnalysis,
-        pushLevel: nextPushLevel, // Guardamos el nivel 1, 2, 3...
-        rollType: originalType,   // Guardamos que sigue siendo 'risk' o 'combat'
+        // 1. Calcular dados actuales
+        const currentLight = roll.dice.filter(d => d.type === 'light').length;
+        const currentDark = roll.dice.filter(d => d.type === 'dark').length;
         
-        // --- ¡¡¡NO DESCOMENTAR ESTO!!! ---
-        // Si descomentas esto, la tirada se irá al final de la lista.
-        // timestamp: Date.now() 
-    }).then(() => {
+        // 2. Aumentar oscuros
+        const newDarkCount = currentDark + 1;
+
+        // 3. Gestionar el NIVEL DE PUSH (Solución al error "siempre 1ª vez")
+        // Forzamos que sea un número entero base 10. Si no existe, es 0.
+        const currentLevel = parseInt(roll.pushLevel || 0, 10);
+        const nextPushLevel = currentLevel + 1;
+
+        // 4. Regenerar dados
+        const newDice = [];
+        // Claros
+        for (let i = 0; i < currentLight; i++) {
+            newDice.push({
+                id: Math.random().toString(36).substr(2, 9),
+                value: Math.floor(Math.random() * 6) + 1,
+                type: 'light'
+            });
+        }
+        // Oscuros
+        for (let i = 0; i < newDarkCount; i++) {
+            newDice.push({
+                id: Math.random().toString(36).substr(2, 9),
+                value: Math.floor(Math.random() * 6) + 1,
+                type: 'dark'
+            });
+        }
+
+        // 5. Analizar y Guardar
+        const newAnalysis = analyzeResult(newDice, roll.rollType); // Mantenemos el tipo original para el análisis
+
+        update(ref(database, `rooms/${roomName}/rolls/${roll.id}`), {
+            dice: newDice,
+            analysis: newAnalysis,
+            pushLevel: nextPushLevel, // Guardamos el nuevo nivel
+            
+            // IMPORTANTE: Aseguramos que el tipo no se pierda
+            rollType: roll.rollType || 'risk', 
+            
+            // CRUCIAL: MANTÉN ESTO COMENTADO PARA QUE NO SE MUEVA DE SITIO
+            // timestamp: Date.now() 
+        });
+
         playSound('click');
-    }).catch(err => console.error("Error al guardar:", err));
-  };
+    };
 
   const copyRoomLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -1047,29 +1041,16 @@ function App() {
                             <div className="flex gap-3 mb-2">
                                 {roll.dice.map(d => (<div key={d.id} className={`w-10 h-10 flex items-center justify-center text-xl font-bold ${d.type==='light'?'bg-[#d4af37] text-black':'bg-black text-white border border-gray-700'}`}>{d.value}</div>))}
                             </div>
-                                {/* BOTÓN DE TENTAR AL DESTINO */}
-                                {/* Condición simplificada: Que no sea Ayuda y que no sea Combate */}
-                                {roll.rollType !== 'help' && roll.rollType !== 'combat' && (
-                                    <div className="mt-2">
-                                        {/* Etiqueta Informativa (Solo si ya has tentado alguna vez) */}
-                                        {(roll.pushLevel || 0) > 0 && (
-                                            <div className="w-full bg-[#d4af37]/20 text-[#d4af37] text-[9px] font-bold text-center uppercase tracking-widest py-1 mb-1 border border-[#d4af37]/50">
-                                                ⚠️ Tentando al destino ({roll.pushLevel}ª vez)
-                                            </div>
-                                        )}
-
-                                        {/* El Botón */}
-                                        <button 
-                                            onClick={() => handlePush(roll)} 
-                                            className="w-full border border-gray-700 text-gray-500 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2 transition-colors flex items-center justify-center gap-2"
-                                        >
-                                            <span>🎲</span>
-                                            {/* Texto dinámico */}
-                                            {(roll.pushLevel || 0) > 0 
-                                                ? '¿Seguir tentando? (+1 Oscuro)' 
-                                                : '¿Tentar al destino? (+1 Oscuro)'}
-                                        </button>
-                                    </div>
+                           
+                            {/* Botón de Tentar al Destino */}
+                                {/* Solo mostramos si es mi tirada y es de riesgo */}
+                                {/*roll.player === playerName && roll.rollType == 'risk' && (
+                                    <button 
+                                        onClick={() => handlePush(roll)} 
+                                        className="mt-3 w-full border border-gray-700 text-gray-500 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2 transition-colors"
+                                    >
+                                        {roll.pushLevel > 0 ? '¿Seguir tentando? (+1 Oscuro)' : '¿Tentar al destino? (+1 Oscuro)'}
+                                    </button>
                                 )}
                         </div>
                         ))}
@@ -1085,7 +1066,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.7.6 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.7.7 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
