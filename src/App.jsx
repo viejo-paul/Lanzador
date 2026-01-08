@@ -823,31 +823,22 @@ function App() {
   };
 
   const handlePush = (roll) => {
-        if (!roll.id) return;
-
-        // 1. Calcular dados actuales
-        const currentLight = roll.dice.filter(d => d.type === 'light').length;
-        const currentDark = roll.dice.filter(d => d.type === 'dark').length;
-        
-        // 2. Aumentar oscuros
-        const newDarkCount = currentDark + 1;
-
-        // 3. Gestionar el NIVEL DE PUSH (Solución al error "siempre 1ª vez")
-        // Forzamos que sea un número entero base 10. Si no existe, es 0.
-        const currentLevel = parseInt(roll.pushLevel || 0, 10);
-        const nextPushLevel = currentLevel + 1;
-
-        // 4. Regenerar dados
+        // 1. Contamos cuántos dados tenía la tirada original
+        const lightCount = roll.dice.filter(d => d.type === 'light').length;
+        const oldDarkCount = roll.dice.filter(d => d.type === 'dark').length;   
+        // 2. Aumentamos la reserva de dados oscuros en +1
+        const newDarkCount = oldDarkCount + 1;
+        // 3. ¡REPETIMOS LA TIRADA! (Generamos todos los dados de cero)
         const newDice = [];
-        // Claros
-        for (let i = 0; i < currentLight; i++) {
+        // Generamos nuevos valores para los dados CLAROS
+        for (let i = 0; i < lightCount; i++) {
             newDice.push({
                 id: Math.random().toString(36).substr(2, 9),
                 value: Math.floor(Math.random() * 6) + 1,
                 type: 'light'
             });
         }
-        // Oscuros
+        // Generamos nuevos valores para los dados OSCUROS (la cantidad vieja + 1)
         for (let i = 0; i < newDarkCount; i++) {
             newDice.push({
                 id: Math.random().toString(36).substr(2, 9),
@@ -855,29 +846,23 @@ function App() {
                 type: 'dark'
             });
         }
-
-        // 5. Analizar y Guardar
-        const newAnalysis = analyzeResult(newDice, roll.rollType); // Mantenemos el tipo original para el análisis
-
+        // 4. Analizamos el nuevo resultado
+        const newAnalysis = analyzeResult(newDice, roll.rollType);
+        // 5. Actualizamos la tirada en Firebase
+        // Esto sobrescribirá la tirada anterior con los nuevos valores
         update(ref(database, `rooms/${roomName}/rolls/${roll.id}`), {
             dice: newDice,
             analysis: newAnalysis,
-            pushLevel: nextPushLevel, // Guardamos el nuevo nivel
-            
-            // IMPORTANTE: Aseguramos que el tipo no se pierda
-            rollType: roll.rollType || 'risk', 
-            
-            // CRUCIAL: MANTÉN ESTO COMENTADO PARA QUE NO SE MUEVA DE SITIO
+            // Opcional: Si quieres que la tirada "suba" como nueva, descomenta esto:
             // timestamp: Date.now() 
         });
-
         playSound('click');
     };
 
   const copyRoomLink = () => {
     navigator.clipboard.writeText(window.location.href);
     alert('¡Enlace de partida copiado!');
-    
+    playSound('click');
   };
 
   return (
@@ -1024,12 +1009,6 @@ function App() {
                     <div className="space-y-4">
                         {history.map((roll, index) => (
                         <div key={roll.id} className={`bg-[#1a1a1a]/95 p-4 border-l-4 shadow-lg animate-in slide-in-from-top-2 ${roll.rollType === 'combat' ? 'border-red-900' : 'border-[#d4af37]'}`}>
-                          {/* INDICADOR DE REPETICIÓN */}
-                            {roll.pushLevel > 0 && (
-                                <div className="w-full bg-[#d4af37] text-black text-[10px] font-bold text-center uppercase tracking-widest py-0.5 mb-2">
-                                    Tentando al destino ({roll.pushLevel}ª vez)
-                                </div>
-                            )}
                             <div className="flex justify-between items-baseline mb-3 border-b border-black pb-2">
                                 <span className="text-[#f9e29c] font-consent text-2xl">{roll.player} <span className="text-[10px] text-gray-500 font-serif ml-1 border border-gray-800 px-1 uppercase tracking-tighter">{roll.rollType === 'risk' ? 'Riesgo' : roll.rollType === 'hunt' ? 'Explor.' : roll.rollType === 'combat' ? 'Combate' : 'Ayuda'}</span> {roll.isPush && <span className="text-red-500 ml-1 font-serif text-xs">Repetida</span>}</span>
                                 <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
@@ -1041,17 +1020,7 @@ function App() {
                             <div className="flex gap-3 mb-2">
                                 {roll.dice.map(d => (<div key={d.id} className={`w-10 h-10 flex items-center justify-center text-xl font-bold ${d.type==='light'?'bg-[#d4af37] text-black':'bg-black text-white border border-gray-700'}`}>{d.value}</div>))}
                             </div>
-                           
-                            {/* Botón de Tentar al Destino */}
-                                {/* Solo mostramos si es mi tirada y es de riesgo */}
-                                {roll.player === playerName && roll.rollType == 'risk' && (
-                                   {/* <button 
-                                        onClick={() => handlePush(roll)} 
-                                        className="mt-3 w-full border border-gray-700 text-gray-500 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2 transition-colors"
-                                    >
-                                        {roll.pushLevel > 0 ? '¿Seguir tentando? (+1 Oscuro)' : '¿Tentar al destino? (+1 Oscuro)'}
-                                    </button> */}
-                                )}
+                            {index === 0 && roll.player === playerName && roll.rollType!=='help' && (<button onClick={()=>handlePush(roll)} className="mt-3 w-full border border-gray-700 text-gray-400 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2">¿Tentar al destino? (+1 Oscuro)</button>)}
                         </div>
                         ))}
                     </div>
@@ -1066,7 +1035,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.7.8* · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.7 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
