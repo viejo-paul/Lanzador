@@ -823,46 +823,64 @@ function App() {
   };
 
   const handlePush = (roll) => {
-        // 1. Contamos cuántos dados tenía la tirada original
-        const lightCount = roll.dice.filter(d => d.type === 'light').length;
-        const oldDarkCount = roll.dice.filter(d => d.type === 'dark').length;   
-        // 2. Aumentamos la reserva de dados oscuros en +1
-        const newDarkCount = oldDarkCount + 1;
-        // 3. ¡REPETIMOS LA TIRADA! (Generamos todos los dados de cero)
-        const newDice = [];
-        // Generamos nuevos valores para los dados CLAROS
-        for (let i = 0; i < lightCount; i++) {
-            newDice.push({
-                id: Math.random().toString(36).substr(2, 9),
-                value: Math.floor(Math.random() * 6) + 1,
-                type: 'light'
-            });
-        }
-        // Generamos nuevos valores para los dados OSCUROS (la cantidad vieja + 1)
-        for (let i = 0; i < newDarkCount; i++) {
-            newDice.push({
-                id: Math.random().toString(36).substr(2, 9),
-                value: Math.floor(Math.random() * 6) + 1,
-                type: 'dark'
-            });
-        }
-        // 4. Analizamos el nuevo resultado
-        const newAnalysis = analyzeResult(newDice, roll.rollType);
-        // 5. Actualizamos la tirada en Firebase
-        // Esto sobrescribirá la tirada anterior con los nuevos valores
-        update(ref(database, `rooms/${roomName}/rolls/${roll.id}`), {
-            dice: newDice,
-            analysis: newAnalysis,
-            // Opcional: Si quieres que la tirada "suba" como nueva, descomenta esto:
-            // timestamp: Date.now() 
+    console.log("--- INTENTANDO TENTAR AL DESTINO ---");
+    
+    // 1. Verificamos que tenemos ID
+    if (!roll.id) {
+        console.error("ERROR: La tirada no tiene ID. Revisa cómo descargas los datos de Firebase.");
+        return;
+    }
+    console.log("ID de tirada:", roll.id);
+
+    // 2. Verificamos analyzeResult
+    if (typeof analyzeResult !== 'function') {
+        console.error("ERROR: La función analyzeResult no existe o no es accesible aquí.");
+        return;
+    }
+
+    const lightCount = roll.dice.filter(d => d.type === 'light').length;
+    const oldDarkCount = roll.dice.filter(d => d.type === 'dark').length;   
+    const newDarkCount = oldDarkCount + 1;
+
+    console.log(`Dados: ${lightCount} Claros, ${newDarkCount} Oscuros (Nuevo)`);
+
+    const newDice = [];
+    // Generar Claros
+    for (let i = 0; i < lightCount; i++) {
+        newDice.push({
+            id: Math.random().toString(36).substr(2, 9),
+            value: Math.floor(Math.random() * 6) + 1,
+            type: 'light'
         });
+    }
+    // Generar Oscuros
+    for (let i = 0; i < newDarkCount; i++) {
+        newDice.push({
+            id: Math.random().toString(36).substr(2, 9),
+            value: Math.floor(Math.random() * 6) + 1,
+            type: 'dark'
+        });
+    }
+
+    const newAnalysis = analyzeResult(newDice, roll.rollType);
+    
+    // Actualizar Firebase
+    console.log("Enviando actualización a Firebase...");
+    update(ref(database, `rooms/${roomName}/rolls/${roll.id}`), {
+        dice: newDice,
+        analysis: newAnalysis
+    }).then(() => {
+        console.log("¡ÉXITO! Firebase actualizado.");
         playSound('click');
-    };
+    }).catch((error) => {
+        console.error("ERROR AL GUARDAR EN FIREBASE:", error);
+    });
+};
 
   const copyRoomLink = () => {
     navigator.clipboard.writeText(window.location.href);
     alert('¡Enlace de partida copiado!');
-    playSound('click');
+    
   };
 
   return (
@@ -1035,7 +1053,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.7 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.7.2 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
