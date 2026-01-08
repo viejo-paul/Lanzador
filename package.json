@@ -13,6 +13,7 @@
     "@3d-dice/dice-box": "^1.1.4",
     "@tailwindcss/postcss": "^4.1.18",
     "firebase": "^12.7.0",
+    "howler": "^2.2.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },

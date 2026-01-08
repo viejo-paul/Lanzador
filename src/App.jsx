@@ -23,16 +23,20 @@ const downloadJSON = (data, fileName) => {
 };
 
 // --- GESTOR DE SONIDOS ---
+import { Howl } from 'howler';
+
+// Definir los sonidos FUERA del componente para que se carguen solo una vez
+const soundBank = {
+    click: new Howl({ src: ['/sounds/click.mp3'], volume: 0.5 }),
+    success: new Howl({ src: ['/sounds/success.mp3'], volume: 0.8 }),
+    fail: new Howl({ src: ['/sounds/fail.mp3'], volume: 1.0 }),
+    // ... otros sonidos
+};
+
 const playSound = (type) => {
-  const sounds = {
-    click: '/sounds/click.mp3',
-    success: '/sounds/success.mp3',
-    fail: '/sounds/fail.mp3',
-    ruin: '/sounds/glitch.mp3',
-  };
-  const audio = new Audio(sounds[type]);
-  audio.volume = 0.5;
-  audio.play().catch(e => {});
+    if (soundBank[type]) {
+        soundBank[type].play();
+    }
 };
 
 // --- LÓGICA DE REGLAS TROPHY GOLD ---
@@ -1261,7 +1265,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.9 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.10 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
