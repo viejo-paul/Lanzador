@@ -1044,13 +1044,13 @@ function App() {
                            
                             {/* Botón de Tentar al Destino */}
                                 {/* Solo mostramos si es mi tirada y es de riesgo */}
-                                {/*roll.player === playerName && roll.rollType == 'risk' && (
-                                    <button 
+                                {roll.player === playerName && roll.rollType == 'risk' && (
+                                   {/* <button 
                                         onClick={() => handlePush(roll)} 
                                         className="mt-3 w-full border border-gray-700 text-gray-500 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2 transition-colors"
                                     >
                                         {roll.pushLevel > 0 ? '¿Seguir tentando? (+1 Oscuro)' : '¿Tentar al destino? (+1 Oscuro)'}
-                                    </button>
+                                    </button> */}
                                 )}
                         </div>
                         ))}
