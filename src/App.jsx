@@ -823,22 +823,23 @@ function App() {
   };
 
   const handlePush = (roll) => {
-        // 1. Datos de seguridad
         if (!roll.id) return;
-        
-        // 2. Calcular dados actuales
-        // Buscamos cuántos dados claros y oscuros tiene la tirada AHORA MISMO
+
+        // 1. Calcular dados actuales
         const currentLight = roll.dice.filter(d => d.type === 'light').length;
         const currentDark = roll.dice.filter(d => d.type === 'dark').length;
         
-        // 3. Aumentamos la reserva de oscuros en +1
-        // (Al usar currentDark, si ya tenías 2 oscuros, ahora serán 3)
+        // 2. Aumentar oscuros
         const newDarkCount = currentDark + 1;
 
-        // 4. Regeneramos TODOS los dados
-        const newDice = [];
+        // 3. Gestionar el NIVEL DE PUSH (Solución al error "siempre 1ª vez")
+        // Forzamos que sea un número entero base 10. Si no existe, es 0.
+        const currentLevel = parseInt(roll.pushLevel || 0, 10);
+        const nextPushLevel = currentLevel + 1;
 
-        // Dados Claros (misma cantidad)
+        // 4. Regenerar dados
+        const newDice = [];
+        // Claros
         for (let i = 0; i < currentLight; i++) {
             newDice.push({
                 id: Math.random().toString(36).substr(2, 9),
@@ -846,8 +847,7 @@ function App() {
                 type: 'light'
             });
         }
-
-        // Dados Oscuros (cantidad anterior + 1)
+        // Oscuros
         for (let i = 0; i < newDarkCount; i++) {
             newDice.push({
                 id: Math.random().toString(36).substr(2, 9),
@@ -856,26 +856,19 @@ function App() {
             });
         }
 
-        // 5. Analizamos
-        const newAnalysis = analyzeResult(newDice, roll.rollType);
-        
-        // 6. Calculamos el nivel de "push" (para mostrarlo en pantalla)
-        const nextPushLevel = (roll.pushLevel || 0) + 1;
+        // 5. Analizar y Guardar
+        const newAnalysis = analyzeResult(newDice, roll.rollType); // Mantenemos el tipo original para el análisis
 
-        // 7. ACTUALIZAMOS EN FIREBASE
         update(ref(database, `rooms/${roomName}/rolls/${roll.id}`), {
             dice: newDice,
             analysis: newAnalysis,
-            pushLevel: nextPushLevel, // Guardamos cuántas veces se ha repetido
+            pushLevel: nextPushLevel, // Guardamos el nuevo nivel
             
-            // --- IMPORTANTE: ---
-            // Reafirmamos el tipo de tirada para que no se pierda ni se convierta en "Ayuda"
-            rollType: roll.rollType, 
+            // IMPORTANTE: Aseguramos que el tipo no se pierda
+            rollType: roll.rollType || 'risk', 
             
-            // Opcional: Si quitas esto, la tirada se queda en su sitio visual. 
-            // Si lo dejas, baja al final como "lo más reciente".
-            // Yo recomiendo dejarlo comentado si quieres que reemplace a la vieja "en su sitio".
-            timestamp: Date.now() 
+            // CRUCIAL: MANTÉN ESTO COMENTADO PARA QUE NO SE MUEVA DE SITIO
+            // timestamp: Date.now() 
         });
 
         playSound('click');
@@ -1049,13 +1042,16 @@ function App() {
                                 {roll.dice.map(d => (<div key={d.id} className={`w-10 h-10 flex items-center justify-center text-xl font-bold ${d.type==='light'?'bg-[#d4af37] text-black':'bg-black text-white border border-gray-700'}`}>{d.value}</div>))}
                             </div>
                             {/* Botón de Tentar al Destino */}
-                                {/* Solo mostramos si es mi tirada y no es una Ayuda */}
-                                {roll.player === playerName && roll.rollType == 'risk' && (
+                                {/* Aparece si: Es mi tirada Y (Es de riesgo O el tipo no está definido) Y NO es de Ayuda */}
+                                {roll.player === playerName && roll.rollType !== 'combat' && roll.rollType !== 'help' && (
                                     <button 
                                         onClick={() => handlePush(roll)} 
                                         className="mt-3 w-full border border-gray-700 text-gray-500 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2 transition-colors"
                                     >
-                                        {roll.pushLevel > 0 ? '¿Seguir tentando? (+1 Oscuro)' : '¿Tentar al destino? (+1 Oscuro)'}
+                                        {/* Aquí usamos parseInt también para asegurar que la visualización sea correcta */}
+                                        {(parseInt(roll.pushLevel || 0)) > 0 
+                                            ? `¿Seguir tentando? (+1 Oscuro)` 
+                                            : '¿Tentar al destino? (+1 Oscuro)'}
                                     </button>
                                 )}
                         </div>
@@ -1072,7 +1068,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.7.4 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.7.5 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
