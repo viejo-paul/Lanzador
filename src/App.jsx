@@ -822,47 +822,18 @@ function App() {
     push(ref(database, `rooms/${roomName}/rolls`), { id: Date.now(), dice: newDice, analysis, player: playerName, rollType, timestamp: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
   };
 
-  const handlePush = (roll) => {
-        // 1. Contamos cuántos dados tenía la tirada original
-        const lightCount = roll.dice.filter(d => d.type === 'light').length;
-        const oldDarkCount = roll.dice.filter(d => d.type === 'dark').length;   
-        // 2. Aumentamos la reserva de dados oscuros en +1
-        const newDarkCount = oldDarkCount + 1;
-        // 3. ¡REPETIMOS LA TIRADA! (Generamos todos los dados de cero)
-        const newDice = [];
-        // Generamos nuevos valores para los dados CLAROS
-        for (let i = 0; i < lightCount; i++) {
-            newDice.push({
-                id: Math.random().toString(36).substr(2, 9),
-                value: Math.floor(Math.random() * 6) + 1,
-                type: 'light'
-            });
-        }
-        // Generamos nuevos valores para los dados OSCUROS (la cantidad vieja + 1)
-        for (let i = 0; i < newDarkCount; i++) {
-            newDice.push({
-                id: Math.random().toString(36).substr(2, 9),
-                value: Math.floor(Math.random() * 6) + 1,
-                type: 'dark'
-            });
-        }
-        // 4. Analizamos el nuevo resultado
-        const newAnalysis = analyzeResult(newDice, roll.rollType);
-        // 5. Actualizamos la tirada en Firebase
-        // Esto sobrescribirá la tirada anterior con los nuevos valores
-        update(ref(database, `rooms/${roomName}/rolls/${roll.id}`), {
-            dice: newDice,
-            analysis: newAnalysis,
-            // Opcional: Si quieres que la tirada "suba" como nueva, descomenta esto:
-            // timestamp: Date.now() 
-        });
-        playSound('click');
-    };
+  const handlePush = async (originalRoll) => {
+    if (!diceBoxInstance) return;
+    diceBoxInstance.clear();
+    const result3D = await diceBoxInstance.roll([{ sides: 6, qty: 1, themeColor: '#1a1a1a', foreground: '#d4af37' }]);
+    const updatedDice = [...originalRoll.dice, { type: 'dark', value: result3D[0].value, id: Math.random() }];
+    const analysis = analyzeResult(updatedDice, originalRoll.rollType); 
+    push(ref(database, `rooms/${roomName}/rolls`), { id: Date.now(), dice: updatedDice, analysis, player: playerName, isPush: true, rollType: originalRoll.rollType, timestamp: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
+  };
 
   const copyRoomLink = () => {
     navigator.clipboard.writeText(window.location.href);
     alert('¡Enlace de partida copiado!');
-    playSound('click');
   };
 
   return (
@@ -1015,7 +986,7 @@ function App() {
                             </div>
                             <div className="mb-4">
                                 <span className={`font-bold text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
-                                {roll.analysis.isDarkHighest && roll.rollType !== 'combat' && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡Dado oscuro domina! Si el resultado supera tu Ruina actual, marca +1 Ruina</div>}
+                                {roll.analysis.isDarkHighest && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡Dado oscuro domina! Si tu valor de Ruina es inferior, marca +1 Ruina</div>}
                             </div>
                             <div className="flex gap-3 mb-2">
                                 {roll.dice.map(d => (<div key={d.id} className={`w-10 h-10 flex items-center justify-center text-xl font-bold ${d.type==='light'?'bg-[#d4af37] text-black':'bg-black text-white border border-gray-700'}`}>{d.value}</div>))}
@@ -1035,7 +1006,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.7 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.6.2 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
