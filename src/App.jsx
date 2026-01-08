@@ -823,22 +823,31 @@ function App() {
   };
 
   const handlePush = (roll) => {
-        // 1. Contamos cuántos dados tenía la tirada original
-        const lightCount = roll.dice.filter(d => d.type === 'light').length;
-        const oldDarkCount = roll.dice.filter(d => d.type === 'dark').length;   
-        // 2. Aumentamos la reserva de dados oscuros en +1
-        const newDarkCount = oldDarkCount + 1;
-        // 3. ¡REPETIMOS LA TIRADA! (Generamos todos los dados de cero)
+        // 1. Datos de seguridad
+        if (!roll.id) return;
+        
+        // 2. Calcular dados actuales
+        // Buscamos cuántos dados claros y oscuros tiene la tirada AHORA MISMO
+        const currentLight = roll.dice.filter(d => d.type === 'light').length;
+        const currentDark = roll.dice.filter(d => d.type === 'dark').length;
+        
+        // 3. Aumentamos la reserva de oscuros en +1
+        // (Al usar currentDark, si ya tenías 2 oscuros, ahora serán 3)
+        const newDarkCount = currentDark + 1;
+
+        // 4. Regeneramos TODOS los dados
         const newDice = [];
-        // Generamos nuevos valores para los dados CLAROS
-        for (let i = 0; i < lightCount; i++) {
+
+        // Dados Claros (misma cantidad)
+        for (let i = 0; i < currentLight; i++) {
             newDice.push({
                 id: Math.random().toString(36).substr(2, 9),
                 value: Math.floor(Math.random() * 6) + 1,
                 type: 'light'
             });
         }
-        // Generamos nuevos valores para los dados OSCUROS (la cantidad vieja + 1)
+
+        // Dados Oscuros (cantidad anterior + 1)
         for (let i = 0; i < newDarkCount; i++) {
             newDice.push({
                 id: Math.random().toString(36).substr(2, 9),
@@ -846,23 +855,36 @@ function App() {
                 type: 'dark'
             });
         }
-        // 4. Analizamos el nuevo resultado
+
+        // 5. Analizamos
         const newAnalysis = analyzeResult(newDice, roll.rollType);
-        // 5. Actualizamos la tirada en Firebase
-        // Esto sobrescribirá la tirada anterior con los nuevos valores
+        
+        // 6. Calculamos el nivel de "push" (para mostrarlo en pantalla)
+        const nextPushLevel = (roll.pushLevel || 0) + 1;
+
+        // 7. ACTUALIZAMOS EN FIREBASE
         update(ref(database, `rooms/${roomName}/rolls/${roll.id}`), {
             dice: newDice,
             analysis: newAnalysis,
-            // Opcional: Si quieres que la tirada "suba" como nueva, descomenta esto:
+            pushLevel: nextPushLevel, // Guardamos cuántas veces se ha repetido
+            
+            // --- IMPORTANTE: ---
+            // Reafirmamos el tipo de tirada para que no se pierda ni se convierta en "Ayuda"
+            rollType: roll.rollType, 
+            
+            // Opcional: Si quitas esto, la tirada se queda en su sitio visual. 
+            // Si lo dejas, baja al final como "lo más reciente".
+            // Yo recomiendo dejarlo comentado si quieres que reemplace a la vieja "en su sitio".
             // timestamp: Date.now() 
         });
+
         playSound('click');
     };
 
   const copyRoomLink = () => {
     navigator.clipboard.writeText(window.location.href);
     alert('¡Enlace de partida copiado!');
-    playSound('click');
+    
   };
 
   return (
@@ -1009,6 +1031,12 @@ function App() {
                     <div className="space-y-4">
                         {history.map((roll, index) => (
                         <div key={roll.id} className={`bg-[#1a1a1a]/95 p-4 border-l-4 shadow-lg animate-in slide-in-from-top-2 ${roll.rollType === 'combat' ? 'border-red-900' : 'border-[#d4af37]'}`}>
+                          {/* INDICADOR DE REPETICIÓN */}
+                            {roll.pushLevel > 0 && (
+                                <div className="w-full bg-[#d4af37] text-black text-[10px] font-bold text-center uppercase tracking-widest py-0.5 mb-2">
+                                    Tentando al destino ({roll.pushLevel}ª vez)
+                                </div>
+                            )}
                             <div className="flex justify-between items-baseline mb-3 border-b border-black pb-2">
                                 <span className="text-[#f9e29c] font-consent text-2xl">{roll.player} <span className="text-[10px] text-gray-500 font-serif ml-1 border border-gray-800 px-1 uppercase tracking-tighter">{roll.rollType === 'risk' ? 'Riesgo' : roll.rollType === 'hunt' ? 'Explor.' : roll.rollType === 'combat' ? 'Combate' : 'Ayuda'}</span> {roll.isPush && <span className="text-red-500 ml-1 font-serif text-xs">Repetida</span>}</span>
                                 <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
@@ -1020,7 +1048,16 @@ function App() {
                             <div className="flex gap-3 mb-2">
                                 {roll.dice.map(d => (<div key={d.id} className={`w-10 h-10 flex items-center justify-center text-xl font-bold ${d.type==='light'?'bg-[#d4af37] text-black':'bg-black text-white border border-gray-700'}`}>{d.value}</div>))}
                             </div>
-                            {index === 0 && roll.player === playerName && roll.rollType!=='help' && (<button onClick={()=>handlePush(roll)} className="mt-3 w-full border border-gray-700 text-gray-400 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2">¿Tentar al destino? (+1 Oscuro)</button>)}
+                            {/* Botón de Tentar al Destino */}
+                        {/* Solo mostramos si es mi tirada y no es una Ayuda */}
+                        {roll.player === playerName && roll.rollType !== 'help' && (
+                            <button 
+                                onClick={() => handlePush(roll)} 
+                                className="mt-3 w-full border border-gray-700 text-gray-500 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2 transition-colors"
+                            >
+                                {roll.pushLevel > 0 ? '¿Seguir tentando? (+1 Oscuro)' : '¿Tentar al destino? (+1 Oscuro)'}
+                            </button>
+                        )}
                         </div>
                         ))}
                     </div>
