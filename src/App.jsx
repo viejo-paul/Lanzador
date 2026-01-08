@@ -986,7 +986,7 @@ function App() {
                             </div>
                             <div className="mb-4">
                                 <span className={`font-bold text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
-                                {roll.analysis.isDarkHighest && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡Dado oscuro domina! Si el resultado es superior a tu valor de Ruina, marca +1 Ruina</div>}
+                                {roll.analysis.isDarkHighest && roll.rollType!=='combat' && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡Dado oscuro domina! Si el resultado es superior a tu valor de Ruina, marca +1 Ruina</div>}
                             </div>
                             <div className="flex gap-3 mb-2">
                                 {roll.dice.map(d => (<div key={d.id} className={`w-10 h-10 flex items-center justify-center text-xl font-bold ${d.type==='light'?'bg-[#d4af37] text-black':'bg-black text-white border border-gray-700'}`}>{d.value}</div>))}
@@ -1006,7 +1006,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.6.2 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.6.3 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
