@@ -641,6 +641,8 @@ function App() {
   const [roomName, setRoomName] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [isJoined, setIsJoined] = useState(false);
+  // Estado para controlar si ya hemos cruzado la antesala
+  const [hasJoined, setHasJoined] = useState(false);
   const [isGM, setIsGM] = useState(false); // Nuevo estado para Guardián
   const [existingCharacters, setExistingCharacters] = useState({});
   const [lightCount, setLightCount] = useState(1);
@@ -708,36 +710,40 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Cargar historial de localStorage
+    // Cargar historial
     const savedGames = JSON.parse(localStorage.getItem('trophy_recent_games') || '[]');
     setRecentGames(savedGames);
+
     document.title = "Trophy (g)Old";
+    
     const p = new URLSearchParams(window.location.search);
     const partidaURL = p.get('partida');
+
     if (partidaURL) {
       setRoomName(partidaURL);
-      // --- BLOQUE NUEVO: DETECTAR SI SOY EL CREADOR/GM ---
-      // Buscamos si hay una "cookie" guardada que diga que soy GM de ESTA sala
+
+      // --- LÓGICA DE LA ANTESALA ---
+      // Verificamos si ya tenemos credenciales guardadas de esta sesión
       const savedRole = localStorage.getItem(`trophy_role_${partidaURL}`);
       const savedName = localStorage.getItem(`trophy_name_${partidaURL}`);
 
       if (savedRole === 'gm') {
-          setIsGM(true); // ¡Pum! Poderes activados automáticamente
-          setPlayerName("Guardián"); // Opcional: poner nombre por defecto
+          // Si eres el GM Creador, entras directo (Pase VIP)
+          setIsGM(true);
+          setPlayerName("Guardián");
+          setHasJoined(true); 
       } else if (savedName) {
-          // Si no soy GM pero guardé mi nombre al entrar
+          // Si ya tienes nombre guardado, lo pre-cargamos pero...
+          // Opcional: ¿Quieres que entren directo o que confirmen?
+          // Yo sugiero que confirmen en la Antesala para evitar confusiones.
           setPlayerName(savedName);
+          // setHasJoined(true); <--- MANTÉN ESTO COMENTADO para obligar a pasar por el Lobby
       }
-      // ----------------------------------------------------
       
-      // Recuperamos el nombre "bonito" guardado en la base de datos
+      // Recuperar título bonito
       onValue(ref(database, `rooms/${partidaURL}/title`), (snapshot) => {
-        if (snapshot.exists()) {
-          setDisplayName(snapshot.val());
-        } else {
-          // Si no existe (partidas viejas), usamos la URL formateada
-          setDisplayName(partidaURL);
-        }
+        if (snapshot.exists()) setDisplayName(snapshot.val());
+        else setDisplayName(partidaURL);
       });
       // --- BLOQUE A AÑADIR (FIN) ---
       onValue(ref(database, `rooms/${partidaURL}/characters`), (snapshot) => {
@@ -990,12 +996,106 @@ function App() {
   }
 
   // SI HAY SALA (roomName existe), RENDERIZAMOS EL JUEGO NORMAL
+  // NUEVO BLOQUE: LA ANTESALA (LOBBY)
+  // Si tenemos sala, pero no hemos entrado aún
+  if (roomName && !hasJoined) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black animate-fade-in">
+         <style>{fontStyles}</style>
+
+         <div className="max-w-md w-full text-center space-y-8 border border-[#333] p-10 bg-black shadow-2xl relative">
+            {/* Decoración de esquinas */}
+            <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#d4af37]"></div>
+            <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#d4af37]"></div>
+            <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#d4af37]"></div>
+            <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#d4af37]"></div>
+
+            <div>
+                <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-2">Estás llegando a</p>
+                <h1 className="text-5xl md:text-6xl text-[#d4af37] tracking-tighter leading-none mb-6">
+                    {displayName || roomName}
+                </h1>
+                <div className="h-px w-24 bg-[#333] mx-auto"></div>
+            </div>
+
+            <div className="flex flex-col gap-6">
+                {/* Selector de Nombre */}
+                <div className="space-y-2">
+                    <label className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">¿Quién eres?</label>
+                    <input 
+                        type="text" 
+                        value={playerName}
+                        onChange={(e) => setPlayerName(e.target.value)}
+                        placeholder="Nombre del aventurero..."
+                        className="w-full bg-[#111] border border-[#333] text-center text-2xl py-3 text-[#d4af37] focus:border-[#d4af37] outline-none transition-colors font-consent"
+                    />
+                </div>
+
+                {/* Checkbox de GM */}
+                <label className="flex items-center justify-center gap-3 cursor-pointer group select-none">
+                    <div className={`w-3 h-3 border border-[#d4af37] transition-all ${isGM ? 'bg-[#d4af37]' : 'bg-transparent'}`}></div>
+                    <input 
+                        type="checkbox" 
+                        checked={isGM} 
+                        onChange={(e) => {
+                            setIsGM(e.target.checked);
+                            if(e.target.checked) setPlayerName("Guardián");
+                            else setPlayerName("");
+                        }} 
+                        className="hidden"
+                    />
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 group-hover:text-[#d4af37] transition-colors">
+                        Reclamar trono de Guardián
+                    </span>
+                </label>
+
+                {/* Botón Entrar */}
+                <button 
+                    onClick={() => {
+                        if (!playerName.trim()) return;
+                        // Guardar preferencia para el futuro
+                        localStorage.setItem(`trophy_name_${roomName}`, playerName);
+                        if (isGM) localStorage.setItem(`trophy_role_${roomName}`, 'gm');
+                        else localStorage.removeItem(`trophy_role_${roomName}`); // Limpiar si dejaste de ser GM
+                        
+                        // ¡Adentro!
+                        setHasJoined(true);
+                        playSound('click');
+                    }}
+                    disabled={!playerName.trim()}
+                    className="w-full bg-[#d4af37] text-black font-mono uppercase tracking-widest py-3 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Cruzar el Umbral
+                </button>
+            </div>
+            
+            {/* Link para volver al inicio */}
+            <a href="/" className="block mt-4 text-gray-700 text-[10px] font-mono uppercase tracking-widest hover:text-gray-500">
+                ← Volver al inicio
+            </a>
+         </div>
+      </div>
+    );
+  }
+
+  // AQUÍ EMPIEZA EL RETURN DEL JUEGO 
   
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       <style>{fontStyles}</style>
       
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
+        {/* Botón para salir/cambiar personaje */}
+          <button 
+              onClick={() => {
+                  setHasJoined(false); // Te devuelve a la Antesala
+                  setIsGM(false);      // Resetea poderes
+              }}
+              className="absolute top-4 left-4 text-gray-600 hover:text-[#d4af37] text-[10px] font-mono uppercase tracking-widest"
+              title="Cambiar personaje"
+          >
+              ← Salir
+          </button>
         <span className="font-consent text-2xl">Trophy (g)Old</span>
       </header>
 
@@ -1161,7 +1261,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.8 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.9 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
