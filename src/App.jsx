@@ -875,7 +875,7 @@ function App() {
             // Opcional: Si quitas esto, la tirada se queda en su sitio visual. 
             // Si lo dejas, baja al final como "lo más reciente".
             // Yo recomiendo dejarlo comentado si quieres que reemplace a la vieja "en su sitio".
-            // timestamp: Date.now() 
+            timestamp: Date.now() 
         });
 
         playSound('click');
@@ -1050,7 +1050,7 @@ function App() {
                             </div>
                             {/* Botón de Tentar al Destino */}
                                 {/* Solo mostramos si es mi tirada y no es una Ayuda */}
-                                {roll.player === playerName && roll.rollType !== 'help' && (
+                                {roll.player === playerName && roll.rollType == 'risk' && (
                                     <button 
                                         onClick={() => handlePush(roll)} 
                                         className="mt-3 w-full border border-gray-700 text-gray-500 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2 transition-colors"
@@ -1072,7 +1072,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.7.3 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.7.4 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
