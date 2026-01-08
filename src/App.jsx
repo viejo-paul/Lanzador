@@ -648,9 +648,9 @@ function App() {
   const [history, setHistory] = useState([]);
   const [rollType, setRollType] = useState('risk');
   const [showRules, setShowRules] = useState(false);
-  
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   const isInitialLoad = useRef(true);
+  const [displayName, setDisplayName] = useState(''); // Para mostrar título y url
 
   useEffect(() => {
     if (diceBoxInstance) return;
@@ -698,6 +698,17 @@ function App() {
     const partidaURL = p.get('partida');
     if (partidaURL) {
       setRoomName(partidaURL);
+      // --- BLOQUE A AÑADIR (INICIO) ---
+      // Recuperamos el nombre "bonito" guardado en la base de datos
+      onValue(ref(database, `rooms/${partidaURL}/title`), (snapshot) => {
+        if (snapshot.exists()) {
+          setDisplayName(snapshot.val());
+        } else {
+          // Si no existe (partidas viejas), usamos la URL formateada
+          setDisplayName(partidaURL);
+        }
+      });
+      // --- BLOQUE A AÑADIR (FIN) ---
       onValue(ref(database, `rooms/${partidaURL}/characters`), (snapshot) => {
         if (snapshot.exists()) { setExistingCharacters(snapshot.val()); } 
         else { setExistingCharacters({}); }
@@ -754,13 +765,19 @@ function App() {
     if (roomName && nameToJoin) {
       let finalRoomName = roomName;
 
-      // Solo si es NUEVA partida (no hay ?partida= en la URL)
-      if (!new URLSearchParams(window.location.search).has('partida')) {
-        const cleanName = slugify(roomName);
-        const randomID = generateRandomID();
-        finalRoomName = `${cleanName}-${randomID}`;
-        setRoomName(finalRoomName);
-      }
+      /// Solo si es NUEVA partida
+    if (!window.location.search.includes('partida')) {
+        // 1. Guardamos el nombre "bonito" original
+        const originalTitle = roomName; 
+        
+        // 2. Convertimos el nombre a formato URL (slug)
+        finalRoomName = slugify(roomName); 
+        
+        // 3. Guardamos el título bonito en la base de datos
+        update(ref(database, `rooms/${finalRoomName}`), {
+            title: originalTitle
+        });
+    }
 
       setPlayerName(nameToJoin);
       setIsGM(asGuardian); // Establecer si es Guardián
@@ -902,8 +919,10 @@ function App() {
                 <div className="flex flex-col">
                   <p className="text-[10px] text-gray-500 uppercase">Partida</p>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-3xl font-consent text-[#d4af37]">{roomName}</h1>
-                    <button onClick={copyRoomLink} className="text-[#d4af37] hover:text-white transition-colors" title="Copiar enlace">🔗</button>
+                      {/* Usamos displayName si existe, si no, roomName */}
+                      <h1 className="text-3xl font-consent text-[#d4af37]">{displayName || roomName}</h1>
+                      
+                      <button onClick={copyRoomLink} className="text-[#d4af37] hover:text-white transition-colors" title="Copiar enlace">🔗</button>
                   </div>
                 </div>
                 <div className="flex gap-4 text-[9px] uppercase font-bold">
@@ -982,7 +1001,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.5.2 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.6 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
