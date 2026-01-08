@@ -651,6 +651,7 @@ function App() {
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   const isInitialLoad = useRef(true);
   const [displayName, setDisplayName] = useState(''); // Para mostrar título y url
+  const generateRandomId = () => Math.random().toString(36).substr(2, 4);
 
   useEffect(() => {
     if (diceBoxInstance) return;
@@ -765,15 +766,19 @@ function App() {
     if (roomName && nameToJoin) {
       let finalRoomName = roomName;
 
-      /// Solo si es NUEVA partida
+    // Solo si es NUEVA partida (estamos en la home)
     if (!window.location.search.includes('partida')) {
-        // 1. Guardamos el nombre "bonito" original
+        // 1. Guardamos el título original "bonito"
         const originalTitle = roomName; 
         
-        // 2. Convertimos el nombre a formato URL (slug)
-        finalRoomName = slugify(roomName); 
+        // 2. Generamos el slug básico y le añadimos el ID aleatorio
+        // Ejemplo: "La Maldición" -> "la-maldicion-x9z1"
+        const slug = roomName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+        const randomSuffix = Math.random().toString(36).substr(2, 4);
         
-        // 3. Guardamos el título bonito en la base de datos
+        finalRoomName = `${slug}-${randomSuffix}`;
+        
+        // 3. Guardamos en base usando la URL única como clave, pero guardando el título original dentro
         update(ref(database, `rooms/${finalRoomName}`), {
             title: originalTitle
         });
@@ -1001,7 +1006,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.6 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.6.2 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
