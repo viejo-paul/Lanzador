@@ -3,14 +3,6 @@ import { database } from './firebase';
 import { ref, push, onValue, limitToLast, query, remove, update } from "firebase/database";
 import DiceBox from '@3d-dice/dice-box'; 
 
-// --- Creditos y versión ---
-const APP_VERSION = "v.0.6.2"; //cambios footer
-const AppFooter = () => (
-  <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase mt-auto">
-    {APP_VERSION} · Viejo · viejorpg@gmail.com
-  </footer>
-);
-
 // --- IMPORTACIÓN DE FUENTE PERSONALIZADA ---
 const fontStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
@@ -648,8 +640,6 @@ const RulesModal = ({ isOpen, onClose }) => {
   );
 };
 
-
-
 // --- APP PRINCIPAL ---
 function App() {
   const [roomName, setRoomName] = useState('');
@@ -684,31 +674,35 @@ function App() {
   const generateRandomId = () => Math.random().toString(36).substr(2, 4);
   // Componente para ver quién está en la sala (Solo visualización)
   const LobbyPartyList = ({ roomName }) => {
-  const [members, setMembers] = useState([]);
-  useEffect(() => {
-    const partyRef = ref(database, `rooms/${roomName}/party`);
-    return onValue(partyRef, (snapshot) => {
-      const data = snapshot.val();
-      setMembers(data ? Object.values(data) : []);
-    });
-  }, [roomName]);
+    const [members, setMembers] = useState([]);
 
-  if (members.length === 0) return null;
+    useEffect(() => {
+      const partyRef = ref(database, `rooms/${roomName}/party`);
+      return onValue(partyRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          setMembers(Object.values(data));
+        } else {
+          setMembers([]);
+        }
+      });
+    }, [roomName]);
 
-  return (
-    <div className="animate-fade-in mb-6">
-      <p className="text-gray-600 font-mono text-[9px] uppercase tracking-[0.2em] mb-3">Personajes en esta partida:</p>
-      <div className="flex flex-wrap justify-center gap-3">
-        {members.map((m, i) => (
-          <div key={i} className="flex items-center gap-2 px-3 py-1 border border-gray-900 bg-[#050505]">
-            <span className="text-[#d4af37] font-consent text-xl">{m.name}</span>
-            {m.isGM && <span className="text-[10px] opacity-50">◈</span>}
-          </div>
-        ))}
+    if (members.length === 0) return <div className="text-gray-600 text-[10px] font-mono tracking-widest uppercase">No hay personajes en esta partida...</div>;
+
+    return (
+      <div className="w-full text-center">
+        <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-3">Personajes en esta partida</p>
+        <div className="flex flex-wrap justify-center gap-2">
+          {members.map((m, i) => (
+            <span key={i} className="px-3 py-1 border border-[#333] text-[#d4af37] font-consent text-lg bg-black/50">
+              {m.name} {m.isGM ? '[DJ]]' : ''}
+            </span>
+          ))}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
   useEffect(() => {
     if (diceBoxInstance) return;
@@ -954,8 +948,8 @@ function App() {
   // SI NO HAY SALA, MOSTRAMOS "EL UMBRAL" (LANDING PAGE)
   if (!roomName) {
     return (
-    <div className="min-h-screen flex flex-col bg-[#050505] text-[#d4af37] font-consent selection:bg-[#d4af37] selection:text-black">
-      <style>{fontStyles}</style>
+      <div className="min-h-screen bg-[#050505] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black">
+        <style>{fontStyles}</style>
 
         {/* A. BLOQUE SUPERIOR: IDENTIDAD */}
         <div className="text-center mb-16 animate-fade-in-up">
@@ -1032,7 +1026,6 @@ function App() {
                 </div>
             </div>
         )}
-        <AppFooter />
       </div>
     );
   }
@@ -1042,8 +1035,8 @@ function App() {
   // LA ANTESALA (LOBBY) MEJORADA
   if (roomName && !hasJoined) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#050505] text-[#d4af37] font-consent relative">
-      <style>{fontStyles}</style>
+      <div className="min-h-screen bg-[#050505] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black animate-fade-in relative">
+         <style>{fontStyles}</style>
          
          {/* Fondo sutil o imagen si tuvieras */}
          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#111] via-[#000] to-[#000] -z-10"></div>
@@ -1117,17 +1110,10 @@ function App() {
     );
   }
 
-  // --- Creditos y versión ---
-const APP_VERSION = "v.0.6.2.2"; // cambios footer 
-const AppFooter = () => (
-  <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase mt-auto">
-    {APP_VERSION} · Viejo · viejorpg@gmail.com
-  </footer>
-);
-
-  // AQUÍ EMPIEZA EL RETURN DEL JUEGO  
+  // AQUÍ EMPIEZA EL RETURN DEL JUEGO 
+  
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0a0a] text-gray-300 font-consent relative">
+    <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       <style>{fontStyles}</style>
       
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
@@ -1144,7 +1130,7 @@ const AppFooter = () => (
     >
         <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
         <span className="font-mono text-[10px] uppercase tracking-widest">Salir</span>
-      </button>
+    </button>
         <span className="font-consent text-2xl">Trophy (g)Old</span>
       </header>
 
@@ -1309,9 +1295,10 @@ const AppFooter = () => (
             </div>
         </main>
       )}
-      <AppFooter />
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.7.0 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
 }
+
 export default App;
