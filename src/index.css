@@ -1,13 +1,5 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
-
-/* Clase maestra */
-.font-consent {
-  font-family: 'Manufacturing Consent', sans-serif !important;
-  text-transform: none !important;
-}
-
 @theme {
   --color-gold: #d4af37;
   --color-gold-light: #f9e29c;
@@ -31,3 +23,30 @@ body {
 ::-webkit-scrollbar-thumb {
   @apply bg-dark-gray rounded-full border-2 border-black;
 }
+
+/* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
+
+.font-consent {
+  font-family: 'Manufacturing Consent', sans-serif !important;
+  text-transform: none !important;
+}
+
+/* Animaciones */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 1s ease-out forwards;
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s ease-out forwards;
+}
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
