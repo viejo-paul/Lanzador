@@ -3,13 +3,6 @@ import { database } from './firebase';
 import { ref, push, onValue, limitToLast, query, remove, update } from "firebase/database";
 import DiceBox from '@3d-dice/dice-box'; 
 
-// --- Creditos y versión ---
-const APP_VERSION = "v.0.6.1"; //cambios lobby y footer
-const AppFooter = () => (
-  <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">
-    {APP_VERSION} · Viejo · viejorpg@gmail.com
-  </footer>
-);
 
 // --- IMPORTACIÓN DE FUENTE PERSONALIZADA ---
 const fontStyles = `
@@ -648,6 +641,14 @@ const RulesModal = ({ isOpen, onClose }) => {
   );
 };
 
+// --- Creditos y versión ---
+const APP_VERSION = "v.0.6.1"; //cambios lobby y footer
+const AppFooter = () => (
+  <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">
+    {APP_VERSION} · Viejo · viejorpg@gmail.com
+  </footer>
+);
+
 // --- APP PRINCIPAL ---
 function App() {
   const [roomName, setRoomName] = useState('');
@@ -683,7 +684,6 @@ function App() {
   // Componente para ver quién está en la sala (Solo visualización)
   const LobbyPartyList = ({ roomName }) => {
   const [members, setMembers] = useState([]);
-
   useEffect(() => {
     const partyRef = ref(database, `rooms/${roomName}/party`);
     return onValue(partyRef, (snapshot) => {
@@ -1136,7 +1136,7 @@ function App() {
     >
         <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
         <span className="font-mono text-[10px] uppercase tracking-widest">Salir</span>
-    </button>
+      </button>
         <span className="font-consent text-2xl">Trophy (g)Old</span>
       </header>
 
