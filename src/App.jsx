@@ -640,7 +640,13 @@ const RulesModal = ({ isOpen, onClose }) => {
   );
 };
 
-
+// --- Creditos y versión ---
+const APP_VERSION = "v.0.6.2.2"; //cambios footer 
+const AppFooter = () => (
+  <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase mt-auto">
+    {APP_VERSION} · Viejo · viejorpg@gmail.com
+  </footer>
+);
 
 // --- APP PRINCIPAL ---
 function App() {
@@ -1108,14 +1114,6 @@ function App() {
       </div>
     );
   }
-
-  // --- Creditos y versión ---
-const APP_VERSION = "v.0.6.2.2"; // cambios footer 
-const AppFooter = () => (
-  <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase mt-auto">
-    {APP_VERSION} · Viejo · viejorpg@gmail.com
-  </footer>
-);
 
   // AQUÍ EMPIEZA EL RETURN DEL JUEGO  
   return (
