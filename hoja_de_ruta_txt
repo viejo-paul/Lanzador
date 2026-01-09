@@ -1,0 +1,58 @@
+v.0.7.
+
+src/
+├── components/           <-- Piezas visuales (Ladrillos)
+│   ├── ui/               <-- Botones, Inputs, Footer, Modal (cosas genéricas)
+│   │   ├── Button.jsx
+│   │   ├── Modal.jsx
+│   │   └── Footer.jsx
+│   ├── game/             <-- Cosas específicas de Trophy
+│   │   ├── DiceTray.jsx     (Tu caja de dados 3D)
+│   │   ├── CharacterSheet.jsx
+│   │   ├── PartyList.jsx
+│   │   └── RollHistory.jsx
+│
+├── screens/              <-- Pantallas completas (Habitaciones)
+│   ├── LandingScreen.jsx    (Paso 1)
+│   ├── LobbyScreen.jsx      (Paso 2)
+│   └── GameScreen.jsx       (Paso 3)
+│
+├── hooks/                <-- Lógica invisible (Cerebro)
+│   ├── useFirebase.js       (Conectar, leer, escribir)
+│   ├── useGameMechanics.js  (Calcular dados, push, ruina)
+│   └── useAudio.js          (Sonidos Howler)
+│
+├── utils/                <-- Herramientas sueltas
+│   └── helpers.js           (Generar ID, formatear textos)
+│
+├── App.jsx               <-- El director de orquesta (Solo decide qué Screen mostrar)
+└── main.jsx
+
+
+---
+
+FASE 1: Limpieza Táctica (Sin romper nada aún)
+Extraer Estilos: Mueve ese bloque const fontStyles = ... al archivo index.css o App.css. Deja el JSX limpio.
+
+Crear Footer.jsx: Ya lo hicimos medio bien, pero ponlo en su propio archivo.
+
+Crear hooks/useAudio.js: Saca toda la lógica de Howler y playSound fuera de App.jsx.
+
+FASE 2: Separación de Pantallas (La gran división)
+Crear el archivo screens/LandingScreen.jsx. Copia y pega ahí todo el primer if (!roomName).
+
+Crear screens/LobbyScreen.jsx. Copia y pega el segundo if.
+
+Crear screens/GameScreen.jsx. Copia y pega el return gigante final.
+
+El App.jsx quedará diminuto. Solo tendrá los estados principales (roomName, playerName) y tres if que llaman a estos componentes.
+
+FASE 3: Modularización del Juego (Refinar el interior)
+Extraer CharacterSheet (que ahora vive mezclado en el código) a su propio archivo.
+
+Extraer PartyView a su archivo.
+
+Importante: Crear DiceTray.jsx. La configuración de @3d-dice/dice-box es muy verborrágica y ensucia mucho el código principal. Esconderla en un componente será un alivio.
+
+FASE 4: Lógica y Hooks (Nivel Avanzado)
+Crear useTrophyRolls. Moveremos la función handlePush, analyzeResult y la lógica de tiradas a un archivo separado. Así, tu componente visual solo dirá rollDice() y no sabrá nada de matemáticas.

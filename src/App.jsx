@@ -1,14 +1,22 @@
+// src/App.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { database } from './firebase';
-import { ref, push, onValue, limitToLast, query, remove, update } from "firebase/database";
-import DiceBox from '@3d-dice/dice-box'; 
+import { ref, update, onValue, push, limitToLast, query, remove } from "firebase/database";
+import DiceBox from '@3d-dice/dice-box';  // Dados 3d
+import { Howl } from 'howler'; //Gestor de sonidos
+
+// --- NUEVOS IMPORTS (La clave de la refactorización) ---
+import LandingScreen from './screens/LandingScreen';
+import LobbyScreen from './screens/LobbyScreen';
+import Footer from './components/ui/Footer'; 
+//import CharacterSheet from './components/game/CharacterSheet'; // (Si ya lo hubiéramos separado, si no, ignora esta línea y mantén tu import si lo tenías o el componente abajo)
+//import PartyView from './components/game/PartyView'; // (Igual que arriba)
 
 // --- IMPORTACIÓN DE FUENTE PERSONALIZADA ---
 const fontStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
   .font-consent { font-family: 'Manufacturing Consent', sans-serif !important; text-transform: none !important; }
 `;
-
 // ---GESTOR DE DESCARGAS JSON ---
 const downloadJSON = (data, fileName) => {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -21,10 +29,6 @@ const downloadJSON = (data, fileName) => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
-
-// --- GESTOR DE SONIDOS ---
-import { Howl } from 'howler';
-
 // Definir los sonidos FUERA del componente para que se carguen solo una vez
 const soundBank = {
     click: new Howl({ src: ['/sounds/click.mp3'], volume: 0.5 }),
@@ -32,7 +36,6 @@ const soundBank = {
     fail: new Howl({ src: ['/sounds/fail.mp3'], volume: 1.0 }),
     // ... otros sonidos
 };
-
 const playSound = (type) => {
     if (soundBank[type]) {
         soundBank[type].play();
@@ -642,12 +645,12 @@ const RulesModal = ({ isOpen, onClose }) => {
 
 // --- APP PRINCIPAL ---
 function App() {
-  const [roomName, setRoomName] = useState('');
-  const [playerName, setPlayerName] = useState('');
-  const [isJoined, setIsJoined] = useState(false);
-  // Estado para controlar si ya hemos cruzado la antesala
-  const [hasJoined, setHasJoined] = useState(false);
-  const [isGM, setIsGM] = useState(false); // Nuevo estado para Guardián
+  // --- ESTADOS GLOBALES (Solo lo esencial para dirigir el tráfico) ---
+  const [roomName, setRoomName] = useState(null); // ¿En qué sala estamos?
+  const [displayName, setDisplayName] = useState(''); // Nombre bonito de la sala
+  const [playerName, setPlayerName] = useState('');   // ¿Quién soy?
+  const [isGM, setIsGM] = useState(false);            // ¿Soy el jefe?
+  const [hasJoined, setHasJoined] = useState(false);  // ¿He pasado el Lobby?
   const [existingCharacters, setExistingCharacters] = useState({});
   const [lightCount, setLightCount] = useState(1);
   const [darkCount, setDarkCount] = useState(0);
@@ -661,49 +664,16 @@ function App() {
   const [recentGames, setRecentGames] = useState([]); // Historial local
   // Frases de ambientación aleatoria
   const taglines = [
-      "El bosque te reclama.",
-      "La deuda debe pagarse.",
-      "No volverás igual que te fuiste.",
-      "El tesoro es una trampa.",
-      "La ruina te espera."
+      "El bosque te reclama", 
+      "La deuda debe pagarse",
+      "No volverás igual que te fuiste",
+      "El tesoro es una trampa",
+      "La ruina te espera"
   ];
   const [randomTagline] = useState(() => taglines[Math.floor(Math.random() * taglines.length)]);
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
-  const isInitialLoad = useRef(true);
-  const [displayName, setDisplayName] = useState(''); // Para mostrar título y url
-  const generateRandomId = () => Math.random().toString(36).substr(2, 4);
-  // Componente para ver quién está en la sala (Solo visualización)
-  const LobbyPartyList = ({ roomName }) => {
-    const [members, setMembers] = useState([]);
-
-    useEffect(() => {
-      const partyRef = ref(database, `rooms/${roomName}/party`);
-      return onValue(partyRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          setMembers(Object.values(data));
-        } else {
-          setMembers([]);
-        }
-      });
-    }, [roomName]);
-
-    if (members.length === 0) return <div className="text-gray-600 text-[10px] font-mono tracking-widest uppercase">No hay personajes en esta partida...</div>;
-
-    return (
-      <div className="w-full text-center">
-        <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-3">Personajes en esta partida</p>
-        <div className="flex flex-wrap justify-center gap-2">
-          {members.map((m, i) => (
-            <span key={i} className="px-3 py-1 border border-[#333] text-[#d4af37] font-consent text-lg bg-black/50">
-              {m.name} {m.isGM ? '[DJ]]' : ''}
-            </span>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
+  
+  
   useEffect(() => {
     if (diceBoxInstance) return;
     let container = document.getElementById("dice-box-full");
@@ -945,97 +915,16 @@ function App() {
       });
   };
 
-  // SI NO HAY SALA, MOSTRAMOS "EL UMBRAL" (LANDING PAGE)
+  // 1. ¿NO HAY SALA? -> PANTALLA DE LANDING (EL UMBRAL)
   if (!roomName) {
-    return (
-      <div className="min-h-screen bg-[#050505] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black">
-        <style>{fontStyles}</style>
-
-        {/* A. BLOQUE SUPERIOR: IDENTIDAD */}
-        <div className="text-center mb-16 animate-fade-in-up">
-            <h1 className="text-8xl md:text-9xl tracking-tighter mb-4 opacity-90">Trophy (g)Old</h1>
-            <p className="font-mono text-sm tracking-[0.5em] uppercase text-gray-500">{randomTagline}</p>
-        </div>
-
-        {/* B. BLOQUE CENTRAL: EL RITUAL */}
-        <div className="w-full max-w-2xl flex flex-col items-center gap-8 animate-fade-in-up delay-100">
-            
-            {/* Input del Título */}
-            <div className="w-full group">
-                <input 
-                    type="text" 
-                    value={landingTitle}
-                    onChange={(e) => setLandingTitle(e.target.value)}
-                    placeholder="Nombre de la Incursión..."
-                    className="w-full bg-transparent text-center text-4xl md:text-5xl border-b border-[#333] focus:border-[#d4af37] text-[#d4af37] placeholder-gray-800 outline-none pb-4 transition-all duration-500 font-consent"
-                    onKeyDown={(e) => e.key === 'Enter' && handleCreateIncursion()}
-                />
-            </div>
-
-            {/* Selector de Rol */}
-            <div className="flex flex-col items-center gap-4">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                    <div className={`w-4 h-4 border border-[#d4af37] transition-all ${isCreatorGM ? 'bg-[#d4af37]' : 'bg-transparent'}`}></div>
-                    <input 
-                        type="checkbox" 
-                        checked={isCreatorGM} 
-                        onChange={(e) => setIsCreatorGM(e.target.checked)} 
-                        className="hidden"
-                    />
-                    <span className="font-mono text-xs uppercase tracking-widest text-gray-400 group-hover:text-[#d4af37] transition-colors">
-                        Entrar como Guardián
-                    </span>
-                </label>
-
-                {/* Si NO es Guardián, pedir nombre */}
-                {!isCreatorGM && (
-                    <input 
-                        type="text"
-                        value={creatorName}
-                        onChange={(e) => setCreatorName(e.target.value)}
-                        placeholder="Tu nombre..."
-                        className="bg-transparent border-b border-gray-800 text-center text-[#d4af37] focus:border-[#d4af37] outline-none text-xl font-consent w-48"
-                    />
-                )}
-            </div>
-
-            {/* Botón de Acción */}
-            <button 
-                onClick={handleCreateIncursion}
-                className="mt-8 px-12 py-4 border border-[#d4af37] hover:bg-[#d4af37] hover:text-black transition-all duration-500 text-xl tracking-widest uppercase font-mono group"
-            >
-                Comenzar Incursión
-            </button>
-        </div>
-
-        {/* C. BLOQUE INFERIOR: MEMORIA */}
-        {recentGames.length > 0 && (
-            <div className="mt-24 text-center animate-fade-in-up delay-200">
-                <h3 className="text-gray-700 font-mono text-[10px] uppercase tracking-widest mb-6">Memorias Recientes</h3>
-                <div className="flex flex-col gap-3">
-                    {recentGames.map((game) => (
-                        <a 
-                            key={game.id} 
-                            href={`?partida=${game.id}`}
-                            className="text-gray-500 hover:text-[#d4af37] transition-colors font-consent text-2xl flex items-center justify-center gap-2 group"
-                        >
-                            <span>{game.title}</span>
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity text-sm">→</span>
-                        </a>
-                    ))}
-                </div>
-            </div>
-        )}
-      </div>
-    );
+    return <LandingScreen />;
   }
 
-  // SI HAY SALA (roomName existe), RENDERIZAMOS EL JUEGO NORMAL
-  // Si tenemos sala, pero no hemos entrado aún
-  // LA ANTESALA (LOBBY) MEJORADA
+  // 2. ¿HAY SALA PERO NO HA ENTRADO? -> LOBBY (LA ANTESALA)
   if (roomName && !hasJoined) {
     return (
-      <div className="min-h-screen bg-[#050505] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black animate-fade-in relative">
+      <div className="min-h-screen flex flex-col justify-between bg-[#050505] text-[#d4af37] font-consent relative animate-fade-in">
+         {/* ... Tu código actual del Lobby (LobbyPartyList, inputs, etc) ... */}
          <style>{fontStyles}</style>
          
          {/* Fondo sutil o imagen si tuvieras */}
@@ -1051,10 +940,7 @@ function App() {
                 </h1>
             </div>
 
-            {/* --- AQUÍ INSERTAMOS LA LISTA DE JUGADORES --- */}
-            <LobbyPartyList roomName={roomName} />
-            {/* --------------------------------------------- */}
-
+            
             <div className="h-px w-16 bg-[#333] mx-auto"></div>
 
             {/* Formulario de Entrada */}
@@ -1105,16 +991,16 @@ function App() {
             </div>
          </div>
          
-         <AppFooter />
+         <Footer />
       </div>
     );
   }
 
-  // AQUÍ EMPIEZA EL RETURN DEL JUEGO 
-  
-  return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
-      <style>{fontStyles}</style>
+
+  // 3. ¿ESTÁ DENTRO? -> MESA DE JUEGO (LA INCURSIÓN) El return 
+    return (
+      <div className="min-h-screen flex flex-col bg-[#0a0a0a] text-gray-300 font-consent relative">
+        <style>{fontStyles}</style>
       
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
         {/* Botón para salir/cambiar personaje */}
@@ -1295,7 +1181,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.7.0 · Viejo · viejorpg@gmail.com</footer>
+      <Footer />
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
