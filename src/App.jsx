@@ -3,6 +3,14 @@ import { database } from './firebase';
 import { ref, push, onValue, limitToLast, query, remove, update } from "firebase/database";
 import DiceBox from '@3d-dice/dice-box'; 
 
+// --- Creditos y versión ---
+const APP_VERSION = "v.0.6.1"; //cambios lobby y footer
+const AppFooter = () => (
+  <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">
+    {APP_VERSION} · Viejo · viejorpg@gmail.com
+  </footer>
+);
+
 // --- IMPORTACIÓN DE FUENTE PERSONALIZADA ---
 const fontStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
@@ -674,35 +682,32 @@ function App() {
   const generateRandomId = () => Math.random().toString(36).substr(2, 4);
   // Componente para ver quién está en la sala (Solo visualización)
   const LobbyPartyList = ({ roomName }) => {
-    const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState([]);
 
-    useEffect(() => {
-      const partyRef = ref(database, `rooms/${roomName}/party`);
-      return onValue(partyRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          setMembers(Object.values(data));
-        } else {
-          setMembers([]);
-        }
-      });
-    }, [roomName]);
+  useEffect(() => {
+    const partyRef = ref(database, `rooms/${roomName}/party`);
+    return onValue(partyRef, (snapshot) => {
+      const data = snapshot.val();
+      setMembers(data ? Object.values(data) : []);
+    });
+  }, [roomName]);
 
-    if (members.length === 0) return <div className="text-gray-600 text-[10px] font-mono tracking-widest uppercase">No hay personajes en esta partida...</div>;
+  if (members.length === 0) return null;
 
-    return (
-      <div className="w-full text-center">
-        <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-3">Personajes en esta partida</p>
-        <div className="flex flex-wrap justify-center gap-2">
-          {members.map((m, i) => (
-            <span key={i} className="px-3 py-1 border border-[#333] text-[#d4af37] font-consent text-lg bg-black/50">
-              {m.name} {m.isGM ? '[DJ]]' : ''}
-            </span>
-          ))}
-        </div>
+  return (
+    <div className="animate-fade-in mb-6">
+      <p className="text-gray-600 font-mono text-[9px] uppercase tracking-[0.2em] mb-3">Personajes en esta partida:</p>
+      <div className="flex flex-wrap justify-center gap-3">
+        {members.map((m, i) => (
+          <div key={i} className="flex items-center gap-2 px-3 py-1 border border-gray-900 bg-[#050505]">
+            <span className="text-[#d4af37] font-consent text-xl">{m.name}</span>
+            {m.isGM && <span className="text-[10px] opacity-50">◈</span>}
+          </div>
+        ))}
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   useEffect(() => {
     if (diceBoxInstance) return;
@@ -1026,6 +1031,7 @@ function App() {
                 </div>
             </div>
         )}
+        <AppFooter />
       </div>
     );
   }
@@ -1295,10 +1301,12 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.6.0 · Viejo · viejorpg@gmail.com</footer>
+      <AppFooter />
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
+    
   );
+  
 }
 
 export default App;
