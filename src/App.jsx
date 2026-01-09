@@ -672,6 +672,37 @@ function App() {
   const isInitialLoad = useRef(true);
   const [displayName, setDisplayName] = useState(''); // Para mostrar título y url
   const generateRandomId = () => Math.random().toString(36).substr(2, 4);
+  // Componente para ver quién está en la sala (Solo visualización)
+  const LobbyPartyList = ({ roomName }) => {
+    const [members, setMembers] = useState([]);
+
+    useEffect(() => {
+      const partyRef = ref(database, `rooms/${roomName}/party`);
+      return onValue(partyRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          setMembers(Object.values(data));
+        } else {
+          setMembers([]);
+        }
+      });
+    }, [roomName]);
+
+    if (members.length === 0) return <div className="text-gray-600 text-[10px] font-mono tracking-widest uppercase">No hay personajes en esta partida...</div>;
+
+    return (
+      <div className="w-full text-center">
+        <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-3">Personajes en esta partida</p>
+        <div className="flex flex-wrap justify-center gap-2">
+          {members.map((m, i) => (
+            <span key={i} className="px-3 py-1 border border-[#333] text-[#d4af37] font-consent text-lg bg-black/50">
+              {m.name} {m.isGM ? '[DJ]]' : ''}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (diceBoxInstance) return;
@@ -1000,43 +1031,46 @@ function App() {
   }
 
   // SI HAY SALA (roomName existe), RENDERIZAMOS EL JUEGO NORMAL
-  // NUEVO BLOQUE: LA ANTESALA (LOBBY)
   // Si tenemos sala, pero no hemos entrado aún
+  // LA ANTESALA (LOBBY) MEJORADA
   if (roomName && !hasJoined) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black animate-fade-in">
+      <div className="min-h-screen bg-[#050505] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black animate-fade-in relative">
          <style>{fontStyles}</style>
+         
+         {/* Fondo sutil o imagen si tuvieras */}
+         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#111] via-[#000] to-[#000] -z-10"></div>
 
-         <div className="max-w-md w-full text-center space-y-8 border border-[#333] p-10 bg-black shadow-2xl relative">
-            {/* Decoración de esquinas */}
-            <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#d4af37]"></div>
-            <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#d4af37]"></div>
-            <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#d4af37]"></div>
-            <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#d4af37]"></div>
-
+         <div className="max-w-md w-full text-center space-y-8 border-y border-[#333] py-10 bg-black/80 backdrop-blur-sm relative">
+            
+            {/* Título de la Sala */}
             <div>
                 <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-2">Estás llegando a</p>
                 <h1 className="text-5xl md:text-6xl text-[#d4af37] tracking-tighter leading-none mb-6">
                     {displayName || roomName}
                 </h1>
-                <div className="h-px w-24 bg-[#333] mx-auto"></div>
             </div>
 
-            <div className="flex flex-col gap-6">
-                {/* Selector de Nombre */}
+            {/* --- AQUÍ INSERTAMOS LA LISTA DE JUGADORES --- */}
+            <LobbyPartyList roomName={roomName} />
+            {/* --------------------------------------------- */}
+
+            <div className="h-px w-16 bg-[#333] mx-auto"></div>
+
+            {/* Formulario de Entrada */}
+            <div className="flex flex-col gap-6 px-8">
                 <div className="space-y-2">
-                    <label className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">¿Quién eres?</label>
+                    <label className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">Tu identidad</label>
                     <input 
                         type="text" 
                         value={playerName}
                         onChange={(e) => setPlayerName(e.target.value)}
-                        placeholder="Nombre del aventurero..."
-                        className="w-full bg-[#111] border border-[#333] text-center text-2xl py-3 text-[#d4af37] focus:border-[#d4af37] outline-none transition-colors font-consent"
+                        placeholder="Nombre..."
+                        className="w-full bg-transparent border-b border-[#333] text-center text-3xl py-2 text-[#d4af37] focus:border-[#d4af37] outline-none transition-colors font-consent placeholder-gray-800"
                     />
                 </div>
 
-                {/* Checkbox de GM */}
-                <label className="flex items-center justify-center gap-3 cursor-pointer group select-none">
+                <label className="flex items-center justify-center gap-3 cursor-pointer group select-none opacity-60 hover:opacity-100 transition-opacity">
                     <div className={`w-3 h-3 border border-[#d4af37] transition-all ${isGM ? 'bg-[#d4af37]' : 'bg-transparent'}`}></div>
                     <input 
                         type="checkbox" 
@@ -1044,40 +1078,34 @@ function App() {
                         onChange={(e) => {
                             setIsGM(e.target.checked);
                             if(e.target.checked) setPlayerName("Guardián");
-                            else setPlayerName("");
+                            else if(playerName === "Guardián") setPlayerName("");
                         }} 
                         className="hidden"
                     />
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 group-hover:text-[#d4af37] transition-colors">
-                        Reclamar trono de Guardián
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 group-hover:text-[#d4af37]">
+                        Soy el Guardián
                     </span>
                 </label>
 
-                {/* Botón Entrar */}
                 <button 
                     onClick={() => {
                         if (!playerName.trim()) return;
-                        // Guardar preferencia para el futuro
                         localStorage.setItem(`trophy_name_${roomName}`, playerName);
                         if (isGM) localStorage.setItem(`trophy_role_${roomName}`, 'gm');
-                        else localStorage.removeItem(`trophy_role_${roomName}`); // Limpiar si dejaste de ser GM
+                        else localStorage.removeItem(`trophy_role_${roomName}`);
                         
-                        // ¡Adentro!
                         setHasJoined(true);
                         playSound('click');
                     }}
                     disabled={!playerName.trim()}
                     className="w-full bg-[#d4af37] text-black font-mono uppercase tracking-widest py-3 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Cruzar el Umbral
+                    Unirse a la Incursión
                 </button>
             </div>
-            
-            {/* Link para volver al inicio */}
-            <a href="/" className="block mt-4 text-gray-700 text-[10px] font-mono uppercase tracking-widest hover:text-gray-500">
-                ← Volver al inicio
-            </a>
          </div>
+         
+         <AppFooter />
       </div>
     );
   }
@@ -1091,15 +1119,18 @@ function App() {
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
         {/* Botón para salir/cambiar personaje */}
           <button 
-              onClick={() => {
-                  setHasJoined(false); // Te devuelve a la Antesala
-                  setIsGM(false);      // Resetea poderes
-              }}
-              className="absolute top-4 left-4 text-gray-600 hover:text-[#d4af37] text-[10px] font-mono uppercase tracking-widest"
-              title="Cambiar personaje"
-          >
-              ← Salir
-          </button>
+        onClick={() => {
+            if(window.confirm("¿Deseas abandonar la incursión y volver a la antesala?")) {
+                setHasJoined(false);
+                // No reseteamos el playerName para que sea rápido volver a entrar
+                playSound('click');
+            }
+        }}
+        className="absolute top-4 left-4 z-50 flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors group"
+    >
+        <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
+        <span className="font-mono text-[10px] uppercase tracking-widest">Salir</span>
+    </button>
         <span className="font-consent text-2xl">Trophy (g)Old</span>
       </header>
 
@@ -1193,7 +1224,6 @@ function App() {
                     <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ Reglas ]</button>
                     <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar dados ]</button>
                     <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Borrar historial ]</button>
-                    <button onClick={handleExit} className="text-gray-500 hover:text-white">[ Salir ]</button>
                 </div>
             </div>
 
@@ -1265,7 +1295,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.10 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.6.0 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
