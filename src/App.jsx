@@ -759,12 +759,12 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!isJoined || !roomName) return;
+    if (!hasJoined || !roomName) return;
     return onValue(query(ref(database, `rooms/${roomName}/rolls`), limitToLast(20)), s => {
       if(s.val()) setHistory(Object.values(s.val()).sort((a,b)=>b.id-a.id));
       else setHistory([]);
     });
-  }, [isJoined, roomName]);
+  }, [hasJoined, roomName]);
 
   useEffect(() => {
     if (history.length > 0) {
@@ -944,22 +944,16 @@ function App() {
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
         {/* Botón para salir/cambiar personaje */}
           <button 
-        onClick={() => {
-            if(window.confirm("¿Deseas abandonar la incursión y volver a la antesala?")) {
-                setHasJoined(false);
-                // No reseteamos el playerName para que sea rápido volver a entrar
-                playSound('click');
-            }
-        }}
+        onClick={() => { if(window.confirm("¿Deseas abandonar la incursión?")) setHasJoined(false); }}
         className="absolute top-4 left-4 z-50 flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors group"
-    >
+      >
         <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
-        <span className="font-mono text-[10px] uppercase tracking-widest">Salir</span>
-    </button>
+        <span className="font-mono text-[10px] uppercase tracking-widest">Abandonar</span>
+          </button>
         <span className="font-consent text-2xl">Trophy (g)Old</span>
       </header>
 
-      {!isJoined ? (
+      {!hasJoined ? (
         <div className="flex-grow flex items-center justify-center p-4 relative z-10 overflow-y-auto">
           <div className="max-w-sm w-full space-y-6 my-8">
             <div className="bg-[#1a1a1a]/95 p-8 border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
