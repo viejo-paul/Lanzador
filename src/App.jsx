@@ -4,9 +4,9 @@ import { ref, push, onValue, limitToLast, query, remove, update } from "firebase
 import DiceBox from '@3d-dice/dice-box'; 
 
 // --- Creditos y versión ---
-const APP_VERSION = "v.0.6.1"; //cambios lobby y footer
+const APP_VERSION = "v.0.6.2"; //cambios footer
 const AppFooter = () => (
-  <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">
+  <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase mt-auto">
     {APP_VERSION} · Viejo · viejorpg@gmail.com
   </footer>
 );
@@ -954,8 +954,8 @@ function App() {
   // SI NO HAY SALA, MOSTRAMOS "EL UMBRAL" (LANDING PAGE)
   if (!roomName) {
     return (
-      <div className="min-h-screen bg-[#050505] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black">
-        <style>{fontStyles}</style>
+    <div className="min-h-screen flex flex-col bg-[#050505] text-[#d4af37] font-consent selection:bg-[#d4af37] selection:text-black">
+      <style>{fontStyles}</style>
 
         {/* A. BLOQUE SUPERIOR: IDENTIDAD */}
         <div className="text-center mb-16 animate-fade-in-up">
@@ -1042,8 +1042,8 @@ function App() {
   // LA ANTESALA (LOBBY) MEJORADA
   if (roomName && !hasJoined) {
     return (
-      <div className="min-h-screen bg-[#050505] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black animate-fade-in relative">
-         <style>{fontStyles}</style>
+      <div className="min-h-screen flex flex-col bg-[#050505] text-[#d4af37] font-consent relative">
+      <style>{fontStyles}</style>
          
          {/* Fondo sutil o imagen si tuvieras */}
          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#111] via-[#000] to-[#000] -z-10"></div>
@@ -1117,10 +1117,9 @@ function App() {
     );
   }
 
-  // AQUÍ EMPIEZA EL RETURN DEL JUEGO 
-  
+  // AQUÍ EMPIEZA EL RETURN DEL JUEGO  
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-[#0a0a0a] text-gray-300 font-consent relative">
       <style>{fontStyles}</style>
       
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
@@ -1305,9 +1304,6 @@ function App() {
       <AppFooter />
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
-    
   );
-  
 }
-
 export default App;
