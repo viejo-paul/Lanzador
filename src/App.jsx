@@ -922,77 +922,16 @@ function App() {
 
   // 2. ¿HAY SALA PERO NO HA ENTRADO? -> LOBBY (LA ANTESALA)
   if (roomName && !hasJoined) {
-      return (
-      <div className="min-h-screen flex flex-col justify-between bg-[#050505] text-[#d4af37] font-consent relative animate-fade-in">
-         {/* ... Tu código actual del Lobby (LobbyPartyList, inputs, etc) ... */}
-         <style>{fontStyles}</style>
-         
-         {/* Fondo sutil o imagen si tuvieras */}
-         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#111] via-[#000] to-[#000] -z-10"></div>
-
-         <div className="max-w-md w-full text-center space-y-8 border-y border-[#333] py-10 bg-black/80 backdrop-blur-sm relative">
-            
-            {/* Título de la Sala */}
-            <div>
-                <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-2">Estás llegando a</p>
-                <h1 className="text-5xl md:text-6xl text-[#d4af37] tracking-tighter leading-none mb-6">
-                    {displayName || roomName}
-                </h1>
-            </div>
-
-            
-            <div className="h-px w-16 bg-[#333] mx-auto"></div>
-
-            {/* Formulario de Entrada */}
-            <div className="flex flex-col gap-6 px-8">
-                <div className="space-y-2">
-                    <label className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">Tu identidad</label>
-                    <input 
-                        type="text" 
-                        value={playerName}
-                        onChange={(e) => setPlayerName(e.target.value)}
-                        placeholder="Nombre..."
-                        className="w-full bg-transparent border-b border-[#333] text-center text-3xl py-2 text-[#d4af37] focus:border-[#d4af37] outline-none transition-colors font-consent placeholder-gray-800"
-                    />
-                </div>
-
-                <label className="flex items-center justify-center gap-3 cursor-pointer group select-none opacity-60 hover:opacity-100 transition-opacity">
-                    <div className={`w-3 h-3 border border-[#d4af37] transition-all ${isGM ? 'bg-[#d4af37]' : 'bg-transparent'}`}></div>
-                    <input 
-                        type="checkbox" 
-                        checked={isGM} 
-                        onChange={(e) => {
-                            setIsGM(e.target.checked);
-                            if(e.target.checked) setPlayerName("Guardián");
-                            else if(playerName === "Guardián") setPlayerName("");
-                        }} 
-                        className="hidden"
-                    />
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 group-hover:text-[#d4af37]">
-                        Soy el Guardián
-                    </span>
-                </label>
-
-                <button 
-                    onClick={() => {
-                        if (!playerName.trim()) return;
-                        localStorage.setItem(`trophy_name_${roomName}`, playerName);
-                        if (isGM) localStorage.setItem(`trophy_role_${roomName}`, 'gm');
-                        else localStorage.removeItem(`trophy_role_${roomName}`);
-                        
-                        setHasJoined(true);
-                        playSound('click');
-                    }}
-                    disabled={!playerName.trim()}
-                    className="w-full bg-[#d4af37] text-black font-mono uppercase tracking-widest py-3 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    Unirse a la Incursión
-                </button>
-            </div>
-         </div>
-         
-         <Footer />
-      </div>
+    return (
+      <LobbyScreen 
+        roomName={roomName}           // Le pasamos el ID de la sala para buscar la lista de jugadores
+        displayName={displayName}     // Le pasamos el título bonito ("La Tumba del Rey")
+        onJoin={(name, roleGM) => {   // Le decimos qué hacer cuando el usuario pulse el botón
+            setPlayerName(name);      // 1. Guardar el nombre en App
+            setIsGM(roleGM);          // 2. Guardar el rol en App
+            setHasJoined(true);       // 3. ¡Abrir la puerta del juego!
+        }}
+      />
     );
   }
 
