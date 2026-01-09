@@ -922,7 +922,7 @@ function App() {
 
   // 2. ¿HAY SALA PERO NO HA ENTRADO? -> LOBBY (LA ANTESALA)
   if (roomName && !hasJoined) {
-    return (
+      return (
       <div className="min-h-screen flex flex-col justify-between bg-[#050505] text-[#d4af37] font-consent relative animate-fade-in">
          {/* ... Tu código actual del Lobby (LobbyPartyList, inputs, etc) ... */}
          <style>{fontStyles}</style>
