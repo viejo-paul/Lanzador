@@ -3,6 +3,14 @@ import { database } from './firebase';
 import { ref, push, onValue, limitToLast, query, remove, update } from "firebase/database";
 import DiceBox from '@3d-dice/dice-box'; 
 
+// --- Creditos y versión ---
+const APP_VERSION = "v.0.6.2"; //cambios footer
+const AppFooter = () => (
+  <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase mt-auto">
+    {APP_VERSION} · Viejo · viejorpg@gmail.com
+  </footer>
+);
+
 // --- IMPORTACIÓN DE FUENTE PERSONALIZADA ---
 const fontStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
