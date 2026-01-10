@@ -939,23 +939,33 @@ function App() {
 
   // 3. ¿ESTÁ DENTRO? -> MESA DE JUEGO (LA INCURSIÓN) El return 
     return (
-      <div className="min-h-screen flex flex-col bg-[#0a0a0a] text-gray-300 font-consent relative">
-        <style>{fontStyles}</style>
+    <div className="w-full md:w-1/3 flex flex-col space-y-4">
+    
+    <div className="text-[#d4af37] font-mono text-xs uppercase tracking-widest border-b border-gray-800 pb-1 mb-2">
+        Crónica de la Incursión
+    </div>
+
+    {/* Aquí usamos tu nuevo componente limpio */}
+    <RollHistory 
+        rolls={rolls} 
+        currentPlayerName={playerName} 
+        onPush={handlePush} 
+    />        <style>{fontStyles}</style>
       
-      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
+        <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
         {/* Botón para salir/cambiar personaje */}
           <button 
         onClick={() => { if(window.confirm("¿Deseas abandonar la incursión?")) setHasJoined(false); }}
         className="absolute top-4 left-4 z-50 flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors group"
-      >
+        >
         <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
         <span className="font-mono text-[10px] uppercase tracking-widest">Abandonar</span>
           </button>
         <span className="font-consent text-2xl">Trophy (g)Old</span>
-      </header>
+        < /header>
 
-      {!hasJoined ? (
-        <div className="flex-grow flex items-center justify-center p-4 relative z-10 overflow-y-auto">
+    { !hasJoined ? (
+      <div className="flex-grow flex items-center justify-center p-4 relative z-10 overflow-y-auto">
           <div className="max-w-sm w-full space-y-6 my-8">
             <div className="bg-[#1a1a1a]/95 p-8 border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
               <h1 className="text-6xl font-consent text-[#d4af37] text-center mb-6">Trophy (g)Old</h1>
@@ -1028,7 +1038,7 @@ function App() {
             )}
           </div>
         </div>
-      ) : (
+        ) : (
         <main className="flex-grow flex flex-col items-center p-4 relative z-10">
             <div className="w-full max-w-5xl flex justify-between items-end mb-6 border-b border-[#1a1a1a] pb-2 px-2 bg-black/40">
                 <div className="flex flex-col">
