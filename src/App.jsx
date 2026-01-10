@@ -11,6 +11,7 @@ import LobbyScreen from './screens/LobbyScreen';
 import Footer from './components/ui/Footer'; 
 import CharacterSheet from './components/game/CharacterSheet'; // (Si ya lo hubiéramos separado, si no, ignora esta línea y mantén tu import si lo tenías o el componente abajo)
 import PartyView from './components/game/PartyView'; // (Igual que arriba)
+import RollHistory from './components/game/RollHistory'; //el historial aparte
 
 // --- IMPORTACIÓN DE FUENTE PERSONALIZADA ---
 const fontStyles = `
