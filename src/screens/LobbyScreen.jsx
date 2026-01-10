@@ -1,64 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { database } from '../firebase';
-import { ref, onValue } from "firebase/database";
-import Footer from '../components/ui/Footer';
-import { Howl } from 'howler';
+import { ref, onValue, update } from "firebase/database";
+import Footer from '../components/Footer';
 
-const LobbyPartyList = ({ roomName }) => {
-  const [members, setMembers] = useState([]);
-  useEffect(() => {
-    const partyRef = ref(database, `rooms/${roomName}/party`);
-    return onValue(partyRef, (snapshot) => {
-      const data = snapshot.val();
-      setMembers(data ? Object.values(data) : []);
-    });
-  }, [roomName]);
+const LobbyScreen = ({ roomName, playerName, isGM, onJoin }) => {
+    const [party, setParty] = useState([]);
 
-  if (members.length === 0) return null;
-  return (
-    <div className="mb-6 flex flex-wrap justify-center gap-2">
-      {members.map((m, i) => (
-        <span key={i} className="border border-[#333] px-2 py-1 text-[#d4af37]">{m.name}</span>
-      ))}
-    </div>
-  );
+    useEffect(() => {
+        const partyRef = ref(database, `rooms/${roomName}/party`);
+        return onValue(partyRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                setParty(Object.values(data));
+            } else {
+                setParty([]);
+            }
+        });
+    }, [roomName]);
+
+    return (
+        <div className="flex flex-col h-screen bg-black text-gray-300 font-sans selection:bg-[#d4af37] selection:text-black">
+            <div className="flex-grow flex flex-col items-center justify-center p-4">
+                <div className="max-w-md w-full text-center space-y-8">
+                    <div className="space-y-2">
+                        <h2 className="text-[#d4af37] font-mono text-xs uppercase tracking-[0.3em]">Incursión</h2>
+                        <h1 className="text-4xl text-white font-serif tracking-tight border-b border-gray-800 pb-4">
+                            {roomName}
+                        </h1>
+                    </div>
+
+                    <div className="bg-gray-900/30 border border-gray-800 p-6 backdrop-blur-sm">
+                        <h3 className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-6">
+                            Miembros de la Expedición
+                        </h3>
+                        <div className="space-y-3">
+                            {party.length === 0 ? (
+                                <p className="text-gray-600 italic">Esperando almas...</p>
+                            ) : (
+                                party.map((member, index) => (
+                                    <div key={index} className="flex justify-between items-center border-b border-gray-800/50 pb-2 last:border-0">
+                                        <span className={member.name === playerName ? "text-[#d4af37] font-medium" : "text-gray-400"}>
+                                            {member.name} {member.name === playerName && "(Tú)"}
+                                        </span>
+                                        <span className="text-xs font-mono text-gray-600 uppercase">
+                                            {member.role === 'guardian' ? 'Guardián' : 'Buscatrofeos'}
+                                        </span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={onJoin}
+                        className="w-full bg-[#d4af37] text-black hover:bg-[#c5a028] font-bold py-4 px-8 tracking-widest uppercase transition-all transform hover:scale-[1.02] shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+                    >
+                        Adentrarse en el Bosque
+                    </button>
+                </div>
+            </div>
+            <Footer />
+        </div>
+    );
 };
 
-const LobbyScreen = ({ roomName, displayName, onJoin }) => {
-  const [name, setName] = useState('');
-  const [isGM, setIsGM] = useState(false);
-
-  return (
-    <div className="min-h-screen flex flex-col justify-between bg-[#050505] text-[#d4af37] font-consent">
-       <div className="flex-grow flex flex-col items-center justify-center p-6 text-center">
-          <h2 className="text-5xl mb-6">{displayName || roomName}</h2>
-          <LobbyPartyList roomName={roomName} />
-          
-          <div className="flex flex-col gap-4 w-full max-w-xs">
-              <input 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Tu Nombre..."
-                className="bg-transparent border-b border-[#333] text-center text-2xl py-2 outline-none text-[#d4af37]"
-              />
-              <label className="flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-widest text-gray-500">
-                  <input type="checkbox" checked={isGM} onChange={(e) => setIsGM(e.target.checked)} />
-                  Soy el Guardián
-              </label>
-              <button 
-                onClick={() => {
-                    new Howl({ src: ['/sounds/click.mp3'] }).play();
-                    onJoin(name, isGM);
-                }}
-                disabled={!name && !isGM}
-                className="bg-[#d4af37] text-black py-3 uppercase tracking-widest hover:bg-white transition-colors disabled:opacity-50"
-              >
-                  Unirse
-              </button>
-          </div>
-       </div>
-       <Footer />
-    </div>
-  );
-};
 export default LobbyScreen;

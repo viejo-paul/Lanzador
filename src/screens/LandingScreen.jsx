@@ -8,7 +8,11 @@ const LandingScreen = () => {
   const [isCreatorGM, setIsCreatorGM] = useState(true);
   const [creatorName, setCreatorName] = useState('');
   const [recentGames, setRecentGames] = useState([]);
-  const [randomTagline] = useState("El bosque te reclama.");
+  const [randomTagline] = useState("El bosque te reclama", 
+      "La deuda debe pagarse",
+      "No volverás igual que te fuiste",
+      "El tesoro es una trampa",
+      "La ruina te espera");
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('trophy_recent_games') || '[]');
@@ -33,7 +37,7 @@ const LandingScreen = () => {
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[#050505] text-[#d4af37] font-consent">
         <div className="flex-grow flex flex-col items-center justify-center p-6 text-center">
-            <h1 className="text-9xl mb-4 tracking-tighter">TROPHY</h1>
+            <h1 className="text-9xl mb-4 tracking-tighter">Trophy (g)Old</h1>
             <p className="font-mono text-xs uppercase tracking-widest mb-10">{randomTagline}</p>
             
             <input 
