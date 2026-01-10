@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { database } from './firebase';
 import { ref, update, onValue, push, limitToLast, query, remove } from "firebase/database";
 import DiceBox from '@3d-dice/dice-box';  // Dados 3d
-import { Howl } from 'howler'; //Gestor de sonidos
+//import { Howl } from 'howler'; //Gestor de sonidos
 
 // --- NUEVOS IMPORTS (La clave de la refactorización) ---
 import LandingScreen from './screens/LandingScreen';
