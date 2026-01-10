@@ -950,7 +950,8 @@ function App() {
         rolls={rolls} 
         currentPlayerName={playerName} 
         onPush={handlePush} 
-    />        <style>{fontStyles}</style>
+    />        
+    <style>{fontStyles}</style>
       
         <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
         {/* Botón para salir/cambiar personaje */}
