@@ -1062,61 +1062,24 @@ function App() {
             <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                 
                 {/* COLUMNA IZQUIERDA: DADOS E HISTORIAL */}
-                <div className="w-full space-y-8">
-                    <div className="bg-[#1a1a1a]/90 p-5 border border-gray-800 shadow-xl">
-                        <div className="grid grid-cols-4 gap-1 mb-6 bg-black p-1">
-                            {['risk','hunt','combat','help'].map(t=>(<button key={t} onClick={()=>setRollType(t)} className={`py-2 text-[10px] uppercase font-bold transition-all ${rollType===t?(t==='combat'?'bg-red-900':'bg-[#d4af37] text-black'):'text-gray-500 hover:text-gray-300'}`}>{t==='risk'?'Riesgo':t==='hunt'?'Explor.':t==='combat'?'Combate':'Ayuda'}</button>))}
-                        </div>
-                        {rollType!=='help' && (
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            {/* CAMBIO: Se muestra SIEMPRE (quitada la condición rollType!=='combat') */}
-                            <div>
-                                <label className="block text-[11px] text-[#d4af37] mb-1 uppercase text-center">
-                                    {rollType === 'combat' ? 'Punto Débil (Claro)' : 'Claros'}
-                                </label>
-                                <div className="flex items-center justify-between border border-[#d4af37] bg-black h-10">
-                                    <button onClick={()=>updateDiceCount(setLightCount,lightCount,-1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">-</button>
-                                    <span className="font-bold">{lightCount}</span>
-                                    <button onClick={()=>updateDiceCount(setLightCount,lightCount,1)} className="px-3 h-full text-[#d4af37] hover:bg-[#d4af37] hover:text-black">+</button>
-                                </div>
-                            </div>
-                          {/* CAMBIO: Quitada la clase col-span-2 dinámica, ya que ahora comparten espacio en combate */}
-                            {rollType!=='hunt' && (
-                                <div>
-                                    <label className="block text-[11px] text-gray-500 mb-1 uppercase text-center">Oscuros</label>
-                                    <div className="flex items-center justify-between border border-gray-600 bg-black h-10">
-                                        <button onClick={()=>updateDiceCount(setDarkCount,darkCount,-1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">-</button>
-                                        <span className="font-bold">{darkCount}</span>
-                                        <button onClick={()=>updateDiceCount(setDarkCount,darkCount,1)} className="px-3 h-full text-gray-500 hover:bg-gray-600 hover:text-white">+</button>
-                                    </div>
-                                </div>
-                            )}
-                          </div>
-                        )}
-                        <button onClick={handleRoll} className={`w-full font-consent text-3xl py-2 shadow-lg ${rollType==='combat'?'bg-red-900':'bg-[#d4af37] text-black'}`}>
-                          {rollType === 'combat' ? '¡Atacar!' : rollType === 'hunt' ? 'Explorar' : rollType === 'help' ? 'Prestar ayuda' : 'Tirar dados'}
-                        </button>
-                    </div>
-
-                    <div className="space-y-4">
-                        {history.map((roll, index) => (
-                        <div key={roll.id} className={`bg-[#1a1a1a]/95 p-4 border-l-4 shadow-lg animate-in slide-in-from-top-2 ${roll.rollType === 'combat' ? 'border-red-900' : 'border-[#d4af37]'}`}>
-                            <div className="flex justify-between items-baseline mb-3 border-b border-black pb-2">
-                                <span className="text-[#f9e29c] font-consent text-2xl">{roll.player} <span className="text-[10px] text-gray-500 font-serif ml-1 border border-gray-800 px-1 uppercase tracking-tighter">{roll.rollType === 'risk' ? 'Riesgo' : roll.rollType === 'hunt' ? 'Explor.' : roll.rollType === 'combat' ? 'Combate' : 'Ayuda'}</span> {roll.isPush && <span className="text-red-500 ml-1 font-serif text-xs">Repetida</span>}</span>
-                                <span className="text-[10px] text-gray-600 font-mono">{roll.timestamp}</span>
-                            </div>
-                            <div className="mb-4">
-                                <span className={`font-bold text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
-                                {roll.analysis.isDarkHighest && roll.rollType!=='combat' && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡Dado oscuro domina! Si el resultado es superior a tu valor de Ruina, marca +1 Ruina</div>}
-                            </div>
-                            <div className="flex gap-3 mb-2">
-                                {roll.dice.map(d => (<div key={d.id} className={`w-10 h-10 flex items-center justify-center text-xl font-bold ${d.type==='light'?'bg-[#d4af37] text-black':'bg-black text-white border border-gray-700'}`}>{d.value}</div>))}
-                            </div>
-                            {index === 0 && roll.player === playerName && roll.rollType!=='help' && roll.rollType!=='combat' && (<button onClick={()=>handlePush(roll)} className="mt-3 w-full border border-gray-700 text-gray-400 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2">¿Tentar al destino? (+1 Oscuro)</button>)}
-                        </div>
-                        ))}
-                    </div>
+                <div className="text-[#d4af37] font-mono text-xs uppercase tracking-widest border-b border-gray-800 pb-1 mb-2">
+                  Crónica de la Incursión
                 </div>
+
+                {/* Aquí está nuestro nuevo componente */}
+                <RollHistory 
+                  rolls={rolls} 
+                  currentPlayerName={playerName} 
+                  onPush={handlePush} 
+                />
+
+                {/* Botón de Reglas (Lo dejamos fuera del historial para que sea accesible) */}
+                <button 
+                  onClick={() => setShowRules(true)}
+                  className="w-full bg-gray-900/50 border border-gray-800 text-gray-500 hover:text-[#d4af37] hover:border-[#d4af37] py-2 text-[10px] uppercase tracking-[0.2em] transition-all font-mono"
+                >
+                  Consultar Reglas
+                </button>
 
                 {/* COLUMNA DERECHA: TU FICHA Y GRUPO (JUNTOS) */}
                 <div className="w-full flex flex-col space-y-2">
