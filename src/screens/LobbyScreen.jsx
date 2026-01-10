@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { database } from '../firebase';
 import { ref, onValue, update } from "firebase/database";
-import Footer from '../components/Footer';
+import Footer from '../components/ui/Footer';
 
 const LobbyScreen = ({ roomName, playerName, isGM, onJoin }) => {
     const [party, setParty] = useState([]);
