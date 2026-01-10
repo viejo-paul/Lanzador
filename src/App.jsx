@@ -963,7 +963,7 @@ function App() {
         <span className="font-mono text-[10px] uppercase tracking-widest">Abandonar</span>
           </button>
         <span className="font-consent text-2xl">Trophy (g)Old</span>
-        < /header>
+        </header>
 
     { !hasJoined ? (
       <div className="flex-grow flex items-center justify-center p-4 relative z-10 overflow-y-auto">
