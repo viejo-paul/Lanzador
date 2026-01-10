@@ -673,15 +673,8 @@ function App() {
   ];
   const [randomTagline] = useState(() => taglines[Math.floor(Math.random() * taglines.length)]);
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
-<<<<<<< HEAD
-  const isInitialLoad = useRef(true);
-  const [displayName, setDisplayName] = useState(''); // Para mostrar título y url
-  const generateRandomId = () => Math.random().toString(36).substr(2, 4);
-
-=======
   
   
->>>>>>> 5f9c555357ca373b39c98c18ba9d84e7bfe308bd
   useEffect(() => {
     if (diceBoxInstance) return;
     let container = document.getElementById("dice-box-full");
@@ -928,88 +921,6 @@ function App() {
     return <LandingScreen />;
   }
 
-<<<<<<< HEAD
-  // SI HAY SALA (roomName existe), RENDERIZAMOS EL JUEGO NORMAL
-  // NUEVO BLOQUE: LA ANTESALA (LOBBY)
-  // Si tenemos sala, pero no hemos entrado aún
-  if (roomName && !hasJoined) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0a] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black animate-fade-in">
-         <style>{fontStyles}</style>
-
-         <div className="max-w-md w-full text-center space-y-8 border border-[#333] p-10 bg-black shadow-2xl relative">
-            {/* Decoración de esquinas */}
-            <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#d4af37]"></div>
-            <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#d4af37]"></div>
-            <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#d4af37]"></div>
-            <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#d4af37]"></div>
-
-            <div>
-                <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-2">Estás llegando a</p>
-                <h1 className="text-5xl md:text-6xl text-[#d4af37] tracking-tighter leading-none mb-6">
-                    {displayName || roomName}
-                </h1>
-                <div className="h-px w-24 bg-[#333] mx-auto"></div>
-            </div>
-
-            <div className="flex flex-col gap-6">
-                {/* Selector de Nombre */}
-                <div className="space-y-2">
-                    <label className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">¿Quién eres?</label>
-                    <input 
-                        type="text" 
-                        value={playerName}
-                        onChange={(e) => setPlayerName(e.target.value)}
-                        placeholder="Nombre del aventurero..."
-                        className="w-full bg-[#111] border border-[#333] text-center text-2xl py-3 text-[#d4af37] focus:border-[#d4af37] outline-none transition-colors font-consent"
-                    />
-                </div>
-
-                {/* Checkbox de GM */}
-                <label className="flex items-center justify-center gap-3 cursor-pointer group select-none">
-                    <div className={`w-3 h-3 border border-[#d4af37] transition-all ${isGM ? 'bg-[#d4af37]' : 'bg-transparent'}`}></div>
-                    <input 
-                        type="checkbox" 
-                        checked={isGM} 
-                        onChange={(e) => {
-                            setIsGM(e.target.checked);
-                            if(e.target.checked) setPlayerName("Guardián");
-                            else setPlayerName("");
-                        }} 
-                        className="hidden"
-                    />
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 group-hover:text-[#d4af37] transition-colors">
-                        Reclamar trono de Guardián
-                    </span>
-                </label>
-
-                {/* Botón Entrar */}
-                <button 
-                    onClick={() => {
-                        if (!playerName.trim()) return;
-                        // Guardar preferencia para el futuro
-                        localStorage.setItem(`trophy_name_${roomName}`, playerName);
-                        if (isGM) localStorage.setItem(`trophy_role_${roomName}`, 'gm');
-                        else localStorage.removeItem(`trophy_role_${roomName}`); // Limpiar si dejaste de ser GM
-                        
-                        // ¡Adentro!
-                        setHasJoined(true);
-                        playSound('click');
-                    }}
-                    disabled={!playerName.trim()}
-                    className="w-full bg-[#d4af37] text-black font-mono uppercase tracking-widest py-3 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    Cruzar el Umbral
-                </button>
-            </div>
-            
-            {/* Link para volver al inicio */}
-            <a href="/" className="block mt-4 text-gray-700 text-[10px] font-mono uppercase tracking-widest hover:text-gray-500">
-                ← Volver al inicio
-            </a>
-         </div>
-      </div>
-=======
   // 2. ¿HAY SALA PERO NO HA ENTRADO? -> LOBBY (LA ANTESALA)
   if (roomName && !hasJoined) {
     return (
@@ -1022,7 +933,6 @@ function App() {
             setHasJoined(true);       // 3. ¡Abrir la puerta del juego!
         }}
       />
->>>>>>> 5f9c555357ca373b39c98c18ba9d84e7bfe308bd
     );
   }
 
@@ -1035,22 +945,11 @@ function App() {
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
         {/* Botón para salir/cambiar personaje */}
           <button 
-<<<<<<< HEAD
-              onClick={() => {
-                  setHasJoined(false); // Te devuelve a la Antesala
-                  setIsGM(false);      // Resetea poderes
-              }}
-              className="absolute top-4 left-4 text-gray-600 hover:text-[#d4af37] text-[10px] font-mono uppercase tracking-widest"
-              title="Cambiar personaje"
-          >
-              ← Salir
-=======
         onClick={() => { if(window.confirm("¿Deseas abandonar la incursión?")) setHasJoined(false); }}
         className="absolute top-4 left-4 z-50 flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors group"
       >
         <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
         <span className="font-mono text-[10px] uppercase tracking-widest">Abandonar</span>
->>>>>>> 5f9c555357ca373b39c98c18ba9d84e7bfe308bd
           </button>
         <span className="font-consent text-2xl">Trophy (g)Old</span>
       </header>
@@ -1217,11 +1116,7 @@ function App() {
             </div>
         </main>
       )}
-<<<<<<< HEAD
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.10 · Viejo · viejorpg@gmail.com</footer>
-=======
       <Footer />
->>>>>>> 5f9c555357ca373b39c98c18ba9d84e7bfe308bd
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
