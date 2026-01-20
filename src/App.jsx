@@ -3,14 +3,6 @@ import { database } from './firebase';
 import { ref, push, onValue, limitToLast, query, remove, update } from "firebase/database";
 import DiceBox from '@3d-dice/dice-box'; 
 
-// --- Creditos y versión ---
-const APP_VERSION = "v.0.6.1"; //cambios lobby y footer
-const AppFooter = () => (
-  <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">
-    {APP_VERSION} · Viejo · viejorpg@gmail.com
-  </footer>
-);
-
 // --- IMPORTACIÓN DE FUENTE PERSONALIZADA ---
 const fontStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
@@ -31,20 +23,16 @@ const downloadJSON = (data, fileName) => {
 };
 
 // --- GESTOR DE SONIDOS ---
-import { Howl } from 'howler';
-
-// Definir los sonidos FUERA del componente para que se carguen solo una vez
-const soundBank = {
-    click: new Howl({ src: ['/sounds/click.mp3'], volume: 0.5 }),
-    success: new Howl({ src: ['/sounds/success.mp3'], volume: 0.8 }),
-    fail: new Howl({ src: ['/sounds/fail.mp3'], volume: 1.0 }),
-    // ... otros sonidos
-};
-
 const playSound = (type) => {
-    if (soundBank[type]) {
-        soundBank[type].play();
-    }
+  const sounds = {
+    click: '/sounds/click.mp3',
+    success: '/sounds/success.mp3',
+    fail: '/sounds/fail.mp3',
+    ruin: '/sounds/glitch.mp3',
+  };
+  const audio = new Audio(sounds[type]);
+  audio.volume = 0.5;
+  audio.play().catch(e => {});
 };
 
 // --- LÓGICA DE REGLAS TROPHY GOLD ---
@@ -653,8 +641,6 @@ function App() {
   const [roomName, setRoomName] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [isJoined, setIsJoined] = useState(false);
-  // Estado para controlar si ya hemos cruzado la antesala
-  const [hasJoined, setHasJoined] = useState(false);
   const [isGM, setIsGM] = useState(false); // Nuevo estado para Guardián
   const [existingCharacters, setExistingCharacters] = useState({});
   const [lightCount, setLightCount] = useState(1);
@@ -662,52 +648,10 @@ function App() {
   const [history, setHistory] = useState([]);
   const [rollType, setRollType] = useState('risk');
   const [showRules, setShowRules] = useState(false);
-  // --- ESTADOS PARA LA LANDING PAGE (EL UMBRAL) ---
-  const [landingTitle, setLandingTitle] = useState(''); // El título "bonito"
-  const [isCreatorGM, setIsCreatorGM] = useState(true); // Por defecto eres DJ
-  const [creatorName, setCreatorName] = useState(''); // Si no eres DJ
-  const [recentGames, setRecentGames] = useState([]); // Historial local
-  // Frases de ambientación aleatoria
-  const taglines = [
-      "El bosque te reclama.",
-      "La deuda debe pagarse.",
-      "No volverás igual que te fuiste.",
-      "El tesoro es una trampa.",
-      "La ruina te espera."
-  ];
-  const [randomTagline] = useState(() => taglines[Math.floor(Math.random() * taglines.length)]);
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   const isInitialLoad = useRef(true);
   const [displayName, setDisplayName] = useState(''); // Para mostrar título y url
   const generateRandomId = () => Math.random().toString(36).substr(2, 4);
-  // Componente para ver quién está en la sala (Solo visualización)
-  const LobbyPartyList = ({ roomName }) => {
-  const [members, setMembers] = useState([]);
-
-  useEffect(() => {
-    const partyRef = ref(database, `rooms/${roomName}/party`);
-    return onValue(partyRef, (snapshot) => {
-      const data = snapshot.val();
-      setMembers(data ? Object.values(data) : []);
-    });
-  }, [roomName]);
-
-  if (members.length === 0) return null;
-
-  return (
-    <div className="animate-fade-in mb-6">
-      <p className="text-gray-600 font-mono text-[9px] uppercase tracking-[0.2em] mb-3">Personajes en esta partida:</p>
-      <div className="flex flex-wrap justify-center gap-3">
-        {members.map((m, i) => (
-          <div key={i} className="flex items-center gap-2 px-3 py-1 border border-gray-900 bg-[#050505]">
-            <span className="text-[#d4af37] font-consent text-xl">{m.name}</span>
-            {m.isGM && <span className="text-[10px] opacity-50">◈</span>}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
   useEffect(() => {
     if (diceBoxInstance) return;
@@ -750,40 +694,20 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Cargar historial
-    const savedGames = JSON.parse(localStorage.getItem('trophy_recent_games') || '[]');
-    setRecentGames(savedGames);
-
     document.title = "Trophy (g)Old";
-    
     const p = new URLSearchParams(window.location.search);
     const partidaURL = p.get('partida');
-
     if (partidaURL) {
       setRoomName(partidaURL);
-
-      // --- LÓGICA DE LA ANTESALA ---
-      // Verificamos si ya tenemos credenciales guardadas de esta sesión
-      const savedRole = localStorage.getItem(`trophy_role_${partidaURL}`);
-      const savedName = localStorage.getItem(`trophy_name_${partidaURL}`);
-
-      if (savedRole === 'gm') {
-          // Si eres el GM Creador, entras directo (Pase VIP)
-          setIsGM(true);
-          setPlayerName("Guardián");
-          setHasJoined(true); 
-      } else if (savedName) {
-          // Si ya tienes nombre guardado, lo pre-cargamos pero...
-          // Opcional: ¿Quieres que entren directo o que confirmen?
-          // Yo sugiero que confirmen en la Antesala para evitar confusiones.
-          setPlayerName(savedName);
-          // setHasJoined(true); <--- MANTÉN ESTO COMENTADO para obligar a pasar por el Lobby
-      }
-      
-      // Recuperar título bonito
+      // --- BLOQUE A AÑADIR (INICIO) ---
+      // Recuperamos el nombre "bonito" guardado en la base de datos
       onValue(ref(database, `rooms/${partidaURL}/title`), (snapshot) => {
-        if (snapshot.exists()) setDisplayName(snapshot.val());
-        else setDisplayName(partidaURL);
+        if (snapshot.exists()) {
+          setDisplayName(snapshot.val());
+        } else {
+          // Si no existe (partidas viejas), usamos la URL formateada
+          setDisplayName(partidaURL);
+        }
       });
       // --- BLOQUE A AÑADIR (FIN) ---
       onValue(ref(database, `rooms/${partidaURL}/characters`), (snapshot) => {
@@ -898,245 +822,72 @@ function App() {
     push(ref(database, `rooms/${roomName}/rolls`), { id: Date.now(), dice: newDice, analysis, player: playerName, rollType, timestamp: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
   };
 
-  const handlePush = async (originalRoll) => {
-    if (!diceBoxInstance) return;
-    diceBoxInstance.clear();
-    const result3D = await diceBoxInstance.roll([{ sides: 6, qty: 1, themeColor: '#1a1a1a', foreground: '#d4af37' }]);
-    const updatedDice = [...originalRoll.dice, { type: 'dark', value: result3D[0].value, id: Math.random() }];
-    const analysis = analyzeResult(updatedDice, originalRoll.rollType); 
-    push(ref(database, `rooms/${roomName}/rolls`), { id: Date.now(), dice: updatedDice, analysis, player: playerName, isPush: true, rollType: originalRoll.rollType, timestamp: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
-  };
+  const handlePush = (roll) => {
+    console.log("--- INTENTANDO TENTAR AL DESTINO ---");
+    
+    // 1. Verificamos que tenemos ID
+    if (!roll.id) {
+        console.error("ERROR: La tirada no tiene ID. Revisa cómo descargas los datos de Firebase.");
+        return;
+    }
+    console.log("ID de tirada:", roll.id);
+
+    // 2. Verificamos analyzeResult
+    if (typeof analyzeResult !== 'function') {
+        console.error("ERROR: La función analyzeResult no existe o no es accesible aquí.");
+        return;
+    }
+
+    const lightCount = roll.dice.filter(d => d.type === 'light').length;
+    const oldDarkCount = roll.dice.filter(d => d.type === 'dark').length;   
+    const newDarkCount = oldDarkCount + 1;
+
+    console.log(`Dados: ${lightCount} Claros, ${newDarkCount} Oscuros (Nuevo)`);
+
+    const newDice = [];
+    // Generar Claros
+    for (let i = 0; i < lightCount; i++) {
+        newDice.push({
+            id: Math.random().toString(36).substr(2, 9),
+            value: Math.floor(Math.random() * 6) + 1,
+            type: 'light'
+        });
+    }
+    // Generar Oscuros
+    for (let i = 0; i < newDarkCount; i++) {
+        newDice.push({
+            id: Math.random().toString(36).substr(2, 9),
+            value: Math.floor(Math.random() * 6) + 1,
+            type: 'dark'
+        });
+    }
+
+    const newAnalysis = analyzeResult(newDice, roll.rollType);
+    
+    // Actualizar Firebase
+    console.log("Enviando actualización a Firebase...");
+    update(ref(database, `rooms/${roomName}/rolls/${roll.id}`), {
+        dice: newDice,
+        analysis: newAnalysis
+    }).then(() => {
+        console.log("¡ÉXITO! Firebase actualizado.");
+        playSound('click');
+    }).catch((error) => {
+        console.error("ERROR AL GUARDAR EN FIREBASE:", error);
+    });
+};
 
   const copyRoomLink = () => {
     navigator.clipboard.writeText(window.location.href);
     alert('¡Enlace de partida copiado!');
+    
   };
 
-  // --- FUNCIÓN PARA CREAR NUEVA INCURSIÓN ---
-  const handleCreateIncursion = () => {
-      if (!landingTitle.trim()) return;
-
-      // 1. Generar Slug Único (nombre-tecnico-a1b2)
-      const slug = landingTitle.toLowerCase()
-          .replace(/ñ/g, 'n')
-          .replace(/[^a-z0-9]+/g, '-') // Reemplaza espacios y símbolos por guiones
-          .replace(/^-+|-+$/g, '');   // Quita guiones al inicio/final
-      
-      const randomSuffix = Math.random().toString(36).substr(2, 4);
-      const finalRoomId = `${slug}-${randomSuffix}`;
-
-      // 2. Guardar en Historial Local
-      const newHistory = [
-          { title: landingTitle, id: finalRoomId, date: Date.now() },
-          ...recentGames.filter(g => g.id !== finalRoomId)
-      ].slice(0, 3); // Guardamos solo las últimas 3
-      
-      localStorage.setItem('trophy_recent_games', JSON.stringify(newHistory));
-
-      // 3. Guardar preferencia de rol (para entrar directo como GM o Jugador)
-      if (isCreatorGM) {
-          localStorage.setItem(`trophy_role_${finalRoomId}`, 'gm');
-      } else {
-          localStorage.setItem(`trophy_name_${finalRoomId}`, creatorName);
-      }
-
-      // 4. Escribir en Firebase el título "Bonito" e ir a la partida
-      update(ref(database, `rooms/${finalRoomId}`), {
-          title: landingTitle,
-          created: Date.now()
-      }).then(() => {
-          // Redirección
-          window.location.href = `?partida=${finalRoomId}`;
-      });
-  };
-
-  // SI NO HAY SALA, MOSTRAMOS "EL UMBRAL" (LANDING PAGE)
-  if (!roomName) {
-    return (
-      <div className="min-h-screen bg-[#050505] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black">
-        <style>{fontStyles}</style>
-
-        {/* A. BLOQUE SUPERIOR: IDENTIDAD */}
-        <div className="text-center mb-16 animate-fade-in-up">
-            <h1 className="text-8xl md:text-9xl tracking-tighter mb-4 opacity-90">Trophy (g)Old</h1>
-            <p className="font-mono text-sm tracking-[0.5em] uppercase text-gray-500">{randomTagline}</p>
-        </div>
-
-        {/* B. BLOQUE CENTRAL: EL RITUAL */}
-        <div className="w-full max-w-2xl flex flex-col items-center gap-8 animate-fade-in-up delay-100">
-            
-            {/* Input del Título */}
-            <div className="w-full group">
-                <input 
-                    type="text" 
-                    value={landingTitle}
-                    onChange={(e) => setLandingTitle(e.target.value)}
-                    placeholder="Nombre de la Incursión..."
-                    className="w-full bg-transparent text-center text-4xl md:text-5xl border-b border-[#333] focus:border-[#d4af37] text-[#d4af37] placeholder-gray-800 outline-none pb-4 transition-all duration-500 font-consent"
-                    onKeyDown={(e) => e.key === 'Enter' && handleCreateIncursion()}
-                />
-            </div>
-
-            {/* Selector de Rol */}
-            <div className="flex flex-col items-center gap-4">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                    <div className={`w-4 h-4 border border-[#d4af37] transition-all ${isCreatorGM ? 'bg-[#d4af37]' : 'bg-transparent'}`}></div>
-                    <input 
-                        type="checkbox" 
-                        checked={isCreatorGM} 
-                        onChange={(e) => setIsCreatorGM(e.target.checked)} 
-                        className="hidden"
-                    />
-                    <span className="font-mono text-xs uppercase tracking-widest text-gray-400 group-hover:text-[#d4af37] transition-colors">
-                        Entrar como Guardián
-                    </span>
-                </label>
-
-                {/* Si NO es Guardián, pedir nombre */}
-                {!isCreatorGM && (
-                    <input 
-                        type="text"
-                        value={creatorName}
-                        onChange={(e) => setCreatorName(e.target.value)}
-                        placeholder="Tu nombre..."
-                        className="bg-transparent border-b border-gray-800 text-center text-[#d4af37] focus:border-[#d4af37] outline-none text-xl font-consent w-48"
-                    />
-                )}
-            </div>
-
-            {/* Botón de Acción */}
-            <button 
-                onClick={handleCreateIncursion}
-                className="mt-8 px-12 py-4 border border-[#d4af37] hover:bg-[#d4af37] hover:text-black transition-all duration-500 text-xl tracking-widest uppercase font-mono group"
-            >
-                Comenzar Incursión
-            </button>
-        </div>
-
-        {/* C. BLOQUE INFERIOR: MEMORIA */}
-        {recentGames.length > 0 && (
-            <div className="mt-24 text-center animate-fade-in-up delay-200">
-                <h3 className="text-gray-700 font-mono text-[10px] uppercase tracking-widest mb-6">Memorias Recientes</h3>
-                <div className="flex flex-col gap-3">
-                    {recentGames.map((game) => (
-                        <a 
-                            key={game.id} 
-                            href={`?partida=${game.id}`}
-                            className="text-gray-500 hover:text-[#d4af37] transition-colors font-consent text-2xl flex items-center justify-center gap-2 group"
-                        >
-                            <span>{game.title}</span>
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity text-sm">→</span>
-                        </a>
-                    ))}
-                </div>
-            </div>
-        )}
-        <AppFooter />
-      </div>
-    );
-  }
-
-  // SI HAY SALA (roomName existe), RENDERIZAMOS EL JUEGO NORMAL
-  // Si tenemos sala, pero no hemos entrado aún
-  // LA ANTESALA (LOBBY) MEJORADA
-  if (roomName && !hasJoined) {
-    return (
-      <div className="min-h-screen bg-[#050505] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black animate-fade-in relative">
-         <style>{fontStyles}</style>
-         
-         {/* Fondo sutil o imagen si tuvieras */}
-         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#111] via-[#000] to-[#000] -z-10"></div>
-
-         <div className="max-w-md w-full text-center space-y-8 border-y border-[#333] py-10 bg-black/80 backdrop-blur-sm relative">
-            
-            {/* Título de la Sala */}
-            <div>
-                <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-2">Estás llegando a</p>
-                <h1 className="text-5xl md:text-6xl text-[#d4af37] tracking-tighter leading-none mb-6">
-                    {displayName || roomName}
-                </h1>
-            </div>
-
-            {/* --- AQUÍ INSERTAMOS LA LISTA DE JUGADORES --- */}
-            <LobbyPartyList roomName={roomName} />
-            {/* --------------------------------------------- */}
-
-            <div className="h-px w-16 bg-[#333] mx-auto"></div>
-
-            {/* Formulario de Entrada */}
-            <div className="flex flex-col gap-6 px-8">
-                <div className="space-y-2">
-                    <label className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">Tu identidad</label>
-                    <input 
-                        type="text" 
-                        value={playerName}
-                        onChange={(e) => setPlayerName(e.target.value)}
-                        placeholder="Nombre..."
-                        className="w-full bg-transparent border-b border-[#333] text-center text-3xl py-2 text-[#d4af37] focus:border-[#d4af37] outline-none transition-colors font-consent placeholder-gray-800"
-                    />
-                </div>
-
-                <label className="flex items-center justify-center gap-3 cursor-pointer group select-none opacity-60 hover:opacity-100 transition-opacity">
-                    <div className={`w-3 h-3 border border-[#d4af37] transition-all ${isGM ? 'bg-[#d4af37]' : 'bg-transparent'}`}></div>
-                    <input 
-                        type="checkbox" 
-                        checked={isGM} 
-                        onChange={(e) => {
-                            setIsGM(e.target.checked);
-                            if(e.target.checked) setPlayerName("Guardián");
-                            else if(playerName === "Guardián") setPlayerName("");
-                        }} 
-                        className="hidden"
-                    />
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 group-hover:text-[#d4af37]">
-                        Soy el Guardián
-                    </span>
-                </label>
-
-                <button 
-                    onClick={() => {
-                        if (!playerName.trim()) return;
-                        localStorage.setItem(`trophy_name_${roomName}`, playerName);
-                        if (isGM) localStorage.setItem(`trophy_role_${roomName}`, 'gm');
-                        else localStorage.removeItem(`trophy_role_${roomName}`);
-                        
-                        setHasJoined(true);
-                        playSound('click');
-                    }}
-                    disabled={!playerName.trim()}
-                    className="w-full bg-[#d4af37] text-black font-mono uppercase tracking-widest py-3 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    Unirse a la Incursión
-                </button>
-            </div>
-         </div>
-         
-         <AppFooter />
-      </div>
-    );
-  }
-
-  // AQUÍ EMPIEZA EL RETURN DEL JUEGO 
-  
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       <style>{fontStyles}</style>
       
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
-        {/* Botón para salir/cambiar personaje */}
-          <button 
-        onClick={() => {
-            if(window.confirm("¿Deseas abandonar la incursión y volver a la antesala?")) {
-                setHasJoined(false);
-                // No reseteamos el playerName para que sea rápido volver a entrar
-                playSound('click');
-            }
-        }}
-        className="absolute top-4 left-4 z-50 flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors group"
-    >
-        <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
-        <span className="font-mono text-[10px] uppercase tracking-widest">Salir</span>
-    </button>
         <span className="font-consent text-2xl">Trophy (g)Old</span>
       </header>
 
@@ -1230,6 +981,7 @@ function App() {
                     <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ Reglas ]</button>
                     <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar dados ]</button>
                     <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Borrar historial ]</button>
+                    <button onClick={handleExit} className="text-gray-500 hover:text-white">[ Salir ]</button>
                 </div>
             </div>
 
@@ -1281,12 +1033,12 @@ function App() {
                             </div>
                             <div className="mb-4">
                                 <span className={`font-bold text-xs tracking-widest ${roll.analysis.color}`}>{roll.analysis.icon} {roll.analysis.label}</span>
-                                {roll.analysis.isDarkHighest && roll.rollType!=='combat' && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡Dado oscuro domina! Si el resultado es superior a tu valor de Ruina, marca +1 Ruina</div>}
+                                {roll.analysis.isDarkHighest && roll.rollType !== 'combat' && <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-900/10 p-1 border border-red-900/50">⚠️ ¡Dado oscuro domina! Si el resultado supera tu Ruina actual, marca +1 Ruina</div>}
                             </div>
                             <div className="flex gap-3 mb-2">
                                 {roll.dice.map(d => (<div key={d.id} className={`w-10 h-10 flex items-center justify-center text-xl font-bold ${d.type==='light'?'bg-[#d4af37] text-black':'bg-black text-white border border-gray-700'}`}>{d.value}</div>))}
                             </div>
-                            {index === 0 && roll.player === playerName && roll.rollType!=='help' && roll.rollType!=='combat' && (<button onClick={()=>handlePush(roll)} className="mt-3 w-full border border-gray-700 text-gray-400 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2">¿Tentar al destino? (+1 Oscuro)</button>)}
+                            {index === 0 && roll.player === playerName && roll.rollType!=='help' && (<button onClick={()=>handlePush(roll)} className="mt-3 w-full border border-gray-700 text-gray-400 hover:text-[#d4af37] hover:border-[#d4af37] text-[10px] uppercase py-2">¿Tentar al destino? (+1 Oscuro)</button>)}
                         </div>
                         ))}
                     </div>
@@ -1301,12 +1053,10 @@ function App() {
             </div>
         </main>
       )}
-      <AppFooter />
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.7.2 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
-    
   );
-  
 }
 
 export default App;
