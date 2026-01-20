@@ -1,22 +1,22 @@
-// src/App.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { database } from './firebase';
-import { ref, update, onValue, push, limitToLast, query, remove } from "firebase/database";
-import DiceBox from '@3d-dice/dice-box';  // Dados 3d
-import { Howl } from 'howler'; //Gestor de sonidos
+import { ref, push, onValue, limitToLast, query, remove, update } from "firebase/database";
+import DiceBox from '@3d-dice/dice-box'; 
 
-// --- NUEVOS IMPORTS (La clave de la refactorización) ---
-import LandingScreen from './screens/LandingScreen';
-import LobbyScreen from './screens/LobbyScreen';
-import Footer from './components/ui/Footer'; 
-import CharacterSheet from './components/game/CharacterSheet'; // (Si ya lo hubiéramos separado, si no, ignora esta línea y mantén tu import si lo tenías o el componente abajo)
-import PartyView from './components/game/PartyView'; // (Igual que arriba)
+// --- Creditos y versión ---
+const APP_VERSION = "v.0.6.1"; //cambios lobby y footer
+const AppFooter = () => (
+  <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">
+    {APP_VERSION} · Viejo · viejorpg@gmail.com
+  </footer>
+);
 
 // --- IMPORTACIÓN DE FUENTE PERSONALIZADA ---
 const fontStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
   .font-consent { font-family: 'Manufacturing Consent', sans-serif !important; text-transform: none !important; }
 `;
+
 // ---GESTOR DE DESCARGAS JSON ---
 const downloadJSON = (data, fileName) => {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -29,7 +29,10 @@ const downloadJSON = (data, fileName) => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
-<<<<<<< HEAD
+
+// --- GESTOR DE SONIDOS ---
+import { Howl } from 'howler';
+
 // Definir los sonidos FUERA del componente para que se carguen solo una vez
 const soundBank = {
     click: new Howl({ src: ['/sounds/click.mp3'], volume: 0.5 }),
@@ -37,20 +40,11 @@ const soundBank = {
     fail: new Howl({ src: ['/sounds/fail.mp3'], volume: 1.0 }),
     // ... otros sonidos
 };
-=======
 
-// --- GESTOR DE SONIDOS ---
->>>>>>> 651af245cae729527b38958d5c001d40cbe7ceeb
 const playSound = (type) => {
-  const sounds = {
-    click: '/sounds/click.mp3',
-    success: '/sounds/success.mp3',
-    fail: '/sounds/fail.mp3',
-    ruin: '/sounds/glitch.mp3',
-  };
-  const audio = new Audio(sounds[type]);
-  audio.volume = 0.5;
-  audio.play().catch(e => {});
+    if (soundBank[type]) {
+        soundBank[type].play();
+    }
 };
 
 // --- LÓGICA DE REGLAS TROPHY GOLD ---
@@ -656,26 +650,18 @@ const RulesModal = ({ isOpen, onClose }) => {
 
 // --- APP PRINCIPAL ---
 function App() {
-<<<<<<< HEAD
-  // --- ESTADOS GLOBALES (Solo lo esencial para dirigir el tráfico) ---
-  const [roomName, setRoomName] = useState(null); // ¿En qué sala estamos?
-  const [displayName, setDisplayName] = useState(''); // Nombre bonito de la sala
-  const [playerName, setPlayerName] = useState('');   // ¿Quién soy?
-  const [isGM, setIsGM] = useState(false);            // ¿Soy el jefe?
-  const [hasJoined, setHasJoined] = useState(false);  // ¿He pasado el Lobby?
-=======
   const [roomName, setRoomName] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [isJoined, setIsJoined] = useState(false);
+  // Estado para controlar si ya hemos cruzado la antesala
+  const [hasJoined, setHasJoined] = useState(false);
   const [isGM, setIsGM] = useState(false); // Nuevo estado para Guardián
->>>>>>> 651af245cae729527b38958d5c001d40cbe7ceeb
   const [existingCharacters, setExistingCharacters] = useState({});
   const [lightCount, setLightCount] = useState(1);
   const [darkCount, setDarkCount] = useState(0);
   const [history, setHistory] = useState([]);
   const [rollType, setRollType] = useState('risk');
   const [showRules, setShowRules] = useState(false);
-<<<<<<< HEAD
   // --- ESTADOS PARA LA LANDING PAGE (EL UMBRAL) ---
   const [landingTitle, setLandingTitle] = useState(''); // El título "bonito"
   const [isCreatorGM, setIsCreatorGM] = useState(true); // Por defecto eres DJ
@@ -683,23 +669,46 @@ function App() {
   const [recentGames, setRecentGames] = useState([]); // Historial local
   // Frases de ambientación aleatoria
   const taglines = [
-      "El bosque te reclama", 
-      "La deuda debe pagarse",
-      "No volverás igual que te fuiste",
-      "El tesoro es una trampa",
-      "La ruina te espera"
+      "El bosque te reclama.",
+      "La deuda debe pagarse.",
+      "No volverás igual que te fuiste.",
+      "El tesoro es una trampa.",
+      "La ruina te espera."
   ];
   const [randomTagline] = useState(() => taglines[Math.floor(Math.random() * taglines.length)]);
-  const [diceBoxInstance, setDiceBoxInstance] = useState(null);
-  
-  
-=======
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   const isInitialLoad = useRef(true);
   const [displayName, setDisplayName] = useState(''); // Para mostrar título y url
   const generateRandomId = () => Math.random().toString(36).substr(2, 4);
+  // Componente para ver quién está en la sala (Solo visualización)
+  const LobbyPartyList = ({ roomName }) => {
+  const [members, setMembers] = useState([]);
 
->>>>>>> 651af245cae729527b38958d5c001d40cbe7ceeb
+  useEffect(() => {
+    const partyRef = ref(database, `rooms/${roomName}/party`);
+    return onValue(partyRef, (snapshot) => {
+      const data = snapshot.val();
+      setMembers(data ? Object.values(data) : []);
+    });
+  }, [roomName]);
+
+  if (members.length === 0) return null;
+
+  return (
+    <div className="animate-fade-in mb-6">
+      <p className="text-gray-600 font-mono text-[9px] uppercase tracking-[0.2em] mb-3">Personajes en esta partida:</p>
+      <div className="flex flex-wrap justify-center gap-3">
+        {members.map((m, i) => (
+          <div key={i} className="flex items-center gap-2 px-3 py-1 border border-gray-900 bg-[#050505]">
+            <span className="text-[#d4af37] font-consent text-xl">{m.name}</span>
+            {m.isGM && <span className="text-[10px] opacity-50">◈</span>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
   useEffect(() => {
     if (diceBoxInstance) return;
     let container = document.getElementById("dice-box-full");
@@ -741,20 +750,40 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // Cargar historial
+    const savedGames = JSON.parse(localStorage.getItem('trophy_recent_games') || '[]');
+    setRecentGames(savedGames);
+
     document.title = "Trophy (g)Old";
+    
     const p = new URLSearchParams(window.location.search);
     const partidaURL = p.get('partida');
+
     if (partidaURL) {
       setRoomName(partidaURL);
-      // --- BLOQUE A AÑADIR (INICIO) ---
-      // Recuperamos el nombre "bonito" guardado en la base de datos
+
+      // --- LÓGICA DE LA ANTESALA ---
+      // Verificamos si ya tenemos credenciales guardadas de esta sesión
+      const savedRole = localStorage.getItem(`trophy_role_${partidaURL}`);
+      const savedName = localStorage.getItem(`trophy_name_${partidaURL}`);
+
+      if (savedRole === 'gm') {
+          // Si eres el GM Creador, entras directo (Pase VIP)
+          setIsGM(true);
+          setPlayerName("Guardián");
+          setHasJoined(true); 
+      } else if (savedName) {
+          // Si ya tienes nombre guardado, lo pre-cargamos pero...
+          // Opcional: ¿Quieres que entren directo o que confirmen?
+          // Yo sugiero que confirmen en la Antesala para evitar confusiones.
+          setPlayerName(savedName);
+          // setHasJoined(true); <--- MANTÉN ESTO COMENTADO para obligar a pasar por el Lobby
+      }
+      
+      // Recuperar título bonito
       onValue(ref(database, `rooms/${partidaURL}/title`), (snapshot) => {
-        if (snapshot.exists()) {
-          setDisplayName(snapshot.val());
-        } else {
-          // Si no existe (partidas viejas), usamos la URL formateada
-          setDisplayName(partidaURL);
-        }
+        if (snapshot.exists()) setDisplayName(snapshot.val());
+        else setDisplayName(partidaURL);
       });
       // --- BLOQUE A AÑADIR (FIN) ---
       onValue(ref(database, `rooms/${partidaURL}/characters`), (snapshot) => {
@@ -765,12 +794,12 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!hasJoined || !roomName) return;
+    if (!isJoined || !roomName) return;
     return onValue(query(ref(database, `rooms/${roomName}/rolls`), limitToLast(20)), s => {
       if(s.val()) setHistory(Object.values(s.val()).sort((a,b)=>b.id-a.id));
       else setHistory([]);
     });
-  }, [hasJoined, roomName]);
+  }, [isJoined, roomName]);
 
   useEffect(() => {
     if (history.length > 0) {
@@ -883,7 +912,6 @@ function App() {
     alert('¡Enlace de partida copiado!');
   };
 
-<<<<<<< HEAD
   // --- FUNCIÓN PARA CREAR NUEVA INCURSIÓN ---
   const handleCreateIncursion = () => {
       if (!landingTitle.trim()) return;
@@ -922,52 +950,197 @@ function App() {
       });
   };
 
-  // 1. ¿NO HAY SALA? -> PANTALLA DE LANDING (EL UMBRAL)
+  // SI NO HAY SALA, MOSTRAMOS "EL UMBRAL" (LANDING PAGE)
   if (!roomName) {
-    return <LandingScreen />;
-  }
-
-  // 2. ¿HAY SALA PERO NO HA ENTRADO? -> LOBBY (LA ANTESALA)
-  if (roomName && !hasJoined) {
     return (
-      <LobbyScreen 
-        roomName={roomName}           // Le pasamos el ID de la sala para buscar la lista de jugadores
-        displayName={displayName}     // Le pasamos el título bonito ("La Tumba del Rey")
-        onJoin={(name, roleGM) => {   // Le decimos qué hacer cuando el usuario pulse el botón
-            setPlayerName(name);      // 1. Guardar el nombre en App
-            setIsGM(roleGM);          // 2. Guardar el rol en App
-            setHasJoined(true);       // 3. ¡Abrir la puerta del juego!
-        }}
-      />
+      <div className="min-h-screen bg-[#050505] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black">
+        <style>{fontStyles}</style>
+
+        {/* A. BLOQUE SUPERIOR: IDENTIDAD */}
+        <div className="text-center mb-16 animate-fade-in-up">
+            <h1 className="text-8xl md:text-9xl tracking-tighter mb-4 opacity-90">Trophy (g)Old</h1>
+            <p className="font-mono text-sm tracking-[0.5em] uppercase text-gray-500">{randomTagline}</p>
+        </div>
+
+        {/* B. BLOQUE CENTRAL: EL RITUAL */}
+        <div className="w-full max-w-2xl flex flex-col items-center gap-8 animate-fade-in-up delay-100">
+            
+            {/* Input del Título */}
+            <div className="w-full group">
+                <input 
+                    type="text" 
+                    value={landingTitle}
+                    onChange={(e) => setLandingTitle(e.target.value)}
+                    placeholder="Nombre de la Incursión..."
+                    className="w-full bg-transparent text-center text-4xl md:text-5xl border-b border-[#333] focus:border-[#d4af37] text-[#d4af37] placeholder-gray-800 outline-none pb-4 transition-all duration-500 font-consent"
+                    onKeyDown={(e) => e.key === 'Enter' && handleCreateIncursion()}
+                />
+            </div>
+
+            {/* Selector de Rol */}
+            <div className="flex flex-col items-center gap-4">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className={`w-4 h-4 border border-[#d4af37] transition-all ${isCreatorGM ? 'bg-[#d4af37]' : 'bg-transparent'}`}></div>
+                    <input 
+                        type="checkbox" 
+                        checked={isCreatorGM} 
+                        onChange={(e) => setIsCreatorGM(e.target.checked)} 
+                        className="hidden"
+                    />
+                    <span className="font-mono text-xs uppercase tracking-widest text-gray-400 group-hover:text-[#d4af37] transition-colors">
+                        Entrar como Guardián
+                    </span>
+                </label>
+
+                {/* Si NO es Guardián, pedir nombre */}
+                {!isCreatorGM && (
+                    <input 
+                        type="text"
+                        value={creatorName}
+                        onChange={(e) => setCreatorName(e.target.value)}
+                        placeholder="Tu nombre..."
+                        className="bg-transparent border-b border-gray-800 text-center text-[#d4af37] focus:border-[#d4af37] outline-none text-xl font-consent w-48"
+                    />
+                )}
+            </div>
+
+            {/* Botón de Acción */}
+            <button 
+                onClick={handleCreateIncursion}
+                className="mt-8 px-12 py-4 border border-[#d4af37] hover:bg-[#d4af37] hover:text-black transition-all duration-500 text-xl tracking-widest uppercase font-mono group"
+            >
+                Comenzar Incursión
+            </button>
+        </div>
+
+        {/* C. BLOQUE INFERIOR: MEMORIA */}
+        {recentGames.length > 0 && (
+            <div className="mt-24 text-center animate-fade-in-up delay-200">
+                <h3 className="text-gray-700 font-mono text-[10px] uppercase tracking-widest mb-6">Memorias Recientes</h3>
+                <div className="flex flex-col gap-3">
+                    {recentGames.map((game) => (
+                        <a 
+                            key={game.id} 
+                            href={`?partida=${game.id}`}
+                            className="text-gray-500 hover:text-[#d4af37] transition-colors font-consent text-2xl flex items-center justify-center gap-2 group"
+                        >
+                            <span>{game.title}</span>
+                            <span className="opacity-0 group-hover:opacity-100 transition-opacity text-sm">→</span>
+                        </a>
+                    ))}
+                </div>
+            </div>
+        )}
+        <AppFooter />
+      </div>
     );
   }
 
-
-  // 3. ¿ESTÁ DENTRO? -> MESA DE JUEGO (LA INCURSIÓN) El return 
+  // SI HAY SALA (roomName existe), RENDERIZAMOS EL JUEGO NORMAL
+  // Si tenemos sala, pero no hemos entrado aún
+  // LA ANTESALA (LOBBY) MEJORADA
+  if (roomName && !hasJoined) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#0a0a0a] text-gray-300 font-consent relative">
-        <style>{fontStyles}</style>
-      
-      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
-        {/* Botón para salir/cambiar personaje */}
-          <button 
-        onClick={() => { if(window.confirm("¿Deseas abandonar la incursión?")) setHasJoined(false); }}
-        className="absolute top-4 left-4 z-50 flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors group"
-      >
-        <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
-        <span className="font-mono text-[10px] uppercase tracking-widest">Abandonar</span>
-          </button>
-=======
+      <div className="min-h-screen bg-[#050505] text-[#d4af37] flex flex-col items-center justify-center p-6 font-consent selection:bg-[#d4af37] selection:text-black animate-fade-in relative">
+         <style>{fontStyles}</style>
+         
+         {/* Fondo sutil o imagen si tuvieras */}
+         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#111] via-[#000] to-[#000] -z-10"></div>
+
+         <div className="max-w-md w-full text-center space-y-8 border-y border-[#333] py-10 bg-black/80 backdrop-blur-sm relative">
+            
+            {/* Título de la Sala */}
+            <div>
+                <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-2">Estás llegando a</p>
+                <h1 className="text-5xl md:text-6xl text-[#d4af37] tracking-tighter leading-none mb-6">
+                    {displayName || roomName}
+                </h1>
+            </div>
+
+            {/* --- AQUÍ INSERTAMOS LA LISTA DE JUGADORES --- */}
+            <LobbyPartyList roomName={roomName} />
+            {/* --------------------------------------------- */}
+
+            <div className="h-px w-16 bg-[#333] mx-auto"></div>
+
+            {/* Formulario de Entrada */}
+            <div className="flex flex-col gap-6 px-8">
+                <div className="space-y-2">
+                    <label className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">Tu identidad</label>
+                    <input 
+                        type="text" 
+                        value={playerName}
+                        onChange={(e) => setPlayerName(e.target.value)}
+                        placeholder="Nombre..."
+                        className="w-full bg-transparent border-b border-[#333] text-center text-3xl py-2 text-[#d4af37] focus:border-[#d4af37] outline-none transition-colors font-consent placeholder-gray-800"
+                    />
+                </div>
+
+                <label className="flex items-center justify-center gap-3 cursor-pointer group select-none opacity-60 hover:opacity-100 transition-opacity">
+                    <div className={`w-3 h-3 border border-[#d4af37] transition-all ${isGM ? 'bg-[#d4af37]' : 'bg-transparent'}`}></div>
+                    <input 
+                        type="checkbox" 
+                        checked={isGM} 
+                        onChange={(e) => {
+                            setIsGM(e.target.checked);
+                            if(e.target.checked) setPlayerName("Guardián");
+                            else if(playerName === "Guardián") setPlayerName("");
+                        }} 
+                        className="hidden"
+                    />
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 group-hover:text-[#d4af37]">
+                        Soy el Guardián
+                    </span>
+                </label>
+
+                <button 
+                    onClick={() => {
+                        if (!playerName.trim()) return;
+                        localStorage.setItem(`trophy_name_${roomName}`, playerName);
+                        if (isGM) localStorage.setItem(`trophy_role_${roomName}`, 'gm');
+                        else localStorage.removeItem(`trophy_role_${roomName}`);
+                        
+                        setHasJoined(true);
+                        playSound('click');
+                    }}
+                    disabled={!playerName.trim()}
+                    className="w-full bg-[#d4af37] text-black font-mono uppercase tracking-widest py-3 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Unirse a la Incursión
+                </button>
+            </div>
+         </div>
+         
+         <AppFooter />
+      </div>
+    );
+  }
+
+  // AQUÍ EMPIEZA EL RETURN DEL JUEGO 
+  
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
       <style>{fontStyles}</style>
       
       <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
->>>>>>> 651af245cae729527b38958d5c001d40cbe7ceeb
+        {/* Botón para salir/cambiar personaje */}
+          <button 
+        onClick={() => {
+            if(window.confirm("¿Deseas abandonar la incursión y volver a la antesala?")) {
+                setHasJoined(false);
+                // No reseteamos el playerName para que sea rápido volver a entrar
+                playSound('click');
+            }
+        }}
+        className="absolute top-4 left-4 z-50 flex items-center gap-2 text-gray-600 hover:text-[#d4af37] transition-colors group"
+    >
+        <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
+        <span className="font-mono text-[10px] uppercase tracking-widest">Salir</span>
+    </button>
         <span className="font-consent text-2xl">Trophy (g)Old</span>
       </header>
 
-      {!hasJoined ? (
+      {!isJoined ? (
         <div className="flex-grow flex items-center justify-center p-4 relative z-10 overflow-y-auto">
           <div className="max-w-sm w-full space-y-6 my-8">
             <div className="bg-[#1a1a1a]/95 p-8 border border-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.1)]">
@@ -1057,7 +1230,6 @@ function App() {
                     <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ Reglas ]</button>
                     <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar dados ]</button>
                     <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Borrar historial ]</button>
-                    <button onClick={handleExit} className="text-gray-500 hover:text-white">[ Salir ]</button>
                 </div>
             </div>
 
@@ -1129,14 +1301,12 @@ function App() {
             </div>
         </main>
       )}
-<<<<<<< HEAD
-      <Footer />
-=======
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.6.3 · Viejo · viejorpg@gmail.com</footer>
->>>>>>> 651af245cae729527b38958d5c001d40cbe7ceeb
+      <AppFooter />
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
+    
   );
+  
 }
 
 export default App;
