@@ -640,6 +640,12 @@ const RulesModal = ({ isOpen, onClose }) => {
 function App() {
   const [roomName, setRoomName] = useState('');
   const [playerName, setPlayerName] = useState('');
+  const roomNameRef = useRef(roomName);
+  const playerNameRef = useRef(playerName);
+    useEffect(() => {
+        roomNameRef.current = roomName;
+        playerNameRef.current = playerName;
+    }, [roomName, playerName]);
   const [isJoined, setIsJoined] = useState(false);
   const [isGM, setIsGM] = useState(false); // Nuevo estado para Guardián
   const [existingCharacters, setExistingCharacters] = useState({});
@@ -654,44 +660,52 @@ function App() {
   const generateRandomId = () => Math.random().toString(36).substr(2, 4);
 
   useEffect(() => {
-    if (diceBoxInstance) return;
-    let container = document.getElementById("dice-box-full");
-    if (!container) {
-        container = document.createElement("div");
-        container.id = "dice-box-full";
-        document.body.appendChild(container);
-    }
-    Object.assign(container.style, { position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh', zIndex: '50', pointerEvents: 'none', display: 'block' });
+    diceBox.init({
+        assetPath: '/assets/dice-box/',
+        theme: 'default',
+        scale: 6
+    }).then(() => {
+        // Esta es la función que antes no tenía nombre, ahora la definimos aquí dentro
+        diceBox.onRollComplete = (results) => {
+            // AQUÍ ESTÁ LA CLAVE: Usamos .current para ver el valor ACTUAL, no el antiguo
+            const currentRoom = roomNameRef.current;
+            const currentPlayer = playerNameRef.current;
+            
+            console.log("🎲 Tirada completada. Sala:", currentRoom, "Jugador:", currentPlayer);
 
-    const box = new DiceBox({
-      container: "#dice-box-full", 
-      assetPath: '/assets/', 
-      sounds: true,
-      volume: 0.5,
-      theme: 'default',
-      width: window.innerWidth,
-      height: window.innerHeight,
-      scale: 14,
-      gravity: 5,
-      mass: 1,
-      friction: 0.6,
-      restitution: 0.1, 
-      linearDamping: 0.5,
-      angularDamping: 0.5,
-      spinForce: 6,
-      throwForce: 3,
+            if (!currentRoom || !currentPlayer) {
+                console.warn("⚠️ No se pueden guardar los datos: Falta sala o jugador.");
+                return;
+            }
+
+            // Calculamos los totales
+            let lightDiceCount = 0;
+            let darkDiceCount = 0;
+            
+            // Recontamos cuántos dados de cada tipo se lanzaron basándonos en los resultados
+            results.forEach(d => {
+                if (d.groupId === 'light') lightDiceCount++;
+                if (d.groupId === 'dark') darkDiceCount++;
+            });
+
+            // Preparamos el objeto para Firebase
+            const rollData = {
+                playerName: currentPlayer, // Usamos la ref actualizada
+                action: "Tirada", 
+                results: results.map(r => ({ value: r.value, type: r.groupId })),
+                lightDice: lightDiceCount,
+                darkDice: darkDiceCount,
+                highest: Math.max(...results.map(r => r.value)),
+                timestamp: Date.now()
+            };
+
+            // Guardamos en Firebase usando la sala correcta
+            push(ref(database, `rooms/${currentRoom}/rolls`), rollData)
+                .then(() => console.log("✅ Tirada guardada en Firebase"))
+                .catch(e => console.error("❌ Error al guardar:", e));
+        };
     });
-    
-    box.init().then(() => {
-        setDiceBoxInstance(box);
-        const canvas = container.querySelector('canvas');
-        if (canvas) { canvas.style.pointerEvents = 'none'; canvas.style.backgroundColor = 'transparent'; }
-    }).catch(console.error);
-
-    const handleResize = () => { if (box && box.renderer) box.renderer.resize(window.innerWidth, window.innerHeight); };
-    window.addEventListener('resize', handleResize);
-    return () => { window.removeEventListener('resize', handleResize); };
-  }, []);
+}, []);
 
   useEffect(() => {
     document.title = "Trophy (g)Old";
