@@ -29,6 +29,7 @@ const downloadJSON = (data, fileName) => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
+<<<<<<< HEAD
 // Definir los sonidos FUERA del componente para que se carguen solo una vez
 const soundBank = {
     click: new Howl({ src: ['/sounds/click.mp3'], volume: 0.5 }),
@@ -36,10 +37,20 @@ const soundBank = {
     fail: new Howl({ src: ['/sounds/fail.mp3'], volume: 1.0 }),
     // ... otros sonidos
 };
+=======
+
+// --- GESTOR DE SONIDOS ---
+>>>>>>> 651af245cae729527b38958d5c001d40cbe7ceeb
 const playSound = (type) => {
-    if (soundBank[type]) {
-        soundBank[type].play();
-    }
+  const sounds = {
+    click: '/sounds/click.mp3',
+    success: '/sounds/success.mp3',
+    fail: '/sounds/fail.mp3',
+    ruin: '/sounds/glitch.mp3',
+  };
+  const audio = new Audio(sounds[type]);
+  audio.volume = 0.5;
+  audio.play().catch(e => {});
 };
 
 // --- LÓGICA DE REGLAS TROPHY GOLD ---
@@ -645,18 +656,26 @@ const RulesModal = ({ isOpen, onClose }) => {
 
 // --- APP PRINCIPAL ---
 function App() {
+<<<<<<< HEAD
   // --- ESTADOS GLOBALES (Solo lo esencial para dirigir el tráfico) ---
   const [roomName, setRoomName] = useState(null); // ¿En qué sala estamos?
   const [displayName, setDisplayName] = useState(''); // Nombre bonito de la sala
   const [playerName, setPlayerName] = useState('');   // ¿Quién soy?
   const [isGM, setIsGM] = useState(false);            // ¿Soy el jefe?
   const [hasJoined, setHasJoined] = useState(false);  // ¿He pasado el Lobby?
+=======
+  const [roomName, setRoomName] = useState('');
+  const [playerName, setPlayerName] = useState('');
+  const [isJoined, setIsJoined] = useState(false);
+  const [isGM, setIsGM] = useState(false); // Nuevo estado para Guardián
+>>>>>>> 651af245cae729527b38958d5c001d40cbe7ceeb
   const [existingCharacters, setExistingCharacters] = useState({});
   const [lightCount, setLightCount] = useState(1);
   const [darkCount, setDarkCount] = useState(0);
   const [history, setHistory] = useState([]);
   const [rollType, setRollType] = useState('risk');
   const [showRules, setShowRules] = useState(false);
+<<<<<<< HEAD
   // --- ESTADOS PARA LA LANDING PAGE (EL UMBRAL) ---
   const [landingTitle, setLandingTitle] = useState(''); // El título "bonito"
   const [isCreatorGM, setIsCreatorGM] = useState(true); // Por defecto eres DJ
@@ -674,6 +693,13 @@ function App() {
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   
   
+=======
+  const [diceBoxInstance, setDiceBoxInstance] = useState(null);
+  const isInitialLoad = useRef(true);
+  const [displayName, setDisplayName] = useState(''); // Para mostrar título y url
+  const generateRandomId = () => Math.random().toString(36).substr(2, 4);
+
+>>>>>>> 651af245cae729527b38958d5c001d40cbe7ceeb
   useEffect(() => {
     if (diceBoxInstance) return;
     let container = document.getElementById("dice-box-full");
@@ -715,40 +741,20 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Cargar historial
-    const savedGames = JSON.parse(localStorage.getItem('trophy_recent_games') || '[]');
-    setRecentGames(savedGames);
-
     document.title = "Trophy (g)Old";
-    
     const p = new URLSearchParams(window.location.search);
     const partidaURL = p.get('partida');
-
     if (partidaURL) {
       setRoomName(partidaURL);
-
-      // --- LÓGICA DE LA ANTESALA ---
-      // Verificamos si ya tenemos credenciales guardadas de esta sesión
-      const savedRole = localStorage.getItem(`trophy_role_${partidaURL}`);
-      const savedName = localStorage.getItem(`trophy_name_${partidaURL}`);
-
-      if (savedRole === 'gm') {
-          // Si eres el GM Creador, entras directo (Pase VIP)
-          setIsGM(true);
-          setPlayerName("Guardián");
-          setHasJoined(true); 
-      } else if (savedName) {
-          // Si ya tienes nombre guardado, lo pre-cargamos pero...
-          // Opcional: ¿Quieres que entren directo o que confirmen?
-          // Yo sugiero que confirmen en la Antesala para evitar confusiones.
-          setPlayerName(savedName);
-          // setHasJoined(true); <--- MANTÉN ESTO COMENTADO para obligar a pasar por el Lobby
-      }
-      
-      // Recuperar título bonito
+      // --- BLOQUE A AÑADIR (INICIO) ---
+      // Recuperamos el nombre "bonito" guardado en la base de datos
       onValue(ref(database, `rooms/${partidaURL}/title`), (snapshot) => {
-        if (snapshot.exists()) setDisplayName(snapshot.val());
-        else setDisplayName(partidaURL);
+        if (snapshot.exists()) {
+          setDisplayName(snapshot.val());
+        } else {
+          // Si no existe (partidas viejas), usamos la URL formateada
+          setDisplayName(partidaURL);
+        }
       });
       // --- BLOQUE A AÑADIR (FIN) ---
       onValue(ref(database, `rooms/${partidaURL}/characters`), (snapshot) => {
@@ -877,6 +883,7 @@ function App() {
     alert('¡Enlace de partida copiado!');
   };
 
+<<<<<<< HEAD
   // --- FUNCIÓN PARA CREAR NUEVA INCURSIÓN ---
   const handleCreateIncursion = () => {
       if (!landingTitle.trim()) return;
@@ -950,6 +957,13 @@ function App() {
         <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
         <span className="font-mono text-[10px] uppercase tracking-widest">Abandonar</span>
           </button>
+=======
+  return (
+    <div className="min-h-screen bg-black text-white flex flex-col font-serif relative overflow-hidden">
+      <style>{fontStyles}</style>
+      
+      <header className="w-full bg-[#1a1a1a]/90 backdrop-blur border-b border-[#d4af37] text-center text-[#d4af37] text-sm py-2 font-bold relative z-20">
+>>>>>>> 651af245cae729527b38958d5c001d40cbe7ceeb
         <span className="font-consent text-2xl">Trophy (g)Old</span>
       </header>
 
@@ -1043,6 +1057,7 @@ function App() {
                     <button onClick={() => setShowRules(true)} className="text-[#d4af37] border border-[#d4af37] px-2 py-1 hover:bg-[#d4af37] hover:text-black transition-colors">[ Reglas ]</button>
                     <button onClick={() => diceBoxInstance?.clear()} className="text-gray-500 hover:text-[#d4af37]">[ Limpiar dados ]</button>
                     <button onClick={handleClearHistory} className="text-gray-500 hover:text-red-500">[ Borrar historial ]</button>
+                    <button onClick={handleExit} className="text-gray-500 hover:text-white">[ Salir ]</button>
                 </div>
             </div>
 
@@ -1114,7 +1129,11 @@ function App() {
             </div>
         </main>
       )}
+<<<<<<< HEAD
       <Footer />
+=======
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.6.3 · Viejo · viejorpg@gmail.com</footer>
+>>>>>>> 651af245cae729527b38958d5c001d40cbe7ceeb
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );

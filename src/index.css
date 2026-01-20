@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Clase maestra */
+.font-consent {
+  font-family: 'Manufacturing Consent', sans-serif !important;
+  text-transform: none !important;
+}
+
 @theme {
   --color-gold: #d4af37;
   --color-gold-light: #f9e29c;
@@ -25,8 +31,11 @@ body {
 }
 
 /* src/index.css */
+<<<<<<< HEAD
 @import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
 
+=======
+>>>>>>> 651af245cae729527b38958d5c001d40cbe7ceeb
 .font-consent {
   font-family: 'Manufacturing Consent', sans-serif !important;
   text-transform: none !important;
