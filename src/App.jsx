@@ -640,12 +640,6 @@ const RulesModal = ({ isOpen, onClose }) => {
 function App() {
   const [roomName, setRoomName] = useState('');
   const [playerName, setPlayerName] = useState('');
-  const roomNameRef = useRef(roomName);
-  const playerNameRef = useRef(playerName);
-    useEffect(() => {
-        roomNameRef.current = roomName;
-        playerNameRef.current = playerName;
-    }, [roomName, playerName]);
   const [isJoined, setIsJoined] = useState(false);
   const [isGM, setIsGM] = useState(false); // Nuevo estado para Guardián
   const [existingCharacters, setExistingCharacters] = useState({});
@@ -654,58 +648,49 @@ function App() {
   const [history, setHistory] = useState([]);
   const [rollType, setRollType] = useState('risk');
   const [showRules, setShowRules] = useState(false);
+  
   const [diceBoxInstance, setDiceBoxInstance] = useState(null);
   const isInitialLoad = useRef(true);
-  const [displayName, setDisplayName] = useState(''); // Para mostrar título y url
-  const generateRandomId = () => Math.random().toString(36).substr(2, 4);
 
   useEffect(() => {
-    diceBox.init({
-        assetPath: '/assets/dice-box/',
-        theme: 'default',
-        scale: 6
-    }).then(() => {
-        // Esta es la función que antes no tenía nombre, ahora la definimos aquí dentro
-        diceBox.onRollComplete = (results) => {
-            // AQUÍ ESTÁ LA CLAVE: Usamos .current para ver el valor ACTUAL, no el antiguo
-            const currentRoom = roomNameRef.current;
-            const currentPlayer = playerNameRef.current;
-            
-            console.log("🎲 Tirada completada. Sala:", currentRoom, "Jugador:", currentPlayer);
+    if (diceBoxInstance) return;
+    let container = document.getElementById("dice-box-full");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "dice-box-full";
+        document.body.appendChild(container);
+    }
+    Object.assign(container.style, { position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh', zIndex: '50', pointerEvents: 'none', display: 'block' });
 
-            if (!currentRoom || !currentPlayer) {
-                console.warn("⚠️ No se pueden guardar los datos: Falta sala o jugador.");
-                return;
-            }
-
-            // Calculamos los totales
-            let lightDiceCount = 0;
-            let darkDiceCount = 0;
-            
-            // Recontamos cuántos dados de cada tipo se lanzaron basándonos en los resultados
-            results.forEach(d => {
-                if (d.groupId === 'light') lightDiceCount++;
-                if (d.groupId === 'dark') darkDiceCount++;
-            });
-
-            // Preparamos el objeto para Firebase
-            const rollData = {
-                playerName: currentPlayer, // Usamos la ref actualizada
-                action: "Tirada", 
-                results: results.map(r => ({ value: r.value, type: r.groupId })),
-                lightDice: lightDiceCount,
-                darkDice: darkDiceCount,
-                highest: Math.max(...results.map(r => r.value)),
-                timestamp: Date.now()
-            };
-
-            // Guardamos en Firebase usando la sala correcta
-            push(ref(database, `rooms/${currentRoom}/rolls`), rollData)
-                .then(() => console.log("✅ Tirada guardada en Firebase"))
-                .catch(e => console.error("❌ Error al guardar:", e));
-        };
+    const box = new DiceBox({
+      container: "#dice-box-full", 
+      assetPath: '/assets/', 
+      sounds: true,
+      volume: 0.5,
+      theme: 'default',
+      width: window.innerWidth,
+      height: window.innerHeight,
+      scale: 14,
+      gravity: 5,
+      mass: 1,
+      friction: 0.6,
+      restitution: 0.1, 
+      linearDamping: 0.5,
+      angularDamping: 0.5,
+      spinForce: 6,
+      throwForce: 3,
     });
-}, []);
+    
+    box.init().then(() => {
+        setDiceBoxInstance(box);
+        const canvas = container.querySelector('canvas');
+        if (canvas) { canvas.style.pointerEvents = 'none'; canvas.style.backgroundColor = 'transparent'; }
+    }).catch(console.error);
+
+    const handleResize = () => { if (box && box.renderer) box.renderer.resize(window.innerWidth, window.innerHeight); };
+    window.addEventListener('resize', handleResize);
+    return () => { window.removeEventListener('resize', handleResize); };
+  }, []);
 
   useEffect(() => {
     document.title = "Trophy (g)Old";
@@ -713,17 +698,6 @@ function App() {
     const partidaURL = p.get('partida');
     if (partidaURL) {
       setRoomName(partidaURL);
-      // --- BLOQUE A AÑADIR (INICIO) ---
-      // Recuperamos el nombre "bonito" guardado en la base de datos
-      onValue(ref(database, `rooms/${partidaURL}/title`), (snapshot) => {
-        if (snapshot.exists()) {
-          setDisplayName(snapshot.val());
-        } else {
-          // Si no existe (partidas viejas), usamos la URL formateada
-          setDisplayName(partidaURL);
-        }
-      });
-      // --- BLOQUE A AÑADIR (FIN) ---
       onValue(ref(database, `rooms/${partidaURL}/characters`), (snapshot) => {
         if (snapshot.exists()) { setExistingCharacters(snapshot.val()); } 
         else { setExistingCharacters({}); }
@@ -780,23 +754,13 @@ function App() {
     if (roomName && nameToJoin) {
       let finalRoomName = roomName;
 
-    // Solo si es NUEVA partida (estamos en la home)
-    if (!window.location.search.includes('partida')) {
-        // 1. Guardamos el título original "bonito"
-        const originalTitle = roomName; 
-        
-        // 2. Generamos el slug básico y le añadimos el ID aleatorio
-        // Ejemplo: "La Maldición" -> "la-maldicion-x9z1"
-        const slug = roomName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-        const randomSuffix = Math.random().toString(36).substr(2, 4);
-        
-        finalRoomName = `${slug}-${randomSuffix}`;
-        
-        // 3. Guardamos en base usando la URL única como clave, pero guardando el título original dentro
-        update(ref(database, `rooms/${finalRoomName}`), {
-            title: originalTitle
-        });
-    }
+      // Solo si es NUEVA partida (no hay ?partida= en la URL)
+      if (!new URLSearchParams(window.location.search).has('partida')) {
+        const cleanName = slugify(roomName);
+        const randomID = generateRandomID();
+        finalRoomName = `${cleanName}-${randomID}`;
+        setRoomName(finalRoomName);
+      }
 
       setPlayerName(nameToJoin);
       setIsGM(asGuardian); // Establecer si es Guardián
@@ -938,10 +902,8 @@ function App() {
                 <div className="flex flex-col">
                   <p className="text-[10px] text-gray-500 uppercase">Partida</p>
                   <div className="flex items-center gap-2">
-                      {/* Usamos displayName si existe, si no, roomName */}
-                      <h1 className="text-3xl font-consent text-[#d4af37]">{displayName || roomName}</h1>
-                      
-                      <button onClick={copyRoomLink} className="text-[#d4af37] hover:text-white transition-colors" title="Copiar enlace">🔗</button>
+                    <h1 className="text-3xl font-consent text-[#d4af37]">{roomName}</h1>
+                    <button onClick={copyRoomLink} className="text-[#d4af37] hover:text-white transition-colors" title="Copiar enlace">🔗</button>
                   </div>
                 </div>
                 <div className="flex gap-4 text-[9px] uppercase font-bold">
@@ -1020,7 +982,7 @@ function App() {
             </div>
         </main>
       )}
-      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.6.2 · Viejo · viejorpg@gmail.com</footer>
+      <footer className="w-full bg-[#1a1a1a] border-t border-gray-900 text-center text-gray-600 text-[10px] py-1 font-mono uppercase">v.0.5.5.2 · Viejo · viejorpg@gmail.com</footer>
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
